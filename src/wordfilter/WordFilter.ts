@@ -133,46 +133,44 @@ export default class WordFilter {
     }
 
     private static filterFragments(chars: string[]): void {
-        for (let currentIndex: number = 0; currentIndex < chars.length; ) {
-            const numberIndex: number = this.indexOfNumber(chars, currentIndex);
-            if (numberIndex === -1) {
-                return;
-            }
-
-            let isSymbolOrNotLowercaseAlpha: boolean = false;
-            for (let index: number = currentIndex; index >= 0 && index < numberIndex && !isSymbolOrNotLowercaseAlpha; index++) {
-                if (!this.isSymbol(chars[index]) && !this.isNotLowercaseAlpha(chars[index])) {
-                    isSymbolOrNotLowercaseAlpha = true;
+        let currentIndex: number = 0;
+        let count: number = 0;
+        let runStart: number = 0;
+        for (;;) {
+            let numberIndex: number;
+            do {
+                numberIndex = this.indexOfNumber(chars, currentIndex);
+                if (numberIndex === -1) {
+                    return;
                 }
-            }
 
-            let startIndex: number = 0;
+                let hasGap: boolean = false;
+                for (let index: number = currentIndex; index >= 0 && index < numberIndex && !hasGap; index++) {
+                    if (!this.isSymbol(chars[index]) && !this.isNotLowercaseAlpha(chars[index])) {
+                        hasGap = true;
+                    }
+                }
+                if (hasGap) {
+                    count = 0;
+                }
+                if (count === 0) {
+                    runStart = numberIndex;
+                }
 
-            if (isSymbolOrNotLowercaseAlpha) {
-                startIndex = 0;
-            }
+                currentIndex = this.indexOfNonNumber(numberIndex, chars);
+                let value: number = 0;
+                for (let index: number = numberIndex; index < currentIndex; index++) {
+                    value = value * 10 + chars[index].charCodeAt(0) - 48;
+                }
 
-            if (startIndex === 0) {
-                startIndex = 1;
-                currentIndex = numberIndex;
-            }
-
-            let value: number = 0;
-            for (let index: number = numberIndex; index < chars.length && index < currentIndex; index++) {
-                value = value * 10 + chars[index].charCodeAt(0) - 48;
-            }
-
-            if (value <= 255 && currentIndex - numberIndex <= 8) {
-                startIndex++;
-            } else {
-                startIndex = 0;
-            }
-
-            if (startIndex === 4) {
-                this.maskChars(numberIndex, currentIndex, chars);
-                startIndex = 0;
-            }
-            currentIndex = this.indexOfNonNumber(currentIndex, chars);
+                if (value <= 255 && currentIndex - numberIndex <= 8) {
+                    count++;
+                } else {
+                    count = 0;
+                }
+            } while (count !== 4);
+            this.maskChars(runStart, currentIndex, chars);
+            count = 0;
         }
     }
 
@@ -321,10 +319,10 @@ export default class WordFilter {
         if (bads.length > chars.length) {
             return;
         }
-        for (let startIndex: number = 0; startIndex <= chars.length - bads.length; startIndex++) {
-            let currentIndex: number = startIndex;
-            const { currentIndex: updatedCurrentIndex, badIndex, hasSymbol, hasNumber, hasDigit } = this.processBadCharacters(chars, bads, currentIndex);
-            currentIndex = updatedCurrentIndex;
+        let step: number = 1;
+        for (let startIndex: number = 0; startIndex <= chars.length - bads.length; startIndex += step) {
+            const { currentIndex, badIndex, hasSymbol, hasNumber, hasDigit, advance } = this.processBadCharacters(chars, bads, startIndex);
+            step = advance;
             let currentChar: string = chars[currentIndex];
             let nextChar: string = currentIndex + 1 < chars.length ? chars[currentIndex + 1] : '\u0000';
             if (!(badIndex >= bads.length && (!hasNumber || !hasDigit))) {
@@ -395,15 +393,22 @@ export default class WordFilter {
             }
             let numeralCount: number = 0;
             let alphaCount: number = 0;
+            let lastAlphaIndex: number = -1;
             for (let index: number = startIndex; index < currentIndex; index++) {
                 if (this.isNumerical(chars[index])) {
                     numeralCount++;
                 } else if (this.isAlpha(chars[index])) {
                     alphaCount++;
+                    lastAlphaIndex = index;
                 }
+            }
+            if (lastAlphaIndex > -1) {
+                numeralCount -= currentIndex - lastAlphaIndex - 1;
             }
             if (numeralCount <= alphaCount) {
                 this.maskChars(startIndex, currentIndex, chars);
+            } else {
+                step = 1;
             }
         }
     }
@@ -418,6 +423,7 @@ export default class WordFilter {
         hasSymbol: boolean;
         hasNumber: boolean;
         hasDigit: boolean;
+        advance: number;
     } {
         let index: number = startIndex;
         let badIndex: number = 0;
@@ -425,6 +431,7 @@ export default class WordFilter {
         let hasSymbol: boolean = false;
         let hasNumber: boolean = false;
         let hasDigit: boolean = false;
+        let advance: number = 1;
 
         for (; index < chars.length && !(hasNumber && hasDigit); ) {
             if (index >= chars.length || (hasNumber && hasDigit)) {
@@ -450,6 +457,9 @@ export default class WordFilter {
                 let previousLength: number;
                 if ((previousLength = this.getEmulatedBadCharLen(nextChar, String.fromCharCode(bads[badIndex - 1]), currentChar)) > 0) {
                     index += previousLength;
+                    if (badIndex === 1) {
+                        advance++;
+                    }
                 } else {
                     if (badIndex >= bads.length || !this.isNotLowercaseAlpha(currentChar)) {
                         break;
@@ -468,7 +478,7 @@ export default class WordFilter {
                 }
             }
         }
-        return { currentIndex: index, badIndex, hasSymbol, hasNumber, hasDigit };
+        return { currentIndex: index, badIndex, hasSymbol, hasNumber, hasDigit, advance };
     }
 
     private static getEmulatedBadCharLen(nextChar: string, badChar: string, currentChar: string): number {
@@ -487,7 +497,7 @@ export default class WordFilter {
             }
             if (badChar === 'b') {
                 if (currentChar !== '6' && currentChar !== '8') {
-                    if (currentChar === '1' && nextChar === '3') {
+                    if ((currentChar === '1' && nextChar === '3') || (currentChar === 'i' && nextChar === '3')) {
                         return 2;
                     }
                     return 0;
@@ -501,7 +511,7 @@ export default class WordFilter {
                 return 1;
             }
             if (badChar === 'd') {
-                if (currentChar === '[' && nextChar === ')') {
+                if ((currentChar === '[' && nextChar === ')') || (currentChar === 'i' && nextChar === ')')) {
                     return 2;
                 }
                 return 0;
@@ -522,7 +532,7 @@ export default class WordFilter {
                 return 0;
             }
             if (badChar === 'g') {
-                if (currentChar !== '9' && currentChar !== '6') {
+                if (currentChar !== '9' && currentChar !== '6' && currentChar !== 'q') {
                     return 0;
                 }
                 return 1;
