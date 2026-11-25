@@ -18,7 +18,7 @@ runs:
               # Pack200 needs JDK 8. The Windows AWT pixel fixtures were captured on Temurin 21.0.7+6.
               java-version: |
                   8
-                  ${{ runner.os == 'Windows' && '21.0.7+6' || '21' }}
+                  ${{ runner.os == 'Windows' && '21.0.7+6.0.LTS' || '21' }}
         - run: bun install --frozen-lockfile
           shell: bash
         - uses: actions/cache@v5
