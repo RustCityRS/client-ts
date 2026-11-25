@@ -2,6 +2,7 @@ import { GLX as E, GlUnsupported } from '#/gl/driver/GlEnums';
 import type { TexEnvState } from '#/gl/driver/GlState';
 import type { BaseFormat } from '#/gl/driver/TextureObject';
 import immediateSource from './immediate.wgsl' with { type: 'text' };
+import projectedOverlaySource from './projectedOverlay.wgsl' with { type: 'text' };
 
 export interface ImmediateStage {
     unit: number;
@@ -69,7 +70,7 @@ function stageCode({ unit, format, env }: ImmediateStage, constant?: string): st
     return 'outColor = vec4f(' + rgb + ',' + alpha + ');';
 }
 
-export function fragmentOperations<T extends ImmediateStage>(stages: T[], alphaFunc: number, alphaRef: number, coordinate: (stage: T) => string, constantColor?: (unit: number) => string): { bindings: string; body: string } {
+export function fragmentOperations<T extends ImmediateStage>(stages: T[], alphaFunc: number, alphaRef: number, coordinate: (stage: T) => string, constantColor?: (unit: number) => string, saveBaseColour = false): { bindings: string; body: string } {
     let bindings = '',
         samples = '';
     for (const stage of stages) {
@@ -83,10 +84,11 @@ export function fragmentOperations<T extends ImmediateStage>(stages: T[], alphaF
     }
     const alphaOps: Record<number, string> = { [E.GL_LESS]: '<', [E.GL_EQUAL]: '==', [E.GL_LEQUAL]: '<=', [E.GL_GREATER]: '>', [E.GL_NOTEQUAL]: '!=', [E.GL_GEQUAL]: '>=' };
     const alpha = alphaFunc === E.GL_NEVER ? 'discard;' : alphaFunc === E.GL_ALWAYS ? '' : 'if (!(outColor.a ' + alphaOps[alphaFunc] + ' ' + literal(alphaRef) + ')) { discard; }';
-    return { bindings, body: samples + stages.map(stage => stageCode(stage, constantColor?.(stage.unit))).join('\n') + '\n' + alpha };
+    const operations = stages.map(stage => stageCode(stage, constantColor?.(stage.unit)) + (saveBaseColour && stage.unit === 0 ? '\nbedColour = outColor.rgb;' : ''));
+    return { bindings, body: samples + (saveBaseColour ? 'var bedColour = outColor.rgb;\n' : '') + operations.join('\n') + '\n' + alpha };
 }
 
-export function immediateShader(stages: ImmediateStage[], alphaFunc: number, alphaRef: number): string {
+export function immediateShader(stages: ImmediateStage[], alphaFunc: number, alphaRef: number, projected = false): string {
     const { bindings, body } = fragmentOperations(stages, alphaFunc, alphaRef, s => 'v.uv' + s.unit);
-    return bindings + immediateSource.replace('/* @FRAGMENT_OPERATIONS */', body);
+    return bindings + (projected ? projectedOverlaySource : immediateSource).replace('/* @FRAGMENT_OPERATIONS */', body);
 }

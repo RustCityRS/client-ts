@@ -124,7 +124,7 @@ import BrowserMouseSurface from './BrowserMouseSurface';
 import BrowserTouchControls from './BrowserTouchControls';
 import PlayerModel from '#/dash3d/PlayerModel';
 import GlLighting from '#/gl/GlLighting';
-import Preferences from '#/ui/Preferences';
+import Preferences, { type HdGraphicsMode } from '#/ui/Preferences';
 import LocChange from '#/dash3d/LocChange';
 import ClientInvCache from './ClientInvCache';
 import { ClientScript } from '#/script/ClientScript';
@@ -183,6 +183,8 @@ import AudioEngine from '#/sound/AudioEngine';
 import MidiManager from '#/sound/MidiManager';
 import AreaSoundManager from '#/sound/AreaSoundManager';
 import GlRendererClass, { type GlCanvas } from '#/gl/GlRenderer';
+import PresentationCamera from '#/gl/driver/PresentationCamera';
+import type ProjectedOverlays from '#/gl/driver/ProjectedOverlays';
 import PointLightManagerClass from '#/gl/PointLightManager';
 import MaterialManager from '#/gl/material/MaterialManager';
 import GlCleaner from '#/gl/GlCleaner';
@@ -471,6 +473,7 @@ export default class Client extends GameShell {
 
     static readonly commandPrefix = fromLiteral('::'); // fi.b:Lid;
     static projectX = -1; // jl.e:I
+    private static projectedOverlays: ProjectedOverlays | null = null;
     static projectY = -1; // tg.z:I
 
     // da.d:Z
@@ -838,6 +841,10 @@ export default class Client extends GameShell {
             if (delta < 0) delta = 0;
             else if (delta > 100) delta = 100;
             const scale = (intDivide(Math.imul(delta, -Client.viewportZoomMin + Client.zoomWidth), 100) + Client.viewportZoomMin) | 0;
+            if (Preferences.enhancedGraphicsEnabled) {
+                OrbitCamera.focusY = y;
+                OrbitCamera.zoomScale = scale;
+            }
             distance = Math.imul(scale, distance) >> 8;
         }
         const turn = -yaw & 2047,
@@ -1947,6 +1954,7 @@ export default class Client extends GameShell {
                 if (showChat) {
                     Client.GetOverlayPos(height >> 1, width >> 1, entity.getOverheadHeight(), entity, scaleX, scaleY);
                     if (Client.projectX > -1 && (glJar ? Client.chatCount < Client.maxChats : Client.maxChats > Client.chatCount)) {
+                        Client.projectedOverlays?.saveChat(Client.chatCount);
                         arrayPutI32(Client.chatWidth, Client.chatCount, intDivide(requireNonNull(Client.fontBold12).stringWidth(entity.overheadText), 2));
                         arrayPutI32(Client.chatHeight, Client.chatCount, requireNonNull(Client.fontBold12).lineHeight);
                         arrayPutI32(Client.chatX, Client.chatCount, Client.projectX);
@@ -1998,6 +2006,7 @@ export default class Client extends GameShell {
                             barWidth = intDivide(Math.imul(requireNonNull(back).width, entity.health), 255);
                         }
                         (renderer?.active ? requireNonNull(hdRaster) : Pix2D).intersectClipping(x, y, (barWidth + x) | 0, (barHeight + y) | 0);
+                        Client.projectedOverlays?.clip(x, y, (barWidth + x) | 0, (barHeight + y) | 0);
                         requireNonNull(front).draw(x, y);
                         (renderer?.active ? requireNonNull(hdRaster) : Pix2D).setClipping(left, top, (width + left) | 0, (top + height) | 0);
                     }
@@ -2073,6 +2082,7 @@ export default class Client extends GameShell {
                     }
                 }
                 Client.projectX = arrayAtI32(Client.chatX, i);
+                Client.projectedOverlays?.selectChat(i);
                 arrayPutI32(Client.chatY, i, y);
                 Client.projectY = y;
                 const message = arrayAtObj(Client.chatMessage, i);
@@ -2117,6 +2127,7 @@ export default class Client extends GameShell {
                     if (arrayAtI32(Client.chatEffect, i) === 4) {
                         const scroll = intDivide(Math.imul(150 - arrayAtI32(Client.chatTimer, i), requireNonNull(Client.fontBold12).stringWidth(message) + 100), 150);
                         (renderer?.active ? requireNonNull(hdRaster) : Pix2D).intersectClipping((left + Client.projectX - 50) | 0, top, (left + Client.projectX + 50) | 0, (top + height) | 0);
+                        Client.projectedOverlays?.clip((left + Client.projectX - 50) | 0, undefined, (left + Client.projectX + 50) | 0);
                         const font = Client.fontBold12;
                         const drawX = (left + Client.projectX + 50 - scroll) | 0;
                         const drawY = (top + Client.projectY) | 0;
@@ -2128,6 +2139,7 @@ export default class Client extends GameShell {
                         const raster = renderer?.active ? requireNonNull(hdRaster) : Pix2D;
                         const clipTop = glJar ? (-1 - requireNonNull(Client.fontBold12).lineHeight + Client.projectY + top) | 0 : (top + Client.projectY - requireNonNull(Client.fontBold12).lineHeight - 1) | 0;
                         raster.intersectClipping(left, clipTop, (width + left) | 0, (top + Client.projectY + 5) | 0);
+                        Client.projectedOverlays?.clip(undefined, clipTop, undefined, (top + Client.projectY + 5) | 0);
                         let offset = 0;
                         if (age < 25) offset = (age - 25) | 0;
                         else if (age > 125) offset = (age - 125) | 0;
@@ -2204,6 +2216,7 @@ export default class Client extends GameShell {
             // HD q.a(IIIIIIBI)V. Projection scales are calculated from the clipped HD viewport.
             Client.projectX = (intDivide(Math.imul(Math.imul(scaleX, 512) >> 8, side), depth) + centerX) | 0;
             Client.projectY = (intDivide(Math.imul(Math.imul(512, scaleY) >> 8, up), depth) + centerY) | 0;
+            Client.projectedOverlays?.anchor(fineX, groundY, fineZ, Client.projectX, Client.projectY);
         } else if (depth >= 50 && glJar) {
             Client.projectX = (intDivide(side << 9, depth) + centerX) | 0;
             Client.projectY = (intDivide(up << 9, depth) + centerY) | 0;
@@ -4006,12 +4019,18 @@ export default class Client extends GameShell {
                 if (axis === 1) OrbitCamera.y = (OrbitCamera.y + delta) | 0;
                 if (axis === 0) OrbitCamera.x = (OrbitCamera.x + delta) | 0;
             }
-            RoofModeStatics.updateRoofs();
             const presentation = GameShell.stressFrame && renderer.active && !fixed ? renderer.stressDrawable?.currentTargets() : null;
+            const displayOrbit =
+                Preferences.enhancedGraphicsEnabled && OrbitCamera.mode === 1 && !Preferences.steppedCameraKeys && !OrbitCamera.shake.some(Boolean)
+                    ? presentation?.prepareOrbit(OrbitCamera, Client.loopCycle, GameShell.simulationTime, GameShell.presentationTime)
+                    : null;
+            const picking = !fixed && Preferences.enhancedGraphicsEnabled && (world.takingInput || Minimenu.deferred !== 0);
+            if (picking) PresentationCamera.applyPickedView(OrbitCamera, Client.loopCycle);
+            RoofModeStatics.updateRoofs();
             if (renderer.active) {
                 raster.setClipping(x, y, (x + width) | 0, (y + height) | 0);
-                let pitchDegrees = Math.fround(Math.fround(OrbitCamera.pitch) * 0.17578125);
-                let yawDegrees = Math.fround(0.17578125 * Math.fround(OrbitCamera.yaw));
+                let pitchDegrees = displayOrbit && !picking ? displayOrbit.pitchDegrees : Math.fround(Math.fround(OrbitCamera.pitch) * 0.17578125);
+                let yawDegrees = displayOrbit && !picking ? displayOrbit.yawDegrees : Math.fround(0.17578125 * Math.fround(OrbitCamera.yaw));
                 if (OrbitCamera.mode === 3) {
                     pitchDegrees = Math.fround(Math.fround(360 * CinematicCamera.pitchRadians) / Math.fround(Math.fround(Math.PI) * 2));
                     yawDegrees = Math.fround(Math.fround(CinematicCamera.yawRadians * 360) / Math.fround(Math.fround(Math.PI) * 2));
@@ -4043,11 +4062,14 @@ export default class Client extends GameShell {
                 renderer.applyLightingPreference();
                 renderer.setDepthTest(true);
                 renderer.setFog(true);
-                const colour =
+                let colour =
                     Client.gameState === 10
                         ? environment.update(AreaSoundManager.elapsed, OrbitCamera.z >> 10, Preferences.brightness, OrbitCamera.x >> 10)
                         : environment.update(AreaSoundManager.elapsed, arrayAtI32(requireNonNull(Client.localPlayer).pathZ, 0) >> 3, Preferences.brightness, arrayAtI32(requireNonNull(Client.localPlayer).pathX, 0) >> 3);
                 lights.update(Client.loopCycle, !Preferences.graphics.flickeringEffects);
+                if (Preferences.enhancedGraphicsEnabled && !fixed && Client.gameState === 30 && Client.localPlayer) {
+                    colour = renderer.stressDrawable?.currentTargets()?.horizonColour(Client.localPlayer.x, Client.localPlayer.z, colour, Preferences.graphics.fogEnabled) ?? colour;
+                }
                 renderer.clear(colour);
                 materials.setCamera(OrbitCamera.pitch, OrbitCamera.z, OrbitCamera.y, OrbitCamera.x, OrbitCamera.yaw);
                 renderer.cycle = Client.loopCycle;
@@ -4057,6 +4079,23 @@ export default class Client extends GameShell {
             const drawable = hardwareScene ? renderer.stressDrawable : null;
             drawable?.beginWorldDraw();
             try {
+                if (drawable && Preferences.enhancedGraphicsEnabled && !fixed && Client.gameState === 30 && GlLighting.sunDirection && Client.localPlayer) {
+                    const player = Client.localPlayer;
+                    drawable.beginWorldSunlight(
+                        Math.max(0, Math.min(world.maxTileX * 128 - 1, OrbitCamera.x)),
+                        OrbitCamera.y,
+                        Math.max(0, Math.min(world.maxTileZ * 128 - 1, OrbitCamera.z)),
+                        player.x,
+                        player.sceneHeight,
+                        player.z,
+                        GlLighting.sunDirection,
+                        world.mainTerrainBatches?.[0] ?? null,
+                        Pix3D.textureProvider as TextureCache | null,
+                        Client.playerLevel,
+                        lights.lights,
+                        lights.lightCount
+                    );
+                }
                 world.draw(
                     OrbitCamera.x,
                     OrbitCamera.y,
@@ -4086,9 +4125,17 @@ export default class Client extends GameShell {
             AudioEngine.tick();
             world.RemoveSprites();
             if (hardwareScene) {
-                Client.GdmEntityOverlays(y, x, width, height, Client.viewportScale, Client.viewportScale);
-                const arrowScaleY = Client.viewportScale;
-                Client.GdmCoordArrow(x, width, height, y, Client.viewportScale, arrowScaleY);
+                if (!fixed && Client.gameState === 30 && Preferences.enhancedGraphicsEnabled) drawable?.currentTargets()?.applyWorldBloom(x, y, width, height);
+                const targets = Preferences.enhancedGraphicsEnabled ? presentation : null;
+                Client.projectedOverlays = targets?.beginProjectedOverlays(x, y, width, height, renderer.sceneProjection) ?? null;
+                try {
+                    Client.GdmEntityOverlays(y, x, width, height, Client.viewportScale, Client.viewportScale);
+                    const arrowScaleY = Client.viewportScale;
+                    Client.GdmCoordArrow(x, width, height, y, Client.viewportScale, arrowScaleY);
+                } finally {
+                    Client.projectedOverlays = null;
+                    if (targets) targets.activeOverlays = null;
+                }
             } else {
                 Client.GdmEntityOverlays(y, x, width, height, 256, 256);
                 Client.GdmCoordArrow(x, width, height, y, 256, 256);
@@ -4292,7 +4339,7 @@ export default class Client extends GameShell {
                     continue;
                 }
                 if (c.clientCode === 1405) {
-                    if (!Client.displayFps && !GameShell.stressFrame) continue;
+                    if (!Client.displayFps && Preferences.graphicsMode !== 'stress') continue;
                     const rightX = (x + c.width) | 0;
                     let baseline = (15 + y) | 0;
                     const fpsFont = Client.p12;
@@ -5753,27 +5800,31 @@ export default class Client extends GameShell {
     private static readonly stressCommand = fromJsString('::stress');
     private static readonly stressOnCommand = fromJsString('::stress on');
     private static readonly stressOffCommand = fromJsString('::stress off');
+    private static readonly enhancedCommand = fromJsString('::enhanced');
+    private static readonly enhancedOnCommand = fromJsString('::enhanced on');
+    private static readonly enhancedOffCommand = fromJsString('::enhanced off');
 
-    private static async toggleStress(enabled: boolean): Promise<void> {
-        if (Preferences.stressGraphicsEnabled === enabled) return;
+    private static async toggleGraphicsMode(preset: 'enhanced' | 'stress', enabled: boolean): Promise<void> {
+        if ((Preferences.graphicsMode === preset) === enabled) return;
+        const name = preset === 'enhanced' ? 'Enhanced' : 'Stress';
         if (enabled && (!glJar || !GlRendererClass.active || !GlRendererClass.stressDrawable || Client.gameState !== 30)) {
-            Client.AddChat(fromJsString('Stress mode requires an active HD game viewport.'), null, 0);
+            Client.AddChat(fromJsString(name + ' mode requires an active HD game viewport.'), null, 0);
             return;
         }
         GameShell.stressFrame = null;
         GlRendererClass.stressDrawable?.currentTargets()?.stopStress();
         try {
-            await Client.setStressGraphics(enabled);
+            await Client.setGraphicsMode(enabled ? preset : 'standard');
             if (enabled && GlRendererClass.active && GlRendererClass.stressDrawable) {
-                GameShell.stressFrame = () => Client.gameState === 30 && (GlRendererClass.stressDrawable?.replayStress() ?? false);
+                GameShell.stressFrame = (gameDrawn, time) => Client.gameState === 30 && (GlRendererClass.stressDrawable?.replayStress(gameDrawn, time) ?? false);
             } else if (enabled) {
-                await Client.setStressGraphics(false);
+                await Client.setGraphicsMode('standard');
             }
         } catch (error) {
-            if (enabled) await Client.setStressGraphics(false);
+            if (enabled) await Client.setGraphicsMode('standard');
             throw error;
         }
-        Client.AddChat(fromJsString(GameShell.stressFrame ? 'HD stress on. Frame rate unlocked.' : 'HD stress off.'), null, 0);
+        Client.AddChat(fromJsString(name + (GameShell.stressFrame ? ' mode on. Frame rate unlocked.' : ' mode off.')), null, 0);
     }
     static readonly memLabel = fromLiteral('Mem:'); // fa.a:Lid;
     static readonly cardLabel = glJar ? fromLiteral('Card:') : null; // HD q.h:Lna;
@@ -5818,9 +5869,12 @@ export default class Client extends GameShell {
 
     // SD ig.a(Lid;I)V / HD k.a(Lna;Z)V. jag::oldscape::Client::DoCheat.
     static DoCheat(command: JagString): void | Promise<void> {
-        if (command?.equalsIgnoreCase(Client.stressCommand)) return Client.toggleStress(!Preferences.stressGraphicsEnabled);
-        if (command?.equalsIgnoreCase(Client.stressOnCommand)) return Client.toggleStress(true);
-        if (command?.equalsIgnoreCase(Client.stressOffCommand)) return Client.toggleStress(false);
+        if (command?.equalsIgnoreCase(Client.enhancedCommand)) return Client.toggleGraphicsMode('enhanced', !Preferences.enhancedGraphicsEnabled);
+        if (command?.equalsIgnoreCase(Client.enhancedOnCommand)) return Client.toggleGraphicsMode('enhanced', true);
+        if (command?.equalsIgnoreCase(Client.enhancedOffCommand)) return Client.toggleGraphicsMode('enhanced', false);
+        if (command?.equalsIgnoreCase(Client.stressCommand)) return Client.toggleGraphicsMode('stress', Preferences.graphicsMode !== 'stress');
+        if (command?.equalsIgnoreCase(Client.stressOnCommand)) return Client.toggleGraphicsMode('stress', true);
+        if (command?.equalsIgnoreCase(Client.stressOffCommand)) return Client.toggleGraphicsMode('stress', false);
         return runToCompletion(
             (function* (): Generator<Promise<void>, void, void> {
                 try {
@@ -5902,7 +5956,7 @@ export default class Client extends GameShell {
                         }
                         if (command.equalsIgnoreCase(Client.qaOpTestCommand)) Client.qaOpTest = true;
                         if (command.equalsIgnoreCase(Client.tweenCommand)) {
-                            if (!SeqType.forceTween) {
+                            if (Preferences.enhancedGraphicsEnabled || !SeqType.forceTween) {
                                 SeqType.forceTween = true;
                                 Client.AddChat(Client.tweenEnabled, null, 0);
                             } else {
@@ -11376,20 +11430,27 @@ export default class Client extends GameShell {
         }
     }
 
-    private static stressPalette: { value: number; lighting: boolean; setting: number } | null = null;
+    private static savedPalette: { value: number; lighting: boolean; setting: number } | null = null;
 
-    private static applyStressQuality(enabled: boolean): void {
+    private static applyGraphicsMode(mode: HdGraphicsMode): void {
         const before = Preferences.graphics;
         if (GlRendererClass.active) MaterialManager.setMaterial(0, 0);
-        if (enabled) Client.stressPalette = { value: Pix3D.legacyBrightness, lighting: Preferences.highDetailLighting, setting: Preferences.brightness };
-        Preferences.setStressGraphics(enabled);
+        if (Preferences.enhancedGraphicsEnabled && mode !== 'enhanced') {
+            const targets = GlRendererClass.stressDrawable?.currentTargets();
+            targets?.releaseWorldBloom();
+            targets?.releaseSunlight();
+        }
+        if (Preferences.graphicsMode === 'standard' && mode !== 'standard') {
+            Client.savedPalette = { value: Pix3D.legacyBrightness, lighting: Preferences.highDetailLighting, setting: Preferences.brightness };
+        }
+        Preferences.setGraphicsMode(mode);
         const after = Preferences.graphics;
         if (before.highDetailTextures !== after.highDetailTextures && Pix3D.textureProvider instanceof TextureCache) Pix3D.textureProvider.setLowMemory(!after.highDetailTextures);
-        if (enabled) {
+        if (mode !== 'standard') {
             if (!before.highDetailLighting) Pix3D.setRenderBrightness(0.7);
-        } else if (Client.stressPalette) {
-            const saved = Client.stressPalette;
-            Client.stressPalette = null;
+        } else if (Client.savedPalette) {
+            const saved = Client.savedPalette;
+            Client.savedPalette = null;
             if (saved.lighting === after.highDetailLighting && saved.setting === Preferences.brightness) Pix3D.setRenderBrightness(saved.value);
             else Pix3D.setRenderBrightness(after.highDetailLighting ? 0.7 : (10 - Preferences.brightness) / 10);
         }
@@ -11397,13 +11458,13 @@ export default class Client extends GameShell {
         ObjType.ResetSpriteCache();
     }
 
-    private static async setStressGraphics(enabled: boolean): Promise<void> {
-        if (enabled === Preferences.stressGraphicsEnabled) return;
+    private static async setGraphicsMode(mode: HdGraphicsMode): Promise<void> {
+        if (mode === Preferences.graphicsMode) return;
         const previousAA = Preferences.graphics.currentAntiAliasingMode;
-        Client.applyStressQuality(enabled);
+        Client.applyGraphicsMode(mode);
         if (GlRendererClass.active && previousAA !== Preferences.graphics.currentAntiAliasingMode) {
-            const mode = Client.getWindowMode();
-            await Client.setWindowMode(Preferences.fullscreenWidth, true, mode, true, Preferences.fullscreenHeight);
+            const windowMode = Client.getWindowMode();
+            await Client.setWindowMode(Preferences.fullscreenWidth, true, windowMode, true, Preferences.fullscreenHeight);
         }
         Client.rebuildSceneIfIngame();
     }
@@ -11415,10 +11476,10 @@ export default class Client extends GameShell {
                 try {
                     Client.windowModeRefreshTime = 0n;
                     const current = Client.getWindowMode();
-                    if (mode === 0 && Preferences.stressGraphicsEnabled) {
+                    if (mode === 0 && Preferences.graphicsMode !== 'standard') {
                         GameShell.stressFrame = null;
                         GlRendererClass.stressDrawable?.currentTargets()?.stopStress();
-                        Client.applyStressQuality(false);
+                        Client.applyGraphicsMode('standard');
                     }
                     if (mode === 3 || current === 3) replaceCanvas = true;
                     if (requireNonNull(Signlink.osNameLower).startsWith('mac') && mode > 0) replaceCanvas = true;
@@ -11428,10 +11489,10 @@ export default class Client extends GameShell {
                     if (glJar || apply) {
                         const change: void | Promise<void> = GameShell.applyWindowMode(mode, height, current, rebuild, replaceCanvas, width);
                         if (change instanceof Promise) yield change;
-                        if (Preferences.stressGraphicsEnabled && !GlRendererClass.active) {
+                        if (Preferences.graphicsMode !== 'standard' && !GlRendererClass.active) {
                             // A failed HD context can select software mode inside applyWindowMode.
                             GameShell.stressFrame = null;
-                            Client.applyStressQuality(false);
+                            Client.applyGraphicsMode('standard');
                         }
                     }
                 } catch (error) {
@@ -11944,7 +12005,7 @@ export default class Client extends GameShell {
                 Client.MessageBox(JagString.join([LocalisedText.conlost, LocalisedText.TAG_BREAK, LocalisedText.attempt_to_reestablish]), false, -95);
             }
             if (renderer !== null && renderer.active && Client.gameState !== 0) {
-                renderer.swapBuffers();
+                renderer.swapBuffers(Preferences.enhancedGraphicsEnabled && !!GameShell.stressFrame && Client.gameState === 30 && !globalThis.document?.hidden);
                 for (let i = 0; i < InterfaceList.rootCount; i++) arrayPutObj(InterfaceList.rectangleRedraw, i, false);
             } else {
                 const partial = (Client.gameState === 30 || Client.gameState === 10) && Client.rectDebug === 0 && !fullRedraw;
@@ -14164,11 +14225,11 @@ export default class Client extends GameShell {
 
     // SD client.c(I)V, HD client.c(B)V. NXT Client::MainQuit, projects/osclient/client.cpp.
     protected async MainQuit(): Promise<void> {
-        if (Preferences.stressGraphicsEnabled) {
+        if (Preferences.graphicsMode !== 'standard') {
             GameShell.stressFrame = null;
             GlRendererClass.stressDrawable?.currentTargets()?.stopStress();
-            Preferences.setStressGraphics(false);
-            Client.stressPalette = null;
+            Preferences.setGraphicsMode('standard');
+            Client.savedPalette = null;
         }
         let gameStream: Js5Stream | null = null;
         let diskJoinStarted = false;

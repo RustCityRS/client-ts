@@ -6,6 +6,7 @@ import { arrayAtI16, arrayAtI8, arrayAtObj, arrayPutI16, arrayPutI8, arrayPutObj
 import { isJavaRuntimeException } from '#/util/JavaException';
 import WrappedException from '#/util/WrappedException';
 import type GlSolidTexture from '#/gl/GlSolidTexture';
+import type WebGpuGL from '#/gl/driver/WebGpuGL';
 import Texture from './Texture';
 import type { HdTextureProvider } from './TextureProvider';
 import GlRenderer from '#/gl/GlRenderer';
@@ -224,6 +225,12 @@ export default class TextureCache implements HdTextureProvider {
             if (!isJavaRuntimeException(error)) throw error;
             throw WrappedException.wrap(error, 'nk.G(' + id + ',' + bind + ')');
         }
+    }
+
+    getShadowCoverage(id: number, gl: WebGpuGL) {
+        const texture = this.GetTexture(id);
+        if (!texture?.isReady(this.sprites, this)) return null;
+        return texture.shadowCoverage(this.getTextureSmall(id), this, this.sprites, gl.textures.get(texture.glTextureName)?.baseImage()?.data);
     }
 
     // HD nk.j(II)Lsd;

@@ -1,5 +1,6 @@
 import PacketT from '#/io/PacketT';
 import LocType from '#/config/LocType';
+import SeqType from '#/config/SeqType';
 import ParticleSystem from '#/dash3d/ParticleSystem';
 import GameShell from '#/client/GameShell';
 import type Signlink from '#/util/Signlink';
@@ -11,9 +12,10 @@ import { loadGlRenderer } from '#/util/GamepackClasses';
 
 const key = 'runescape-530-preferences';
 
-// Render-only values for the opt-in HD stress test. The Java settings remain the
-// source for scripts, saved preferences and protocol fields throughout the test.
-const stressGraphics = {
+export type HdGraphicsMode = 'standard' | 'stress' | 'enhanced';
+
+// Scripts, saves and protocol fields always read the original Java preferences.
+const highQualityGraphics = {
     highDetailTextures: true,
     highDetailTextures2: true,
     showGroundDecorations: true,
@@ -57,14 +59,23 @@ export default class Preferences {
     static safeMode = false; // we.y:Z
     static sent = true; // qc.W:Z
 
-    static graphics: Readonly<typeof stressGraphics> = this;
+    static graphics: Readonly<typeof highQualityGraphics> = this;
+    static graphicsMode: HdGraphicsMode = 'standard';
+    private static previousForceTween = false;
 
-    static setStressGraphics(enabled: boolean): void {
-        this.graphics = enabled ? stressGraphics : this;
+    static setGraphicsMode(mode: HdGraphicsMode): void {
+        if (mode === 'enhanced' && this.graphicsMode !== 'enhanced') {
+            this.previousForceTween = SeqType.forceTween;
+            SeqType.forceTween = true;
+        } else if (this.graphicsMode === 'enhanced' && mode !== 'enhanced') {
+            SeqType.forceTween = this.previousForceTween;
+        }
+        this.graphics = mode === 'standard' ? this : highQualityGraphics;
+        this.graphicsMode = mode;
     }
 
-    static get stressGraphicsEnabled(): boolean {
-        return this.graphics === stressGraphics;
+    static get enhancedGraphicsEnabled(): boolean {
+        return this.graphicsMode === 'enhanced';
     }
 
     // SD dl.a(Z)Z, HD km.f(I)Z

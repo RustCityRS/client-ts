@@ -249,7 +249,11 @@ class DrawUniforms {
     height = -1;
     readonly groups = new WeakMap<GPUBuffer, GPUBindGroup>();
     readonly pipelineLayouts = new WeakMap<GPUBindGroupLayout, GPUPipelineLayout>();
+    readonly waterPipelineLayouts = new WeakMap<GPUBindGroupLayout, GPUPipelineLayout>();
+    readonly waterCameraPipelineLayouts = new WeakMap<GPUBindGroupLayout, GPUPipelineLayout>();
     readonly cameraPipelineLayouts = new WeakMap<GPUBindGroupLayout, GPUPipelineLayout>();
+    readonly sunPipelineLayouts = new WeakMap<GPUBindGroupLayout, GPUPipelineLayout>();
+    readonly sunCameraPipelineLayouts = new WeakMap<GPUBindGroupLayout, GPUPipelineLayout>();
     layout?: GPUBindGroupLayout;
 
     constructor(extra: number) {
@@ -449,10 +453,24 @@ export default class IndexedRenderer {
         return (block.layout ??= device.createBindGroupLayout({ entries: [{ binding: 0, visibility: GPUShaderStage.VERTEX | GPUShaderStage.FRAGMENT, buffer: { type: 'uniform', hasDynamicOffset: true, minBindingSize: block.values.byteLength } }] }));
     }
 
-    private prepare(device: GPUDevice, s: GlState, slots: number[], stages: IndexedStage[], block: DrawUniforms, buffers: GPUVertexBufferLayout[], sampleCount: number, alphaBits: number, program: boolean, cameraLayout?: GPUBindGroupLayout) {
+    private prepare(
+        device: GPUDevice,
+        s: GlState,
+        slots: number[],
+        stages: IndexedStage[],
+        block: DrawUniforms,
+        buffers: GPUVertexBufferLayout[],
+        sampleCount: number,
+        alphaBits: number,
+        program: boolean,
+        cameraLayout?: GPUBindGroupLayout,
+        sunLayout?: GPUBindGroupLayout,
+        enhancedWater: boolean | 'shore' | 'bank' | 'bed' = false,
+        emissive = false
+    ) {
         // Meshes first seen as the camera turns often differ only in vertex stride and offsets.
         // Those require distinct pipelines but can share shader code, layouts and texture bindings.
-        const code = indexedShader(s, slots, stages, !!cameraLayout);
+        const code = indexedShader(s, slots, stages, !!cameraLayout, !!sunLayout, enhancedWater, emissive);
         let module = this.modules.get(code);
         if (!module) {
             module = device.createShaderModule({ label: 'gl-indexed', code });
@@ -466,11 +484,14 @@ export default class IndexedRenderer {
             textureLayout = device.createBindGroupLayout({ entries });
             this.textureLayouts.set(layoutKey, textureLayout);
         }
-        const layouts = cameraLayout ? block.cameraPipelineLayouts : block.pipelineLayouts;
+        let layouts = cameraLayout ? block.cameraPipelineLayouts : block.pipelineLayouts;
+        if (enhancedWater) layouts = cameraLayout ? block.waterCameraPipelineLayouts : block.waterPipelineLayouts;
+        else if (sunLayout) layouts = cameraLayout ? block.sunCameraPipelineLayouts : block.sunPipelineLayouts;
         let layout = layouts.get(textureLayout);
         if (!layout) {
             const groups = [textureLayout, this.uniformLayout(device, block)];
             if (cameraLayout) groups.push(cameraLayout);
+            if (sunLayout) groups.push(sunLayout);
             layout = device.createPipelineLayout({ bindGroupLayouts: groups });
             layouts.set(textureLayout, layout);
         }
@@ -478,6 +499,15 @@ export default class IndexedRenderer {
             depth = s.isEnabled(E.GL_DEPTH_TEST);
         const cull = s.isEnabled(E.GL_CULL_FACE) ? (s.cullFaceMode === E.GL_FRONT ? 'front' : 'back') : 'none';
         const blendState: GPUBlendComponent = { srcFactor: blendFactors[s.blendSrc], dstFactor: blendFactors[s.blendDst], operation: 'add' };
+        // The stock window requests RGB only. Between the world clear and bloom composite,
+        // its spare alpha stores inverse emissive coverage. RGB still uses the real source opacity.
+        const mask = !!sunLayout && !alphaBits && (!blend || (s.blendSrc === E.GL_SRC_ALPHA && s.blendDst === E.GL_ONE_MINUS_SRC_ALPHA));
+        const alphaBlend: GPUBlendComponent = mask ? { srcFactor: emissive ? 'zero' : 'one', dstFactor: 'one-minus-src-alpha' } : blendState;
+        const colourTarget: GPUColorTargetState = {
+            format: COLOR_FORMAT,
+            writeMask: alphaBits || mask ? GPUColorWrite.ALL : GPUColorWrite.RED | GPUColorWrite.GREEN | GPUColorWrite.BLUE,
+            blend: blend || mask ? { color: blend ? blendState : {}, alpha: alphaBlend } : undefined
+        };
         const descriptor: GPURenderPipelineDescriptor = {
             label: 'gl-indexed',
             layout,
@@ -485,7 +515,7 @@ export default class IndexedRenderer {
             fragment: {
                 module,
                 entryPoint: 'fragment',
-                targets: [{ format: COLOR_FORMAT, writeMask: alphaBits ? GPUColorWrite.ALL : GPUColorWrite.RED | GPUColorWrite.GREEN | GPUColorWrite.BLUE, blend: blend ? { color: blendState, alpha: blendState } : undefined }]
+                targets: [colourTarget]
             },
             primitive: { topology: 'triangle-list', frontFace: s.frontFace === E.GL_CCW ? 'ccw' : 'cw', cullMode: cull },
             depthStencil: { format: DEPTH_FORMAT, depthWriteEnabled: depth && s.depthMask, depthCompare: depth ? depthComparisons[s.depthFunc - E.GL_NEVER] : 'always' },
@@ -786,6 +816,7 @@ export default class IndexedRenderer {
         }
         if (byteLength - firstByte < count * 4) throw new RangeError('indexed draw exceeds element store');
         const textures = this.drawTextures;
+        const enhancedWorld = target.worldSunlight !== null;
         let stageMask = 0;
         let resourceCount = 0;
         const pointers = (this.pointers ??= [s.vertexArray, s.colorArray, s.normalArray, ...s.texCoordArrays.slice(0, 3)]);
@@ -800,7 +831,7 @@ export default class IndexedRenderer {
             stage.format = format;
             stageMask |= 1 << i;
             textures[resourceCount++] = gl.realizeTexture(tex);
-            textures[resourceCount++] = tex.sampler(gpu);
+            textures[resourceCount++] = tex.sampler(gpu, enhancedWorld && i === 0);
         }
         // At most three texture units. Reuse their ordered stage lists when models alternate
         // between textured and untextured faces; leave resource slots available for the next draw.
@@ -815,13 +846,42 @@ export default class IndexedRenderer {
         const input = this.lastInput && this.vertexEpoch === gpu.epoch ? this.lastInput : this.resolveVertexInput(gl, gpu, pointers, data, firstByte, count, typeof indices === 'bigint' && indices >= 0n ? element : undefined);
         const slots = input.slots;
         const viewGroup = target.worldCameraGroup;
-        const choice = pipelineChoice(input.variants, s, stages, !!program, target.sampleCount, target.alphaBits, !!viewGroup);
+        // Material 2 is the jar's water vertex program. Material 4 generates S/T on unit 0 and
+        // fades to the underwater colour with a 1D ramp on unit 1.
+        const enhancedWater = enhancedWorld && !(stageMask & 4) && (!!program || ((stageMask & 3) === 3 && this.stageByUnit[1].target === E.GL_TEXTURE_1D && s.units[0].genEnabled[0] && s.units[0].genEnabled[1]));
+        const sun = target.worldSunlight;
+        const bed = !!sun?.drawingBed;
+        const bank = enhancedWorld && !!sun?.drawingBank && !enhancedWater;
+        const water = enhancedWater || bank || bed ? sun?.waterResources() : null;
+        const shoreline = !!water && !program && !!sun?.waterSurface && !!sun.waterBottom;
+        const worldBindings = water ?? sun;
+        const emissive = !enhancedWater && !!sun?.emissiveMaterial;
+        let variants = input.variants;
+        if (bed) variants = variant(variants, 'enhanced-bed');
+        else if (bank) variants = variant(variants, 'enhanced-bank');
+        else if (enhancedWater) variants = variant(variants, shoreline ? 'enhanced-shore' : 'enhanced-water');
+        else if (emissive) variants = variant(variants, 'emissive');
+        const choice = pipelineChoice(sun ? variant(variants, 'sunlight') : variants, s, stages, !!program, target.sampleCount, target.alphaBits, !!viewGroup);
         const device = gpu.device;
         const block = program ? this.vertexProgram : s.enabled.mask & ServerFlag.Lighting ? this.lit : this.unlit;
         const size = block.values.byteLength;
         let cached = choice.pipeline;
         if (!cached) {
-            const prepared = this.prepare(device, s, slots, stages, block, vertexLayouts(input), target.sampleCount, target.alphaBits, !!program, viewGroup ? gpu.presentationCameraLayout : undefined);
+            const prepared = this.prepare(
+                device,
+                s,
+                slots,
+                stages,
+                block,
+                vertexLayouts(input),
+                target.sampleCount,
+                target.alphaBits,
+                !!program,
+                viewGroup ? gpu.presentationCameraLayout : undefined,
+                worldBindings?.layout,
+                bed ? 'bed' : bank ? 'bank' : shoreline ? 'shore' : enhancedWater,
+                emissive
+            );
             cached = { value: device.createRenderPipeline(prepared.descriptor), textureLayout: prepared.textureLayout, inputs: prepared.inputs };
             choice.pipeline = cached;
         }
@@ -829,14 +889,19 @@ export default class IndexedRenderer {
         const textureGroup = this.textureGroups.get(device, cached.textureLayout, stages, textures as (GPUTexture | GPUSampler)[]);
         const registers = program?.local;
         const lightMask = cached.inputs.lit ? s.enabled.mask & (255 * ServerFlag.Light0) : 0;
-        const stateChanged = block.revision !== s.uniformRevision || block.inputs !== cached.inputs || block.width !== target.width || block.height !== target.height || block.registers !== registers || block.lightMask !== lightMask;
+        const waterRate = enhancedWater ? (sun?.waterRate ?? 1) : 0;
+        const stateChanged =
+            block.revision !== s.uniformRevision || block.inputs !== cached.inputs || block.width !== target.width || block.height !== target.height || block.registers !== registers || block.lightMask !== lightMask || block.values[131] !== waterRate;
         const changed = stateChanged || block.transformRevision !== s.transformRevision;
         if (changed) {
             // A failed upload can leave the staging block partially refreshed. Force a complete
             // refresh on retry before publishing a revision and reusing its immutable GPU slot.
             block.revision = -1;
             transformUniforms(block.values, s, cached.inputs);
-            if (stateChanged) uniforms(block.values, s, cached.inputs, target.width, target.height, registers);
+            if (stateChanged) {
+                uniforms(block.values, s, cached.inputs, target.width, target.height, registers);
+                block.values[131] = waterRate;
+            }
         }
         let uniform = block.slice;
         // Multiple material and terrain draws frequently have identical uniforms. Their original
@@ -867,6 +932,7 @@ export default class IndexedRenderer {
         pass.setBindGroup(0, textureGroup);
         pass.setBindGroup(1, group, uniform.offset);
         if (viewGroup) pass.setBindGroup(2, viewGroup);
+        if (worldBindings) pass.setBindGroup(viewGroup ? 3 : 2, worldBindings.group);
         for (let i = 0; i < input.bufferCount; i++) pass.setVertexBuffer(i, requireNonNull(input.buffers[i].buffer), input.buffers[i].offset);
         const alignedIndex = (indexOffset & 3) === 0;
         if (alignedIndex) pass.setIndexBuffer(indexBuffer, 'uint32');

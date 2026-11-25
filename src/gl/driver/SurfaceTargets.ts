@@ -2,7 +2,13 @@
 import GpuDevice, { CLEAR_UNIFORM_BYTES, COLOR_FORMAT, DEPTH_FORMAT, type PassOwner } from './GpuDevice';
 import DrawPass from './DrawPass';
 import StressRenderPass from './StressRenderPass';
-import PresentationCamera from './PresentationCamera';
+import PresentationCamera, { type RenderEye } from './PresentationCamera';
+import SunlightMaps from './SunlightMaps';
+import type { FollowCamera } from './PresentationOrbit';
+import WorldBloom from './WorldBloom';
+import ProjectedOverlays from './ProjectedOverlays';
+import type StaticPointLight from '#/dash3d/StaticPointLight';
+import type GlState from './GlState';
 
 // SurfaceTargets: a GL drawable's back colour buffer and depth buffer on WebGPU (HD_PLAN 2.3 clear row, 2.4 swap and
 // MSAA rows). Host code, not a Java port.
@@ -11,7 +17,7 @@ import PresentationCamera from './PresentationCamera';
 //   Swaps resolve into the front texture. A GL back-buffer read allocates a separate snapshot on demand.
 //   Depth: depth24plus, same sample count.
 // - The drawable's GLCapabilities ask for 0 alpha bits (the jar never sets alpha bits), so the colour buffer has no
-//   GL-visible alpha: every write keeps alpha at 1, which is what GL reads for a missing alpha channel.
+//   GL-visible alpha. Enhanced bloom can use it for coverage during world drawing and restores it before the HUD.
 // - The back buffer is preserved across swaps (GL leaves it undefined; keeping it makes frames deterministic).
 // - GL window coordinates are bottom-up; GL window row y is texture row (height - 1 - y), so a GL box (x, y, w, h)
 //   becomes the WebGPU rect (x, height - (y + h), w, h).
@@ -55,12 +61,55 @@ export default class SurfaceTargets implements PassOwner {
     private readonly bundleLayout: GPURenderBundleEncoderDescriptor;
     private recording = false;
     private replayEpoch = -1;
-    private pendingReplay = false;
+    private pendingReplays = 0;
     presentationCamera: PresentationCamera | null = null;
+    private preparedOrbit = false;
     worldCameraGroup: GPUBindGroup | null = null;
+    private sunlight: SunlightMaps | null = null;
+    private recordedEnhancedView: SunlightMaps | null = null;
+    worldSunlight: SunlightMaps | null = null;
+
+    horizonColour(x: number, z: number, nativeColour: number, enabled: boolean): number {
+        const sun = (this.sunlight ??= new SunlightMaps(this.gpu));
+        return sun.horizonColour(x, z, nativeColour, enabled);
+    }
+
+    beginSunlight(...args: Parameters<SunlightMaps['begin']>): void {
+        const sun = (this.sunlight ??= new SunlightMaps(this.gpu));
+        sun.begin(...args);
+        if (this.recording) this.recordedEnhancedView = sun;
+        this.worldSunlight = SunlightMaps.active = sun;
+        this.gpu.shadowPass = sun;
+    }
+
+    endSunlight(): void {
+        if (SunlightMaps.active === this.worldSunlight) SunlightMaps.active = null;
+        this.worldSunlight = null;
+    }
+
+    releaseSunlight(): void {
+        this.recordedEnhancedView = null;
+        this.endSunlight();
+        if (this.gpu.shadowPass && this.gpu.shadowPass === this.sunlight) this.gpu.submit();
+        this.sunlight?.dispose();
+        this.sunlight = null;
+    }
     private cameraBuffer: GPUBuffer | null = null;
+    private overlays: ProjectedOverlays | null = null;
+    activeOverlays: ProjectedOverlays | null = null;
+
+    beginProjectedOverlays(x: number, y: number, width: number, height: number, projection: Float32Array | null): ProjectedOverlays | null {
+        if (!this.recording || !projection || !this.cameraBuffer || !this.capturedView || !this.presentationCamera?.canAdvance) return null;
+        const overlays = (this.overlays ??= new ProjectedOverlays(this.cameraBuffer, this.presentationCamera));
+        overlays.begin(x, y, width, height, this.width, this.height, projection);
+        return (this.activeOverlays = overlays);
+    }
     private cameraGroup: GPUBindGroup | null = null;
     private capturedView = false;
+    private readonly presentedMatrix = new Float32Array(16);
+    private presentedOffset = false;
+    private bloom: WorldBloom | null = null;
+    private bloomAfterPass = -1;
     // Render passes begun (diagnostics: a full clear starts a pass with loadOp 'clear').
     passesBegun = 0;
     clearQuads = 0;
@@ -76,6 +125,7 @@ export default class SurfaceTargets implements PassOwner {
     ensureSize(width: number, height: number): void {
         if (this.back !== null && width === this.width && height === this.height) return;
         this.stopStress();
+        this.releaseWorldBloom();
         if (width <= 0 || height <= 0) throw new Error('WebGpuGL: surface has no size');
         this.gpu.endPass();
         for (const t of [this.back, this.resolveTexture, this.depth]) if (t !== null) this.gpu.retire(t);
@@ -156,6 +206,10 @@ export default class SurfaceTargets implements PassOwner {
     }
 
     startStress(): void {
+        this.preparedOrbit = false;
+        this.recordedEnhancedView = null;
+        this.presentedOffset = false;
+        this.bloomAfterPass = -1;
         this.capturedView = false;
         this.worldCameraGroup = null;
         this.recording = true;
@@ -167,15 +221,26 @@ export default class SurfaceTargets implements PassOwner {
         this.beginPass({ r: 0, g: 0, b: 0, a: 1 }, 1);
     }
 
+    prepareOrbit(eye: RenderEye & FollowCamera, cycle: number, tickTime: number, refreshTime: number): PresentationCamera | null {
+        if (!this.recording || this.capturedView) return null;
+        const camera = (this.presentationCamera ??= new PresentationCamera());
+        camera.capture(eye.x, eye.y, eye.z, eye.pitch * (360 / 2048), eye.yaw * (360 / 2048), cycle, tickTime, eye);
+        camera.sample(refreshTime);
+        camera.applyTo(eye);
+        this.preparedOrbit = true;
+        return camera;
+    }
+
     beginWorldView(x: number, y: number, z: number, pitch: number, yaw: number, cycle: number, now = performance.now()): void {
         if (!this.recording) return;
         // A single camera buffer cannot describe two different viewports in one submission.
         if (this.capturedView) {
-            this.stopStress();
+            this.discardRecording();
             return;
         }
         const camera = (this.presentationCamera ??= new PresentationCamera());
-        camera.capture(x, y, z, pitch, yaw, cycle, now);
+        if (this.preparedOrbit) camera.setSource(x, y, z, pitch, yaw);
+        else camera.capture(x, y, z, pitch, yaw, cycle, now);
         this.capturedView = true;
         // A stationary view can use the original model pipelines for every presentation.
         if (!camera.canAdvance) return;
@@ -192,38 +257,120 @@ export default class SurfaceTargets implements PassOwner {
         this.worldCameraGroup = null;
     }
 
+    latchEnhancedSource(now: number): void {
+        const camera = this.presentationCamera;
+        if (!camera?.followsOrbit) return;
+        // The encoded scene still reads this uniform when the queue executes it.
+        // A mid-scene submit can already have drawn part of the world at its old pose.
+        const buffer = this.cameraBuffer;
+        const canLatch = this.recording && this.capturedView && buffer !== null && this.replayEpoch === this.gpu.epoch;
+        if (canLatch) {
+            const matrix = camera.sample(now);
+            this.gpu.device.queue.writeBuffer(buffer, 0, matrix);
+            this.presentedMatrix.set(matrix);
+            this.presentedOffset = camera.hasViewOffset;
+        }
+        camera.captureFront(canLatch);
+    }
+
+    captureBloomLights(state: GlState, x: number, y: number, z: number, level: number, lights: (StaticPointLight | null)[] | null, count: number): void {
+        if (!this.worldSunlight) return;
+        (this.bloom ??= new WorldBloom(this.gpu, this.sampleCount, !this.alphaBits)).capture(state, this.worldSunlight.fogViewParams, this.worldCameraGroup ? this.cameraBuffer : null, x, y, z, level, lights, count);
+    }
+
+    applyWorldBloom(x: number, y: number, width: number, height: number): void {
+        if (!this.views) return;
+        const left = Math.max(0, x),
+            top = Math.max(0, y);
+        const w = Math.min(this.width, x + width) - left,
+            h = Math.min(this.height, y + height) - top;
+        if (w <= 0 || h <= 0) return;
+        this.gpu.endPass();
+        const bloom = (this.bloom ??= new WorldBloom(this.gpu, this.sampleCount, !this.alphaBits));
+        if (this.recording) {
+            if (this.bloomAfterPass >= 0) this.discardRecording();
+            else this.bloomAfterPass = this.recordedPassCount;
+        }
+        bloom.prepare(this.views.back, this.views.depth, left, top, w, h);
+        bloom.encode(this.gpu.getEncoder());
+    }
+
+    releaseWorldBloom(): void {
+        this.bloom?.dispose();
+        this.bloom = null;
+        this.bloomAfterPass = -1;
+    }
+
     finishStress(): void {
         if (!this.recording) return;
         this.recording = false;
         if (this.stressPasses) this.stressPasses.length = this.recordedPassCount;
         // An intermediate submit or destroyed geometry makes this frame unsuitable.
-        if (this.gpu.epoch !== this.replayEpoch + 1 || !this.stressPasses?.some(pass => pass.indexed)) this.stopStress();
+        if (this.gpu.epoch !== this.replayEpoch + 1 || !this.stressPasses?.some(pass => pass.indexed)) this.discardRecording();
         else this.replayEpoch = this.gpu.epoch;
     }
 
     stopStress(): void {
+        this.discardRecording();
+        this.presentationCamera?.reset();
+    }
+
+    discardRecording(): void {
+        this.preparedOrbit = false;
+        this.recordedEnhancedView = null;
         this.recording = false;
         this.stressPasses = null;
         this.replayEpoch = -1;
         this.endWorldView();
         this.capturedView = false;
-        this.presentationCamera?.reset();
+        if (!this.presentationCamera?.followsOrbit) this.presentationCamera?.reset();
     }
 
-    replayStress(present: () => void, now = performance.now()): boolean {
+    replayStress(present: () => void, now = performance.now(), gameDrawn = false): boolean {
+        if (this.recording || this.gpu.hasUnsubmittedWork) return false;
         if (this.gpu.hasRetiredResources) {
-            this.stopStress();
+            this.discardRecording();
             return false;
         }
-        if (this.stressPasses === null || this.recording || this.pendingReplay || this.gpu.lost || this.replayEpoch !== this.gpu.epoch) return false;
-        if (this.capturedView && this.cameraBuffer && this.presentationCamera?.canAdvance) this.gpu.device.queue.writeBuffer(this.cameraBuffer, 0, this.presentationCamera.sample(now));
+        if (this.stressPasses === null || this.pendingReplays >= (this.recordedEnhancedView ? 2 : 1) || this.gpu.lost || this.replayEpoch !== this.gpu.epoch) return false;
+        const camera = this.presentationCamera;
+        const view = this.capturedView && this.cameraBuffer && camera?.canAdvance ? camera.sample(now) : null;
+        if (this.recordedEnhancedView) {
+            const offset = !!(view && camera?.hasViewOffset);
+            let moved = offset !== this.presentedOffset;
+            if (view && offset && !moved) {
+                for (let i = 0; i < 16; i++)
+                    if (this.presentedMatrix[i] !== view[i]) {
+                        moved = true;
+                        break;
+                    }
+            }
+            // A fresh scene already contains this refresh's water. Between scene draws a
+            // four-byte write animates every water draw in the recorded GPU commands.
+            if (!moved && (gameDrawn || !this.recordedEnhancedView.advanceWater(now))) return false;
+            if (moved) {
+                this.recordedEnhancedView.advanceWater(now);
+                if (view && this.cameraBuffer) {
+                    this.gpu.device.queue.writeBuffer(this.cameraBuffer, 0, view);
+                    this.presentedMatrix.set(view);
+                }
+                this.presentedOffset = offset;
+            }
+        } else if (view && this.cameraBuffer) {
+            if (gameDrawn && !camera?.hasViewOffset) return false;
+            this.gpu.device.queue.writeBuffer(this.cameraBuffer, 0, view);
+        } else if (gameDrawn) return false;
         const encoder = this.gpu.getEncoder();
-        for (const pass of this.stressPasses) pass.encode(encoder.beginRenderPass(pass.descriptor));
+        for (let i = 0; i < this.stressPasses.length; i++) {
+            const pass = this.stressPasses[i];
+            pass.encode(encoder.beginRenderPass(pass.descriptor));
+            if (i + 1 === this.bloomAfterPass) this.bloom?.encode(encoder);
+        }
         present();
         this.replayEpoch = this.gpu.epoch;
-        this.pendingReplay = true;
+        this.pendingReplays++;
         const complete = () => {
-            this.pendingReplay = false;
+            this.pendingReplays--;
         };
         void this.gpu.device.queue.onSubmittedWorkDone().then(complete, complete);
         return true;
@@ -242,7 +389,10 @@ export default class SurfaceTargets implements PassOwner {
     // mechanism: they are destroyed only after the next submit.
     dispose(): void {
         this.stopStress();
+        this.releaseSunlight();
+        this.releaseWorldBloom();
         if (this.cameraBuffer) this.gpu.retire(this.cameraBuffer);
+        this.overlays = this.activeOverlays = null;
         this.cameraBuffer = this.cameraGroup = this.presentationCamera = null;
         if (this.pass !== null) this.gpu.endPass();
         for (const t of [this.back, this.resolveTexture, this.depth]) if (t !== null) this.gpu.retire(t);

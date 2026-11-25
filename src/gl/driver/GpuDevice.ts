@@ -46,6 +46,7 @@ export default class GpuDevice {
     private encoder: GPUCommandEncoder | null = null;
     private passOwner: PassOwner | null = null;
     private readonly retired: (GPUTexture | GPUBuffer)[] = [];
+    shadowPass: { encode(encoder: GPUCommandEncoder): void } | null = null;
     private readonly streamBytes = new WeakMap<GPUBuffer, Uint8Array<ArrayBuffer>>();
     private readonly pendingStreams = new Map<GPUBuffer, DrawUpload>();
     private readonly uploadPages = new Set<GPUBuffer>();
@@ -151,6 +152,11 @@ export default class GpuDevice {
             }
         }
         // The frame is already encoded. Submit all mapped copies ahead of its first vertex/index/uniform read.
+        if (this.shadowPass) {
+            copies ??= this.device.createCommandEncoder({ label: 'sun-before-world' });
+            this.shadowPass.encode(copies);
+            this.shadowPass = null;
+        }
         if (copies) {
             const commands = [copies.finish()];
             if (this.encoder !== null) commands.push(this.encoder.finish());
@@ -176,6 +182,10 @@ export default class GpuDevice {
 
     get hasRetiredResources(): boolean {
         return this.retired.length !== 0;
+    }
+
+    get hasUnsubmittedWork(): boolean {
+        return this.encoder !== null || this.pendingStreams.size !== 0 || this.uniformOffset !== 0 || this.shadowPass !== null;
     }
 
     // On leaving HD there may never be another swap. Submit any last users before

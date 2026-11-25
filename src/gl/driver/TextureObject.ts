@@ -137,10 +137,11 @@ export interface SamplerKey {
     readonly wrapS: number;
     readonly wrapT: number;
     readonly wrapR: number;
+    readonly anisotropy?: number;
 }
 
 export function samplerKeyString(k: SamplerKey): string {
-    return k.minFilter + ',' + k.magFilter + ',' + k.wrapS + ',' + k.wrapT + ',' + k.wrapR;
+    return k.minFilter + ',' + k.magFilter + ',' + k.wrapS + ',' + k.wrapT + ',' + k.wrapR + ',' + (k.anisotropy ?? 1);
 }
 
 function addressMode(wrap: number): GPUAddressMode {
@@ -159,9 +160,10 @@ export function samplerDescriptor(k: SamplerKey): GPUSamplerDescriptor {
         addressModeU: addressMode(k.wrapS),
         addressModeV: addressMode(k.wrapT),
         addressModeW: addressMode(k.wrapR),
-        magFilter: k.magFilter === E.GL_LINEAR ? 'linear' : 'nearest',
-        minFilter: linearMin ? 'linear' : 'nearest',
-        mipmapFilter: linearMip ? 'linear' : 'nearest',
+        magFilter: k.anisotropy || k.magFilter === E.GL_LINEAR ? 'linear' : 'nearest',
+        minFilter: k.anisotropy || linearMin ? 'linear' : 'nearest',
+        mipmapFilter: k.anisotropy || linearMip ? 'linear' : 'nearest',
+        maxAnisotropy: k.anisotropy ?? 1,
         lodMinClamp: 0,
         lodMaxClamp: isMipmapFilter(min) ? 32 : 0
     };
@@ -189,6 +191,7 @@ export class TextureObject {
     private complete?: boolean;
     private samplerDevice?: GpuDevice;
     private gpuSampler?: GPUSampler;
+    private anisotropicSampler?: GPUSampler;
 
     constructor(name: number, target: TextureTarget) {
         this.name = name;
@@ -229,18 +232,22 @@ export class TextureObject {
                 break;
         }
         this.gpuSampler = undefined;
+        this.anisotropicSampler = undefined;
     }
 
     samplerKey(): SamplerKey {
         return { minFilter: this.minFilter, magFilter: this.magFilter, wrapS: this.wrapS, wrapT: this.wrapT, wrapR: this.wrapR };
     }
 
-    sampler(gpu: GpuDevice): GPUSampler {
-        if (this.gpuSampler === undefined || this.samplerDevice !== gpu) {
-            this.gpuSampler = gpu.sampler(this.samplerKey());
+    sampler(gpu: GpuDevice, enhance = false): GPUSampler {
+        if (this.samplerDevice !== gpu) {
+            this.gpuSampler = this.anisotropicSampler = undefined;
             this.samplerDevice = gpu;
         }
-        return this.gpuSampler;
+        if (enhance && this.target === E.GL_TEXTURE_2D && this.wrapS === E.GL_REPEAT && this.wrapT === E.GL_REPEAT) {
+            return (this.anisotropicSampler ??= gpu.sampler({ ...this.samplerKey(), anisotropy: 4 }));
+        }
+        return (this.gpuSampler ??= gpu.sampler(this.samplerKey()));
     }
 
     // The number of mip levels a complete mipmap chain needs for the base image (GL 2.1 3.8.10: log2 of the largest

@@ -2,6 +2,7 @@ import { isJavaRuntimeException } from '#/util/JavaException';
 import WrappedException from '#/util/WrappedException';
 import JagString, { fromJsString, fromLiteral, hashTableInitStrings, toJsString } from '#/datastruct/JagString';
 import GameShell from '#/client/GameShell';
+import PresentationCamera from '#/gl/driver/PresentationCamera';
 import { glJar } from '#/client/ClientVariant';
 import MinimenuOps from './MinimenuOps';
 import ClientMouseListener from '#/client/ClientMouseListener';
@@ -791,7 +792,7 @@ export default class Minimenu {
     static useTopOption(ui?: InterfaceSession): void | Promise<void> {
         if (Minimenu.deferred === 2) {
             if (Minimenu.mouseX !== Minimenu.deferredX || Minimenu.mouseY !== Minimenu.deferredY) return;
-        } else if (Minimenu.mouseX !== ClientMouseListener.clickX || Minimenu.mouseY !== ClientMouseListener.clickY) {
+        } else if (Minimenu.mouseX !== ClientMouseListener.clickX || Minimenu.mouseY !== ClientMouseListener.clickY || (PresentationCamera.needsRepick && ui?.isSceneClick(ClientMouseListener.clickX, ClientMouseListener.clickY))) {
             Minimenu.deferredY = ClientMouseListener.clickY;
             Minimenu.deferredX = ClientMouseListener.clickX;
             Minimenu.deferred = 2;
@@ -829,7 +830,7 @@ export default class Minimenu {
             Minimenu.isOpen = true;
             return;
         }
-        if (ClientMouseListener.clickX !== Minimenu.mouseX || Minimenu.mouseY !== ClientMouseListener.clickY) {
+        if (ClientMouseListener.clickX !== Minimenu.mouseX || Minimenu.mouseY !== ClientMouseListener.clickY || (PresentationCamera.needsRepick && Client.activeClient?.ui?.isSceneClick(ClientMouseListener.clickX, ClientMouseListener.clickY))) {
             Minimenu.deferredY = ClientMouseListener.clickY;
             Minimenu.deferred = 1;
             Minimenu.deferredX = ClientMouseListener.clickX;

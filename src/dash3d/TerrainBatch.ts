@@ -15,6 +15,9 @@ import { arrayAtF32, arrayAtI32, arrayAtObj, arrayPutF32, arrayPutI32, arrayPutO
 import Pix3D from './Pix3D';
 import type Square from './Square';
 import type { HdTextureProvider } from './TextureProvider';
+import type SunlightMaps from '#/gl/driver/SunlightMaps';
+import type Shoreline from '#/gl/driver/Shoreline';
+import type WebGpuGL from '#/gl/driver/WebGpuGL';
 
 // The two shared packet buffers already hold these indices. A native word view
 // writes the same four little-endian bytes without allocating another copy.
@@ -206,8 +209,35 @@ export default class TerrainBatch extends Linkable {
         this.extraCoords = null;
     }
 
+    collectSunlight(sun: SunlightMaps): void {
+        const type = this.texture === -1 ? 0 : (Pix3D.textureProvider as HdTextureProvider).materialType(this.texture);
+        if (this.vbo && this.polygons && type !== 2 && type !== 4) {
+            sun.terrain(this, this.vbo, this.extra ? 40 : 36, this.polygons, this.blendPolygon, this.tileCount);
+        }
+    }
+
+    addWaterFootprint(shoreline: Shoreline, gl: WebGpuGL): void {
+        const bytes = this.vbo ? gl.buffers.get(this.vbo.id)?.data : this.vertexBuffer?.storageBytes();
+        if (!bytes || !this.polygons || !this.tileX || !this.tileZ) return;
+        const vertices = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        for (let i = 0; i < this.tileCount; i++) {
+            const poly = this.polygons[i];
+            if (poly && !this.blendPolygon?.[i]) shoreline.addTile(this.tileX[i], this.tileZ[i], vertices, this.extra ? 40 : 36, poly, !GlRenderer.bigEndian);
+        }
+    }
+
+    touchesBank(tiles: Uint8Array): boolean {
+        if (!this.tileX || !this.tileZ) return false;
+        for (let i = 0; i < this.tileCount; i++) {
+            if (tiles[this.tileZ[i] * 104 + this.tileX[i]]) return true;
+        }
+        return false;
+    }
+
     // hg.a([[[Lbj;FZ)V
-    draw(tiles: (Square | null)[][][] | null, depthBias: number, forceNoTexture: boolean): void {
+    draw(tiles: (Square | null)[][][] | null, depthBias: number, forceNoTexture: boolean, bank?: SunlightMaps, submerged = false): void {
+        const bankTiles = bank?.bankTiles;
+        let bankVisible = false;
         if (TerrainBatch.indices === null || requireNonNull(TerrainBatch.indices.m_data).length < Math.imul(this.indexCount, 4)) {
             TerrainBatch.indices = new PacketT(Math.imul(this.indexCount, 4));
         } else TerrainBatch.indices.m_pos = 0;
@@ -218,6 +248,7 @@ export default class TerrainBatch extends Linkable {
             for (let tile = 0; tile < this.tileCount; tile++) {
                 const square = arrayAtObj(arrayAtObj(arrayAtObj(tiles, arrayAtI32(this.tileLevel, tile)), arrayAtI32(this.tileX, tile)), arrayAtI32(this.tileZ, tile));
                 if (square === null || !square.drawFront) continue;
+                if (bankTiles && !bankVisible) bankVisible = bankTiles[square.z * 104 + square.x] !== 0;
                 const polygon = arrayAtObj(this.polygons, tile);
                 let indices: PacketT;
                 if (this.blend) {
@@ -239,6 +270,7 @@ export default class TerrainBatch extends Linkable {
             for (let tile = 0; tile < this.tileCount; tile++) {
                 const square = arrayAtObj(arrayAtObj(arrayAtObj(tiles, arrayAtI32(this.tileLevel, tile)), arrayAtI32(this.tileX, tile)), arrayAtI32(this.tileZ, tile));
                 if (square === null || !square.drawFront) continue;
+                if (bankTiles && !bankVisible) bankVisible = bankTiles[square.z * 104 + square.x] !== 0;
                 const polygon = arrayAtObj(this.polygons, tile);
                 let indices: PacketT;
                 if (this.blend) {
@@ -276,6 +308,10 @@ export default class TerrainBatch extends Linkable {
             }
         }
         if (TerrainBatch.indices.m_pos === 0 && TerrainBatch.blendIndices.m_pos === 0) return;
+        if (bank) {
+            if (submerged) bank.drawingBed = bankVisible;
+            else bank.drawingBank = bankVisible;
+        }
         const gl = GlRenderer.gl;
         if (this.texture === -1 || forceNoTexture) {
             GlRenderer.bindTexture2D(-1);

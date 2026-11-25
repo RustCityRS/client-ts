@@ -1371,8 +1371,8 @@ export default class world {
             firstZ = 0,
             endX = corners,
             endZ = corners;
-        if (renderer?.active && Preferences.stressGraphicsEnabled) {
-            // The full-region stress mask is camera-relative. Only the loaded rectangle
+        if (renderer?.active && Preferences.graphicsMode !== 'standard') {
+            // The extended visibility mask is camera-relative. Only the loaded rectangle
             // contains heights; clear the old mask when its position on this grid moves.
             firstX = Math.max(0, world.viewRadius - world.gx);
             firstZ = Math.max(0, world.viewRadius - world.eyeTileZ);
@@ -1726,6 +1726,9 @@ export default class world {
     // var4 = the first level var3 applies to, var5 = the roof level byte that hides a square, var6/var7 = the tile
     // within 16 tiles of which hidden squares still advance their animated models.
     static Render(var0: number, var1: number, var2: number, var3: Uint8Array[][] | null, var4: number, var5: number, var6: number, var7: number): void {
+        const enhanced = Preferences.enhancedGraphicsEnabled ? (rendererClass ??= loadGlRenderer()).stressDrawable?.currentTargets()?.worldSunlight : null;
+        const sunlight = world.levelHeightmaps !== world.underwaterHeightmap ? enhanced : null;
+        const casterClass = sunlight ? loadGlModel() : null;
         world.cycleNo = (world.cycleNo + 1) | 0;
         world.fillLeft = 0;
         const var8 = (var6 - 16) | 0;
@@ -1740,6 +1743,7 @@ export default class world {
                 for (let var15 = world.minZ; var15 < world.maxZ; var15++) {
                     const var16 = at2(var13, var14, var15);
                     if (var16 !== null) {
+                        if (sunlight && casterClass) sunlight.collectTile(var16, casterClass);
                         if (!at2(world.visibilityMap, var14 - world.gx + world.viewRadius, var15 - world.eyeTileZ + world.viewRadius) || (var3 !== null && var12 >= var4 && (byteAt(at2(var3, var12, var14), var15) << 24) >> 24 === var5)) {
                             var16.drawFront = false;
                             var16.drawBack = false;
@@ -1798,6 +1802,11 @@ export default class world {
             requireNonNull(gl).glTranslatef(-var0 | 0, -var1 | 0, -var2 | 0);
             if (var24) {
                 world.drawWaterSurface();
+                if (enhanced && world.mainTerrainBatches?.[0]) {
+                    enhanced.waterSurface = world.mainGroundh?.[0] ?? null;
+                    enhanced.waterBottom = world.underwaterHeightmap?.[0] ?? null;
+                    enhanced.prepareBanks(world.mainTerrainBatches[0]);
+                }
                 materials.setMaterial(-1, 3);
                 materials.locked = true;
                 // eslint-disable-next-line @typescript-eslint/no-require-imports -- UnderwaterMaterial stays deferred until ad.a(III[[[BIBII)V in world.Render.
@@ -1813,18 +1822,32 @@ export default class world {
                         materials.setUnderwaterColour(batch.waterColour);
                         (lightingClass ??= loadGlLighting()).applyFogColour(materials.underwaterFogColour());
                     }
-                    batch.draw(world.squares, bias, false);
+                    batch.draw(world.squares, bias, false, enhanced?.bankTiles ? enhanced : undefined, true);
+                    if (enhanced) enhanced.drawingBed = false;
                 }
+                if (enhanced) enhanced.waterSurface = enhanced.waterBottom = null;
                 water.disableRampCoordArray();
             } else {
                 for (let level = world.minLevel; level < world.maxLevel; level++) {
+                    if (sunlight && level === 0) {
+                        sunlight.waterSurface = world.mainGroundh?.[0] ?? null;
+                        sunlight.waterBottom = world.underwaterHeightmap?.[0] ?? null;
+                        sunlight.prepareBanks(requireNonNull(arrayAtObj(world.terrainBatches, level)));
+                    }
                     for (let i = 0; i < requireNonNull(arrayAtObj(world.terrainBatches, level)).length; i++) {
                         const batch = requireNonNull(arrayAtObj(arrayAtObj(world.terrainBatches, level), i));
+                        if (sunlight) batch.collectSunlight(sunlight);
+                        const bank = sunlight && level === 0 && sunlight.waterBottom !== null && sunlight.banks.has(batch) ? sunlight : undefined;
                         const bias = 201.5 - 50 * level - (batch.blend ? 1 : 0.5);
                         if (batch.texture !== -1 && (requireNonNull(Pix3D.textureProvider) as HdTextureProvider).materialType(batch.texture) === 4 && Preferences.graphics.highWaterDetail) materials.setUnderwaterColour(batch.waterColour);
-                        batch.draw(world.squares, bias, false);
+                        batch.draw(world.squares, bias, false, bank);
+                        if (bank) bank.drawingBank = false;
                     }
-                    if (level === 0 && Preferences.graphics.sceneryShadows > 0) {
+                    if (sunlight) {
+                        sunlight.drawingBank = false;
+                        sunlight.waterSurface = sunlight.waterBottom = null;
+                    }
+                    if (level === 0 && Preferences.graphics.sceneryShadows > 0 && !sunlight) {
                         renderer.setLevelDepthBias(101.5);
                         // eslint-disable-next-line @typescript-eslint/no-require-imports -- HD tj stays deferred until ad.a(III[[[BIBII)V in world.Render.
                         const shadows = (require('./GroundShadows') as typeof import('./GroundShadows')).default;

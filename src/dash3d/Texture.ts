@@ -213,6 +213,18 @@ export default class Texture extends SecondaryNode {
         return this.procedural.isReady(provider, sprites);
     }
 
+    shadowCoverage(small: boolean, provider: TextureProvider, sprites: Js5 | null, resident?: Uint8Array | null) {
+        const size = small ? 64 : 128;
+        const rgba = resident?.length === size * size * 4 ? resident : this.procedural.getPixelsRgba(size, size, this.transposed, provider, 0.7, sprites);
+        const alpha = new Uint8Array(size * size);
+        for (let i = 0; i < alpha.length; i++) alpha[i] = rgba[i * 4 + 3];
+        return { size, alpha, repeatS: this.repeatS, repeatT: this.repeatT };
+    }
+
+    get glTextureName(): number {
+        return this.allocation.id;
+    }
+
     // qi.a(ZBLpc;Lal;)[I
     // Uncached texels at brightness 1.0 with jd's horizontal-flip flag clear, or null when not ready.
     getPixels(small: boolean, provider: TextureProvider | null, sprites: Js5 | null): Int32Array | null {

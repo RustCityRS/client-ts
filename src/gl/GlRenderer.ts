@@ -53,14 +53,19 @@ export default class GlRenderer {
     private static maxTextureImageUnits = 0; // tf.v:I (GL_MAX_TEXTURE_IMAGE_UNITS)
     static active = false; // tf.w:Z (the HD context is up)
     static get sceneFar(): number {
-        // Allow the full 104 × 104 build area even on the diagonal, with room for
-        // elevation and the fog ramp beyond the last tile.
-        return Preferences.stressGraphicsEnabled ? 160 * 128 : 3584;
+        // HD fog ends two tiles before the far plane, at the enhanced traversal radius.
+        if (Preferences.enhancedGraphicsEnabled) return 50 * 128;
+        // Stress includes the diagonal of the entire build area.
+        return Preferences.graphicsMode === 'stress' ? 160 * 128 : 3584;
     }
     static get sceneRadius(): number {
-        return Preferences.stressGraphicsEnabled ? 104 : 28;
+        if (Preferences.enhancedGraphicsEnabled) return 48;
+        return Preferences.graphicsMode === 'stress' ? 104 : 28;
     }
     private static projection: Float32Array | null = new Float32Array(16); // tf.x:[F
+    static get sceneProjection(): Float32Array | null {
+        return this.projection;
+    }
     static multisampleSupported = false; // tf.y:Z (GL_ARB_multisample)
     static whiteTexture = 0; // tf.z:I (the 1x1 white texture of initTextures)
     static height = 0; // tf.A:I
@@ -152,9 +157,11 @@ export default class GlRenderer {
     }
 
     // tf.d()V
-    static swapBuffers(): void {
+    static swapBuffers(deferPresentation = false): void {
         try {
-            requireNonNull(GlRenderer.drawable).swapBuffers();
+            const drawable = deferPresentation ? GlRenderer.stressDrawable : null;
+            if (drawable) drawable.submitEnhancedSource();
+            else requireNonNull(GlRenderer.drawable).swapBuffers();
         } catch (error) {
             if (!(error instanceof Error) || error instanceof JavaError) throw error;
             // empty catch block

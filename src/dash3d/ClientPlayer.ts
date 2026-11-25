@@ -232,7 +232,7 @@ export default class ClientPlayer extends ClientEntity {
         }
 
         this.modelMinY = var15.getMinY();
-        if (Preferences.graphics.characterShadows && (this.appearance.npcId === -1 || NpcType.List(this.appearance.npcId).spotShadow)) {
+        if (Preferences.graphics.characterShadows && !Preferences.enhancedGraphicsEnabled && (this.appearance.npcId === -1 || NpcType.List(this.appearance.npcId).spotShadow)) {
             const var24 = ClientEntity.getShadowModel(this.z, 1, var15, 240, 0, 0, var14 !== null ? var14 : var13, this.x, this.stretches, var1, 160, var14 !== null ? this.walkFrame : this.seqFrame, this.sceneHeight);
             if (glJar && GlRenderer.active) {
                 const renderer = GlRenderer;

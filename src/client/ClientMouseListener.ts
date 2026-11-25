@@ -1,9 +1,10 @@
 import { releaseReferences } from '#/util/StaticReferences';
+import PresentationCamera from '#/gl/driver/PresentationCamera';
 import { isJavaRuntimeException } from '#/util/JavaException';
 import WrappedException from '#/util/WrappedException';
 import SafeTime from '#/io/SafeTime';
 import { requireNonNull } from '#/util/JavaArray';
-import { loadClientBuild, loadLocalisedText, loadMaterialManager } from '#/util/GamepackClasses';
+import { loadClientBuild, loadLocalisedText, loadMaterialManager, loadMinimenu } from '#/util/GamepackClasses';
 import { glJar } from './ClientVariant';
 
 export interface MouseEvent530 {
@@ -115,6 +116,7 @@ export default class ClientMouseListener {
     // uk.mousePressed(Ljava/awt/event/MouseEvent;)V
     mousePressed(event: MouseEvent530): void {
         if (ClientMouseListener.instance !== null) {
+            PresentationCamera.rememberPress(() => loadMinimenu().isOpen);
             ClientMouseListener.idleCycles = 0;
             ClientMouseListener.nextClickX = event.getX();
             ClientMouseListener.nextClickY = event.getY();

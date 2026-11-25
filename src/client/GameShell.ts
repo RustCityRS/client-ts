@@ -301,14 +301,17 @@ export default abstract class GameShell {
     static m_fps = 0; // dd.a:I
     private static stressFrames: BrowserStressFrames | null = null;
 
-    static get stressFrame(): (() => boolean) | null {
+    static presentationTime = 0;
+    static simulationTime = 0;
+
+    static get stressFrame(): ((gameDrawn?: boolean, time?: number) => boolean) | null {
         return GameShell.stressFrames?.render ?? null;
     }
 
-    static set stressFrame(render: (() => boolean) | null) {
+    static set stressFrame(render: ((gameDrawn?: boolean, time?: number) => boolean) | null) {
         if (render === GameShell.stressFrame) return;
         GameShell.stressFrames?.close();
-        GameShell.stressFrames = render === null ? null : new BrowserStressFrames(render);
+        GameShell.stressFrames = render === null ? null : new BrowserStressFrames(render, loadPreferences().enhancedGraphicsEnabled);
     }
 
     static get stressRenderFps(): number {
@@ -977,6 +980,10 @@ export default abstract class GameShell {
                 for (let i = 0; i < GameShell.m_updateCount; i++) {
                     await this.MainLoopWrapper();
                     if (this.closed) return;
+                }
+                if (GameShell.stressFrames?.displayPaced) {
+                    GameShell.presentationTime = performance.now();
+                    GameShell.simulationTime = GameShell.timer.browserWakeTime ? GameShell.timer.browserWakeTime() - GameShell.m_delTime : GameShell.presentationTime;
                 }
                 const redraw = this.MainRedrawWrapper();
                 if (redraw !== undefined) await redraw;

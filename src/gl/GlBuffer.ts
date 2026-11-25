@@ -26,7 +26,7 @@ export default class GlBuffer {
     private stream = false; // vi.d:Z
 
     // vi.a:I (the buffer name; -1 once finalized)
-    private get id(): number {
+    get id(): number {
         return this.fields.id;
     }
 

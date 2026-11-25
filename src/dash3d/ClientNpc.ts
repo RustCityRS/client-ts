@@ -102,7 +102,7 @@ export default class ClientNpc extends ClientEntity {
             var16 = var16.GetMultiNpc();
         }
 
-        if (Preferences.graphics.characterShadows && requireNonNull(var16).spotShadow) {
+        if (Preferences.graphics.characterShadows && !Preferences.enhancedGraphicsEnabled && requireNonNull(var16).spotShadow) {
             const var17 = ClientEntity.getShadowModel(
                 this.z,
                 this.npcType.m_gridSize,

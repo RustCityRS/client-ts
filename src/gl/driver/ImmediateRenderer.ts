@@ -3,6 +3,7 @@ import { GLX as E, GlUnsupported } from './GlEnums';
 import GlState, { transformPoint } from './GlState';
 import { COLOR_FORMAT, DEPTH_FORMAT } from './GpuDevice';
 import type GpuDevice from './GpuDevice';
+import type ProjectedOverlays from './ProjectedOverlays';
 import { glBoxToRect } from './SurfaceTargets';
 import TextureBindingCache from './TextureBindingCache';
 import type WebGpuGL from './WebGpuGL';
@@ -11,6 +12,16 @@ import { immediateShader, type ImmediateStage } from '#/gl/driver/shaders/immedi
 
 const STRIDE = 12;
 const CHUNK_SIZE = 1024 * 1024;
+const overlayVertexLayout: GPUVertexBufferLayout = {
+    arrayStride: 44,
+    stepMode: 'instance',
+    attributes: [
+        { shaderLocation: 4, offset: 0, format: 'float32x3' },
+        { shaderLocation: 5, offset: 12, format: 'float32x2' },
+        { shaderLocation: 6, offset: 20, format: 'float32x4' },
+        { shaderLocation: 7, offset: 36, format: 'float32x2' }
+    ]
+};
 export const blendFactors: Record<number, GPUBlendFactor> = {
     [E.GL_ZERO]: 'zero',
     [E.GL_ONE]: 'one',
@@ -31,6 +42,8 @@ type PipelineField = number | boolean | string | undefined;
 interface PipelineState {
     pipeline: GPURenderPipeline;
     textureLayout: GPUBindGroupLayout | null;
+    camera?: GPUBuffer;
+    cameraGroup?: GPUBindGroup;
 }
 
 /** GL immediate vertices latch the current colour and coordinates, including when played from a display list. */
@@ -57,6 +70,11 @@ export default class ImmediateRenderer {
     private epoch = -1;
     private chunk = 0;
     private offset = 0;
+    private anchorView?: ProjectedOverlays;
+    private anchorRevision = -1;
+    private anchorEpoch = -1;
+    private anchorBuffer?: GPUBuffer;
+    private anchorOffset = 0;
 
     begin(mode: number, state: GlState): void {
         if (this.mode !== null) {
@@ -134,9 +152,9 @@ export default class ImmediateRenderer {
             x1 = Math.min(x1, sc[0] + sc[2]);
             y1 = Math.min(y1, sc[1] + sc[3]);
         }
-        const rect = glBoxToRect(x0, y0, x1 - x0, y1 - y0, targets.width, targets.height, this.clipRect);
-        if (!rect) return;
-        const { x: clipX, y: clipY, width: clipWidth, height: clipHeight } = rect;
+        const overlays = targets.activeOverlays;
+        const rect = overlays ?? glBoxToRect(x0, y0, x1 - x0, y1 - y0, targets.width, targets.height, this.clipRect);
+        if (!rect || rect.width === 0 || rect.height === 0) return;
         const triangles = mode === E.GL_TRIANGLE_FAN;
         const cull = triangles && state.enabled.get(E.GL_CULL_FACE);
         if (cull && state.cullFaceMode === E.GL_FRONT_AND_BACK) return;
@@ -179,6 +197,7 @@ export default class ImmediateRenderer {
         signature[8] = targets.alphaBits;
         signature[9] = alpha;
         signature[10] = alpha === E.GL_NEVER || alpha === E.GL_ALWAYS ? 0 : state.alphaRef;
+        signature[15] = !!overlays;
         let cached = this.previousPipeline;
         if (cached) {
             for (let i = 0; i < signature.length; i++) {
@@ -193,7 +212,7 @@ export default class ImmediateRenderer {
             const key = signature.join('|');
             cached = this.pipelines.get(key);
             if (!cached) {
-                const module = gpu.device.createShaderModule({ label: 'gl-immediate', code: immediateShader(stages, alpha, state.alphaRef) });
+                const module = gpu.device.createShaderModule({ label: 'gl-immediate', code: immediateShader(stages, alpha, state.alphaRef, !!overlays) });
                 const blend: GPUBlendComponent = { srcFactor: blendFactors[state.blendSrc], dstFactor: blendFactors[state.blendDst], operation: 'add' };
                 const pipeline = gpu.device.createRenderPipeline({
                     label: 'gl-immediate',
@@ -210,7 +229,8 @@ export default class ImmediateRenderer {
                                     { shaderLocation: 2, offset: 32, format: 'float32x2' },
                                     { shaderLocation: 3, offset: 40, format: 'float32x2' }
                                 ]
-                            }
+                            },
+                            ...(overlays ? [overlayVertexLayout] : [])
                         ]
                     },
                     fragment: {
@@ -222,7 +242,7 @@ export default class ImmediateRenderer {
                     depthStencil: { format: DEPTH_FORMAT, depthCompare, depthWriteEnabled: depthWrite },
                     multisample: { count: targets.sampleCount }
                 });
-                cached = { pipeline, textureLayout: stages.length === 0 ? null : pipeline.getBindGroupLayout(0) };
+                cached = { pipeline, textureLayout: stages.length === 0 && !overlays ? null : pipeline.getBindGroupLayout(0) };
                 this.pipelines.set(key, cached);
             }
             this.previousPipeline = cached;
@@ -259,13 +279,28 @@ export default class ImmediateRenderer {
             }
             bytes = count <= 8 ? this.outlineBytes[count] : new Uint8Array(data.buffer);
         }
-        const buffer = this.upload(gpu, bytes),
-            offset = this.uploadOffset;
         const pass = targets.currentPass();
         pass.setPipeline(cached.pipeline);
         if (group) pass.setBindGroup(0, group);
+        if (overlays) {
+            if (cached.camera !== overlays.camera) {
+                cached.camera = overlays.camera;
+                cached.cameraGroup = gpu.device.createBindGroup({ layout: cached.pipeline.getBindGroupLayout(1), entries: [{ binding: 0, resource: { buffer: overlays.camera } }] });
+            }
+            pass.setBindGroup(1, requireNonNull(cached.cameraGroup));
+            if (this.anchorView !== overlays || this.anchorRevision !== overlays.revision || this.anchorEpoch !== gpu.epoch) {
+                this.anchorBuffer = this.upload(gpu, overlays.bytes);
+                this.anchorOffset = this.uploadOffset;
+                this.anchorView = overlays;
+                this.anchorRevision = overlays.revision;
+                this.anchorEpoch = gpu.epoch;
+            }
+            pass.setVertexBuffer(1, requireNonNull(this.anchorBuffer), this.anchorOffset, overlays.bytes.byteLength);
+        }
         pass.setViewport(0, 0, targets.width, targets.height, 0, 1);
-        pass.setScissorRect(clipX, clipY, clipWidth, clipHeight);
+        pass.setScissorRect(rect.x, rect.y, rect.width, rect.height);
+        const buffer = this.upload(gpu, bytes),
+            offset = this.uploadOffset;
         pass.drawImmediate(buffer, offset, bytes.byteLength, count);
     }
 
@@ -303,5 +338,6 @@ export default class ImmediateRenderer {
         this.pipelines.clear();
         this.previousPipeline = undefined;
         this.resources.length = 0;
+        this.anchorView = this.anchorBuffer = undefined;
     }
 }

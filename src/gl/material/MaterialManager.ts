@@ -4,6 +4,7 @@ import WrappedException from '#/util/WrappedException';
 import { arrayAtF32, arrayAtObj, arrayPutF32, arrayPutObj, requireNonNull } from '#/util/JavaArray';
 import NoiseTextures from '#/gl/NoiseTextures';
 import GlLighting from '#/gl/GlLighting';
+import GlRenderer from '#/gl/GlRenderer';
 import HighDetailWaterMaterial from './HighDetailWaterMaterial';
 import type MaterialRenderer from './MaterialRenderer';
 import ScrollingDetailMaterial from './ScrollingDetailMaterial';
@@ -154,6 +155,10 @@ export default class MaterialManager {
             }
             MaterialManager.current = material;
             MaterialManager.currentArgument = argument;
+        }
+        if (Preferences.enhancedGraphicsEnabled && (material === 2 || material === 4)) {
+            const sunlight = GlRenderer.stressDrawable?.currentTargets()?.worldSunlight;
+            if (sunlight) sunlight.waterRate = 1 << (argument & 3);
         }
     }
 

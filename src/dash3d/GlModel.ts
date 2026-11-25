@@ -13,6 +13,7 @@ import GlModelNormals from './GlModelNormals';
 import GlBuffer from '#/gl/GlBuffer';
 import GlLighting from '#/gl/GlLighting';
 import GlRenderer from '#/gl/GlRenderer';
+import SunlightMaps from '#/gl/driver/SunlightMaps';
 import MaterialManager from '#/gl/material/MaterialManager';
 import type { HdTextureProvider } from './TextureProvider';
 import { GL } from '#/jogl/GL';
@@ -702,6 +703,8 @@ export default class GlModel extends ModelLit {
 
     // td.a(IIIIIIIIJILga;)V
     draw(angle: number, sinPitch: number, cosPitch: number, sinYaw: number, cosYaw: number, x: number, y: number, z: number, typecode: bigint, _level: number, _particles: ParticleSystem | null): void {
+        const sun = SunlightMaps.active;
+        if (sun) sun.model(this, x + sun.eyeX, y + sun.eyeY, z + sun.eyeZ, angle, false);
         if (this.expandedVertexCount !== 0) {
             if (!requireNonNull(this.bounds).valid) {
                 this.calculateBounds();
@@ -3495,6 +3498,22 @@ export default class GlModel extends ModelLit {
         return requireNonNull(this.bounds).minX;
     }
 
+    prepareSunlightStreams(): void {
+        if (!this.positionStream?.valid || !this.colourStream?.valid || !this.uvStream?.valid) {
+            if (this.deferredUpdateMask !== 0) {
+                this.uploadVertices(
+                    true,
+                    !this.positionStream?.valid && (this.deferredUpdateMask & 1) !== 0,
+                    !this.colourStream?.valid && (this.deferredUpdateMask & 2) !== 0,
+                    this.normalStream !== null && !this.normalStream.valid && (this.deferredUpdateMask & 4) !== 0,
+                    false
+                );
+            }
+            this.uploadVertices(false, !this.positionStream?.valid, !this.colourStream?.valid, this.normalStream !== null && !this.normalStream.valid, !this.uvStream?.valid);
+        }
+        if (!this.indexStream?.valid) this.uploadIndices();
+    }
+
     // td.w()V
     private drawElements(): void {
         const var1: GL | null = GlRenderer.gl;
@@ -3601,6 +3620,8 @@ export default class GlModel extends ModelLit {
                 requireNonNull(var1).glBindBufferARB(34963, 0);
             }
             const var3: number = (requireNonNull(this.materialRuns).length - 1) | 0;
+            const enhanced = SunlightMaps.active;
+            const brightSpot = this === GlModel.tempSpotModel && this.ambient > 64;
             for (let var4: number = 0; var4 < var3; var4++) {
                 const var5: number = arrayAtI32(this.materialRuns, var4);
                 const var6: number = arrayAtI32(this.materialRuns, (var4 + 1) | 0);
@@ -3611,6 +3632,7 @@ export default class GlModel extends ModelLit {
                 } else {
                     requireNonNull(Pix3D.textureProvider as HdTextureProvider | null).bindTexture(var7 & 65535, true);
                 }
+                if (enhanced) enhanced.emissiveMaterial = MaterialManager.current === 6 || brightSpot;
                 if (requireNonNull(this.indexStream).vbo !== null) {
                     requireNonNull(var1).glDrawElements(4, Math.imul((var6 - var5) | 0, 3), 5125, faceRunByteOffsets[var5] ?? BigInt(Math.imul(var5, 12)));
                 } else {
@@ -3618,6 +3640,7 @@ export default class GlModel extends ModelLit {
                     requireNonNull(var1).glDrawElements(4, Math.imul((var6 - var5) | 0, 3), 5125, requireNonNull(this.indexStream).buffer);
                 }
             }
+            if (enhanced) enhanced.emissiveMaterial = false;
         }
     }
 

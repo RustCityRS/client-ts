@@ -697,7 +697,7 @@ export default class WebGpuGL implements GL {
             if (this.state.readBuffer === E.GL_FRONT || this.state.readBuffer === E.GL_FRONT_LEFT) {
                 // The next swap changes this source. This frame cannot be redrawn
                 // later using the same front-buffer binding.
-                targets.stopStress();
+                targets.discardRecording();
                 transferPixels(this.state, targets, host.front(), x, y, width, height, true, host.alphaBits === 0);
             } else {
                 // A self-copy must sample a snapshot, including when the rectangles overlap.

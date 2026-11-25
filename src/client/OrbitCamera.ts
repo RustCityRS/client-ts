@@ -24,6 +24,8 @@ export default class OrbitCamera {
     static yaw = 0;
     // pg.H:I
     static focusX = 0;
+    static focusY = 0;
+    static zoomScale = 256;
     // ai.f:I
     static focusZ = 0;
     // pd.s:I

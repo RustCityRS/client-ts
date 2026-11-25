@@ -1,4 +1,6 @@
 import { JavaError } from '#/util/JavaException';
+import type TextureCache from '#/dash3d/TextureCache';
+import type StaticPointLight from '#/dash3d/StaticPointLight';
 import { requireNonNull } from '#/util/JavaArray';
 import type { GL } from '#/jogl/GL';
 import GLCapabilities from '#/jogl/GLCapabilities';
@@ -110,6 +112,7 @@ export class WebGpuDrawable implements GLDrawable {
     private worldDrawDepth = 0;
     private sceneTargets: SurfaceTargets | null = null;
     private presenter: Presenter | null = null;
+    private pendingFront: GPUTexture | null = null;
     // Completed swaps (diagnostics).
     swaps = 0;
 
@@ -145,8 +148,33 @@ export class WebGpuDrawable implements GLDrawable {
         this.worldDrawDepth++;
     }
 
+    beginWorldSunlight(
+        x: number,
+        y: number,
+        z: number,
+        focusX: number,
+        focusY: number,
+        focusZ: number,
+        sun: Float32Array,
+        region: object | null,
+        textures: TextureCache | null,
+        level: number,
+        lights: (StaticPointLight | null)[] | null,
+        count: number
+    ): void {
+        const context = GLContext.getCurrent();
+        if (context instanceof WebGpuContext && context.drawable === this) {
+            const driver = context.driver();
+            this.surfaceTargets?.beginSunlight(driver, x, y, z, focusX, focusY, focusZ, sun, region, textures);
+            this.surfaceTargets?.captureBloomLights(driver.state, x, y, z, level, lights, count);
+        }
+    }
+
     endWorldDraw(): void {
-        if (--this.worldDrawDepth === 0) this.sceneTargets = null;
+        if (--this.worldDrawDepth === 0) {
+            this.surfaceTargets?.endSunlight();
+            this.sceneTargets = null;
+        }
     }
 
     // The drawable's buffers if a context has used them (tests read them back).
@@ -158,10 +186,23 @@ export class WebGpuDrawable implements GLDrawable {
         return this.presenter;
     }
 
-    replayStress(): boolean {
+    replayStress(gameDrawn = false, time = performance.now()): boolean {
         const t = this.surfaceTargets;
         if (!t || this.surface.width() !== t.width || this.surface.height() !== t.height) return false;
-        return t.replayStress(() => this.swapBuffers());
+        if (t.replayStress(() => this.swapBuffers(), time, gameDrawn)) {
+            t.presentationCamera?.markPresented(false);
+            return true;
+        }
+        // A new scene must still appear when its bundles cannot be reused (for
+        // example, a texture was retired). Never submit an unfinished game pass.
+        const presenter = this.presenter;
+        if (!this.pendingFront || this.pendingFront !== presenter?.front || t.gpu.lost) return false;
+        const encoder = t.gpu.device.createCommandEncoder();
+        presenter.present(encoder);
+        t.gpu.device.queue.submit([encoder.finish()]);
+        this.pendingFront = null;
+        t.presentationCamera?.markPresented(true);
+        return true;
     }
 
     // javax.media.opengl.GLDrawable.createContext(Ljavax/media/opengl/GLContext;)Ljavax/media/opengl/GLContext;
@@ -174,6 +215,7 @@ export class WebGpuDrawable implements GLDrawable {
     // unrealize drawables whose contexts are already destroyed). The window's front buffer stays with the Presenter.
     setRealized(realized: boolean): void {
         this.realized = realized;
+        if (!realized) this.pendingFront = null;
         if (!realized && this.surfaceTargets !== null) {
             const targets = this.surfaceTargets;
             targets.dispose();
@@ -184,6 +226,14 @@ export class WebGpuDrawable implements GLDrawable {
 
     // javax.media.opengl.GLDrawable.swapBuffers()V
     swapBuffers(): void {
+        this.swap(true);
+    }
+
+    submitEnhancedSource(): void {
+        this.swap(false);
+    }
+
+    private swap(display: boolean): void {
         const t = this.surfaceTargets;
         const p = this.presenter;
         if (t === null || p === null) return; // no context has drawn into this drawable yet
@@ -191,10 +241,12 @@ export class WebGpuDrawable implements GLDrawable {
         if (gpu.lost) throw new GLException('WebGPU device lost: ' + gpu.lostMessage);
         const front = p.ensureFront(t.width, t.height);
         t.copyTo(front);
-        p.present();
-        if (gpu.hasRetiredResources) t.stopStress();
+        if (display) p.present();
+        else t.latchEnhancedSource(performance.now());
+        if (gpu.hasRetiredResources) t.discardRecording();
         gpu.submit();
         t.finishStress();
+        this.pendingFront = display ? null : front;
         this.swaps++;
     }
 }
