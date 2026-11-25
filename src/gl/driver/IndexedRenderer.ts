@@ -9,7 +9,7 @@ import { glBoxToRect } from './SurfaceTargets';
 import type WebGpuGL from './WebGpuGL';
 import type { BufferObject } from './BufferObject';
 import type { WebGpuGLHost } from './WebGpuGL';
-import { indexedShader, type IndexedStage } from '#/gl/driver/shaders/indexed.wgsl';
+import { indexedShader, type IndexedStage } from '#/gl/driver/shaders/indexedShader';
 import TextureBindingCache from './TextureBindingCache';
 import { loginMaterial, loginPipelinePairs, loginVertexLayouts } from './LoginPipelines';
 import { ClientVertexRanges, includeClientPointer } from './ClientVertexRange';

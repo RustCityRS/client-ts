@@ -1,6 +1,6 @@
 import { GLX as E } from './GlEnums';
 import GlState from './GlState';
-import type { IndexedStage } from '#/gl/driver/shaders/indexed.wgsl';
+import type { IndexedStage } from '#/gl/driver/shaders/indexedShader';
 import type { BaseFormat } from './TextureObject';
 
 // Captured from the original runescape_gl.jar title.19 trace, the cached title scene at tick 120

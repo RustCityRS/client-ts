@@ -2,7 +2,7 @@ import { GLX as E, GlUnsupported } from './GlEnums';
 import type GlState from './GlState';
 import GpuDevice, { COLOR_FORMAT, DEPTH_FORMAT } from './GpuDevice';
 import SurfaceTargets, { glBoxToRect } from './SurfaceTargets';
-import { pixelTransferWgsl } from '#/gl/driver/shaders/pixelTransfer.wgsl';
+import pixelTransferWgsl from '#/gl/driver/shaders/pixelTransfer.wgsl' with { type: 'text' };
 
 // glDrawPixels (dj.a) and glCopyPixels (tf.h) both disable alpha, blend and depth testing. The GL window-space
 // raster position and zoom select a rectangle of fragments. GL client-data row zero is the bottom source row;

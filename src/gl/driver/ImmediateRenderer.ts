@@ -7,7 +7,7 @@ import { glBoxToRect } from './SurfaceTargets';
 import TextureBindingCache from './TextureBindingCache';
 import type WebGpuGL from './WebGpuGL';
 import type { WebGpuGLHost } from './WebGpuGL';
-import { immediateShader, type ImmediateStage } from '#/gl/driver/shaders/immediate.wgsl';
+import { immediateShader, type ImmediateStage } from '#/gl/driver/shaders/immediateShader';
 
 const STRIDE = 12;
 const CHUNK_SIZE = 1024 * 1024;

@@ -3773,6 +3773,7 @@ export default class Client extends GameShell {
                     const pending = (runner ?? new ScriptRunner(ClientScript.Get)).run(event);
                     if (pending instanceof Promise) yield pending;
                 }
+                if (Client.activeClient?.standaloneWorldMap) return;
                 let send = true;
                 if (c.clientCode > 0) send = Client.ClientButton(c);
                 if (send && Client.GetActive(c).isOpEnabled((op - 1) | 0)) {
@@ -6215,7 +6216,7 @@ export default class Client extends GameShell {
             else TitleScreen.Close();
             const wasAtTitle = Client.gameState === 5 || Client.gameState === 10 || Client.gameState === 28;
             if (atTitle !== wasAtTitle) {
-                if (atTitle) {
+                if (atTitle && !Client.activeClient?.standaloneWorldMap) {
                     Client.midiSong = Client.titleSong;
                     if (Preferences.musicVolume !== 0) {
                         if (glJar) {
@@ -6223,7 +6224,7 @@ export default class Client extends GameShell {
                             MidiManager.Play(255, 2, Client.m_pMidi, false, song, 0);
                         } else MidiManager.Play(255, 2, Client.m_pMidi, false, Client.titleSong, 0);
                     } else MidiManager.Stop(2);
-                } else MidiManager.Stop(2);
+                } else if (!atTitle) MidiManager.Stop(2);
                 requireNonNull(Client.js5NetQueue).setLoggedIn(!atTitle);
             }
             if (glJar) {
@@ -8632,6 +8633,7 @@ export default class Client extends GameShell {
     private readonly login = new Login();
     private pendingLoginSession: GameSession | null = null;
     ui?: InterfaceSession;
+    protected standaloneWorldMap = false;
     static loadingStage = 0; // bh.b:I
     static loadingComplete = false; // qf.f:Z
     static windowModeRefreshTime = 0n; // oa.a:J
@@ -8998,7 +9000,7 @@ export default class Client extends GameShell {
     static OpenJs5(discardPacked: boolean, prefetch: boolean, id: number, discardUnpacked: boolean): Js5 {
         const groupStore = Client.cacheData !== null ? new DataFile(id, Client.cacheData, arrayAtObj(Client.cacheIndexFiles, id), 1000000) : browserDiskStore(Client.browserCache, id);
         arrayPutObj(Client.js5Providers, id, requireNonNull(Client.js5MasterIndex).getProvider(id, Client.masterIndexStore, groupStore));
-        if (prefetch) requireNonNull(arrayAtObj(Client.js5Providers, id)).prefetchAll();
+        if (prefetch && !Client.activeClient?.standaloneWorldMap) requireNonNull(arrayAtObj(Client.js5Providers, id)).prefetchAll();
         return new Js5(requireNonNull(arrayAtObj(Client.js5Providers, id)), discardPacked, discardUnpacked);
     }
 
@@ -9135,7 +9137,7 @@ export default class Client extends GameShell {
         canvas.addEventListener(
             'pointerdown',
             event => {
-                this.audio.unlock();
+                if (!this.standaloneWorldMap) this.audio.unlock();
                 if (event.pointerType === 'mouse') touchControls.mouseDown();
                 if (!keyboardSurface.isMobileKeyboardDisplayed()) canvas.focus({ preventScroll: true });
             },
@@ -9143,7 +9145,7 @@ export default class Client extends GameShell {
         );
         window.addEventListener('focus', () => this.focusGained(), options);
         window.addEventListener('blur', () => this.focusLost(), options);
-        canvas.addEventListener('keydown', () => this.audio.unlock(), options);
+        if (!this.standaloneWorldMap) canvas.addEventListener('keydown', () => this.audio.unlock(), options);
         window.addEventListener(
             'pagehide',
             event => {
@@ -9254,7 +9256,7 @@ export default class Client extends GameShell {
                         const assets = requireNonNull(client.assets);
                         const view = new InterfaceView([]);
                         client.ui = new InterfaceSession(view, assets);
-                        InterfaceList.top = Client.loginScreenInterface;
+                        InterfaceList.top = client.standaloneWorldMap ? requireNonNull(Client.interfacesArchive).GetGroupId(fromLiteral('worldmap')) : Client.loginScreenInterface;
                         Client.InterfaceCalculateSizeAndPosAll(false);
                         InterfaceList.redrawAll();
                         const loaded = ScriptRunner.OnLoad(InterfaceList.top, client.ui.runner);
@@ -9270,6 +9272,12 @@ export default class Client extends GameShell {
                     } else {
                         requireNonNull(Client.localPlayer).x = 3000;
                         requireNonNull(Client.localPlayer).z = 3000;
+                    }
+                    if (client.standaloneWorldMap) {
+                        // This control sends IF_CLOSE to the world in a logged-in session.
+                        requireNonNull(IfType.Get((InterfaceList.top << 16) | 3)).hidden = true;
+                        Client.SetMainState(10);
+                        return;
                     }
                     if (glJar && GlRendererClass.active) {
                         if (OrbitCamera.mode === 2) {
@@ -9607,6 +9615,10 @@ export default class Client extends GameShell {
                     TitleScreen.m_loadPos = 20;
                     TitleScreen.m_loadString = LocalisedText.loadedUpdateList;
                     Client.lookupSpriteGroupIds(Client.m_pSprites);
+                    if (this.standaloneWorldMap) {
+                        Client.loadingStage = 50;
+                        break;
+                    }
                     Client.loadTitleGroupIds(Client.m_pSprites);
                     Client.findRunesSpriteGroup(Client.m_pSprites);
                     Client.loadingStage = 45;
@@ -9643,7 +9655,7 @@ export default class Client extends GameShell {
                 } else {
                     if (glJar) TitleScreen.m_loadString = LocalisedText.loadedFonts;
                     TitleScreen.m_loadPos = 35;
-                    Client.loadingStage = 60;
+                    Client.loadingStage = this.standaloneWorldMap ? 65 : 60;
                     if (!glJar) TitleScreen.m_loadString = LocalisedText.loadedFonts;
                 }
                 break;
@@ -9669,7 +9681,7 @@ export default class Client extends GameShell {
                 if (!glJar) TitleScreen.m_loadString = LocalisedText.openedTitleScreen;
                 TitleScreen.m_loadPos = 45;
                 if (glJar) TitleScreen.m_loadString = LocalisedText.openedTitleScreen;
-                Client.SetMainState(5);
+                if (!this.standaloneWorldMap) Client.SetMainState(5);
                 Client.loadingStage = 70;
                 break;
             }
@@ -9785,7 +9797,7 @@ export default class Client extends GameShell {
                     if (Preferences.brightness === 3) Pix3D.setBrightness(0.7);
                     if (Preferences.brightness === 4) Pix3D.setBrightness(0.6);
                     TitleScreen.m_loadString = LocalisedText.loadedTextures;
-                    Client.loadingStage = 100;
+                    Client.loadingStage = this.standaloneWorldMap ? 130 : 100;
                     TitleScreen.m_loadPos = 70;
                 }
                 break;
@@ -9829,6 +9841,13 @@ export default class Client extends GameShell {
                     TitleScreen.m_loadPos = 85;
                 } else {
                     WorldMap.init(Client.imageMapfunction, Client.worldMapArchive);
+                    if (this.standaloneWorldMap) {
+                        // Supply worldmap_focus to the map's onload using the surface map's own origin.
+                        const surface = requireNonNull(MapArea.get(fromLiteral('main')));
+                        DelayedStateChange.varcs[622] = ((surface.originX << 6) << 14) | (surface.originZ << 6);
+                        await this.resetToTitle(true);
+                        break;
+                    }
                     TitleScreen.m_loadPos = 95;
                     if (!glJar) Client.loadingStage = 135;
                     TitleScreen.m_loadString = LocalisedText.loadedInterfaces;
@@ -10851,7 +10870,9 @@ export default class Client extends GameShell {
                 }
                 Client.transmitCycle = (Client.transmitCycle + 1) | 0;
                 // HD client.d(B)V @ the title, before queued interface hooks.
-                if (glJar && GlRendererClass.active) {
+                if (client.standaloneWorldMap) {
+                    if (WorldMap.component !== null) WorldMap.tick();
+                } else if (glJar && GlRendererClass.active) {
                     const blocked = 19137023;
                     npcs: for (let i = 0; i < 32768; i++) {
                         const npc = arrayAtObj(Client.npcs, i);
@@ -11264,6 +11285,11 @@ export default class Client extends GameShell {
                 case 10: {
                     const hooks = this.titleLoop();
                     if (hooks instanceof Promise) await hooks;
+                    if (this.standaloneWorldMap) {
+                        const menu = Minimenu.GameLoop(this.ui);
+                        if (menu instanceof Promise) await menu;
+                        break;
+                    }
                     if (this.closed) return;
                     await AccountCreation.loop(); // hi.a(I)V
                     if (this.closed) return;
@@ -11799,6 +11825,7 @@ export default class Client extends GameShell {
 
     // SD client.d(I)V, HD client.f(I)V
     protected MainRedraw(): void | Promise<void> {
+        if (this.standaloneWorldMap && Client.gameState === 0) return;
         return runToCompletion(this.redraw());
     }
 
@@ -11896,7 +11923,8 @@ export default class Client extends GameShell {
             } else if (Client.gameState === 5) {
                 TitleScreen.Draw(-1, Client.fontBold12, false);
             } else if (Client.gameState === 10) {
-                Client.drawGame(-54);
+                if (this.standaloneWorldMap) Client.GameDraw(glJar ? 0 : 120);
+                else Client.drawGame(-54);
             } else if (Client.gameState === 25 || Client.gameState === 28) {
                 if (Client.sceneState === 1) {
                     if (Client.mapLoadingTotal < Client.mapFilesMissing) Client.mapLoadingTotal = Client.mapFilesMissing;

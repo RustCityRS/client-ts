@@ -14,7 +14,6 @@ if (process.argv[2] === 'majula') {
     if (!fs.statSync(majulaPublic, { throwIfNoEntry: false })?.isDirectory()) throw new Error(`Missing Majula public directory: ${majulaPublic}`);
 }
 const define: Record<string, string> = {
-    RS530_DEV_LAUNCHER: JSON.stringify(!production),
     'process.env.RS530_GZIP_WASM': JSON.stringify(fs.readFileSync('src/3rdparty/js5-zlib/js5-inflate.wasm').toString('base64')),
     'process.env.RS530_BZIP_WASM': JSON.stringify(fs.readFileSync('src/3rdparty/js5-bzip/js5-bzip.wasm').toString('base64')),
     'process.env.RS530_GAMEPACK_IDENTITY': JSON.stringify('gl'),

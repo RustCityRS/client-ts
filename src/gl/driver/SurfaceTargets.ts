@@ -1,9 +1,8 @@
 /// <reference types="@webgpu/types" />
-import GpuDevice, { COLOR_FORMAT, DEPTH_FORMAT, type PassOwner } from './GpuDevice';
+import GpuDevice, { CLEAR_UNIFORM_BYTES, COLOR_FORMAT, DEPTH_FORMAT, type PassOwner } from './GpuDevice';
 import DrawPass from './DrawPass';
 import StressRenderPass from './StressRenderPass';
 import PresentationCamera from './PresentationCamera';
-import { CLEAR_UNIFORM_BYTES } from '#/gl/driver/shaders/clear.wgsl';
 
 // SurfaceTargets: a GL drawable's back colour buffer and depth buffer on WebGPU (HD_PLAN 2.3 clear row, 2.4 swap and
 // MSAA rows). Host code, not a Java port.
@@ -253,7 +252,7 @@ export default class SurfaceTargets implements PassOwner {
         this.width = this.height = 0;
     }
 
-    // A clear honouring a scissor rect and the masks (shaders/clear.wgsl.ts).
+    // A clear honouring a scissor rect and the masks (shaders/clear.wgsl).
     clearQuad(rect: Rect, color: Float32Array, depth: number, colorWrite: boolean, depthWrite: boolean): void {
         const pass = this.currentPass();
         const params = new Float32Array(CLEAR_UNIFORM_BYTES / 4);

@@ -1,5 +1,5 @@
 import type { SdRasterFrame } from './SdRasterSpans';
-import { sdRasterShader } from '#/gl/driver/shaders/sdRaster.wgsl';
+import sdRasterShader from '#/gl/driver/shaders/sdRaster.wgsl' with { type: 'text' };
 import { requireNonNull } from '#/util/JavaArray';
 
 const pipelines = new WeakMap<GPUDevice, Promise<GPUComputePipeline>>();

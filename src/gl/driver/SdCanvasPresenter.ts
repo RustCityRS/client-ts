@@ -1,5 +1,5 @@
 /// <reference types="@webgpu/types" />
-import { sdCanvasPresentWgsl } from '#/gl/driver/shaders/sdCanvasPresent.wgsl';
+import sdCanvasPresentWgsl from '#/gl/driver/shaders/sdCanvasPresent.wgsl' with { type: 'text' };
 
 export interface SdCanvasRectangle {
     readonly x: number;

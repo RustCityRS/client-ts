@@ -1,7 +1,7 @@
 /// <reference types="@webgpu/types" />
-import { CLEAR_UNIFORM_BYTES, clearWgsl } from '#/gl/driver/shaders/clear.wgsl';
-import { depthReadWgsl } from '#/gl/driver/shaders/depthRead.wgsl';
-import { presentWgsl } from '#/gl/driver/shaders/present.wgsl';
+import clearWgsl from '#/gl/driver/shaders/clear.wgsl' with { type: 'text' };
+import depthReadWgsl from '#/gl/driver/shaders/depthRead.wgsl' with { type: 'text' };
+import presentWgsl from '#/gl/driver/shaders/present.wgsl' with { type: 'text' };
 import { type SamplerKey, samplerDescriptor, samplerKeyString } from './TextureObject';
 
 // GpuDevice: the one GPUDevice of the page (HD_PLAN 1.4 "Device at boot"). Host code, not a Java port.
@@ -32,6 +32,7 @@ interface DrawUpload {
 
 export const DEPTH_FORMAT: GPUTextureFormat = 'depth24plus';
 export const COLOR_FORMAT: GPUTextureFormat = 'rgba8unorm';
+export const CLEAR_UNIFORM_BYTES = 32;
 
 export default class GpuDevice {
     private static active: GpuDevice | null = null;
@@ -325,7 +326,7 @@ export default class GpuDevice {
         return g;
     }
 
-    // The clear-quad pipeline for (sample count, colour write, depth write). See shaders/clear.wgsl.ts.
+    // The clear-quad pipeline for (sample count, colour write, depth write). See shaders/clear.wgsl.
     clearPipeline(sampleCount: number, colorWrite: boolean, depthWrite: boolean): GPURenderPipeline {
         const key = 'clear:' + sampleCount + ':' + colorWrite + ':' + depthWrite;
         let p = this.pipelines.get(key);
@@ -366,7 +367,8 @@ export default class GpuDevice {
         const key = 'depth-read:' + multisampled;
         let p = this.computePipelines.get(key);
         if (p === undefined) {
-            const module = this.device.createShaderModule({ label: key, code: depthReadWgsl(multisampled) });
+            const code = multisampled ? depthReadWgsl.replace('texture_depth_2d', 'texture_depth_multisampled_2d') : depthReadWgsl;
+            const module = this.device.createShaderModule({ label: key, code });
             p = this.device.createComputePipeline({ label: key, layout: 'auto', compute: { module, entryPoint: 'main' } });
             this.computePipelines.set(key, p);
         }

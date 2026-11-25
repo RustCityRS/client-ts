@@ -5,7 +5,7 @@
 //
 // Orientation: the driver keeps GL window row y at texture row (height - 1 - y), which is the row order WebGPU
 // rasterizes GL clip space into. The front texture is therefore already top-down and the blit does not flip.
-export const presentWgsl = /* wgsl */ `
+
 @group(0) @binding(0) var src: texture_2d<f32>;
 
 @vertex
@@ -19,4 +19,3 @@ fn fs(@builtin(position) pos: vec4f) -> @location(0) vec4f {
     let c = textureLoad(src, vec2i(pos.xy), 0);
     return vec4f(c.rgb, 1.0);
 }
-`;

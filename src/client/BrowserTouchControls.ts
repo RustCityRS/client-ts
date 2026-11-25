@@ -44,6 +44,7 @@ export default class BrowserTouchControls implements TouchControls {
 
     area(x: number, y: number): TouchArea {
         this.touched = true;
+        if (Client.gameState === 10 && InterfaceList.top === 755) return 'interface';
         if (Client.gameState !== 30 || !this.client.ui || Minimenu.isOpen) return 'other';
         const mounts = InterfaceList.subInterfaces;
         // The fixed gameframe has one main modal slot. The resizable gameframe has two.

@@ -1,4 +1,3 @@
-export const sdCanvasPresentWgsl = /* wgsl */ `
 struct Vertex {
     @builtin(position) position: vec4f,
     @location(0) @interpolate(flat) stride: u32,
@@ -11,4 +10,4 @@ struct Vertex {
 @fragment fn fragment(v: Vertex) -> @location(0) vec4f {
     let rgb = pixels[u32(v.position.y) * v.stride + u32(v.position.x)];
     return vec4f(vec4u((rgb >> 16u) & 255u, (rgb >> 8u) & 255u, rgb & 255u, 255u)) / 255.0;
-}`;
+}

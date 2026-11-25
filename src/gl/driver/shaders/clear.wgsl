@@ -5,9 +5,7 @@
 // depth writes only for DEPTH_BUFFER_BIT with DepthMask(true). The scissor rect is set to the GL scissor box.
 //
 // Uniform layout (32 bytes, one dynamic-offset slot per clear): color vec4f at 0, depth f32 at 16.
-export const CLEAR_UNIFORM_BYTES = 32;
 
-export const clearWgsl = /* wgsl */ `
 struct ClearParams {
     color: vec4f,
     depth: f32,
@@ -33,4 +31,3 @@ fn fs() -> ClearOut {
     out.depth = params.depth;
     return out;
 }
-`;

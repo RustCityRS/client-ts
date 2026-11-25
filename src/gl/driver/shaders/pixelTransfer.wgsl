@@ -1,4 +1,3 @@
-export const pixelTransferWgsl = /* wgsl */ `
 struct Transfer {
     rasterZoom: vec4f,
     sourceRect: vec4i,
@@ -24,4 +23,4 @@ struct Transfer {
     if (any(pos < vec2i(0)) || any(pos >= vec2i(textureDimensions(source)))) { discard; }
     let rgba = textureLoad(source,pos,0);
     return vec4f(rgba.rgb,select(rgba.a,1.0,transfer.surface.w != 0));
-}`;
+}
