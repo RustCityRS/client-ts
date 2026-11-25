@@ -15,10 +15,10 @@ runs:
         - uses: actions/setup-java@v5
           with:
               distribution: temurin
-              # Pack200 needs JDK 8. The final entry is the active JDK for javac/java.
+              # Pack200 needs JDK 8. The Windows AWT pixel fixtures were captured on Temurin 21.0.7+6.
               java-version: |
                   8
-                  21
+                  ${{ runner.os == 'Windows' && '21.0.7+6' || '21' }}
         - run: bun install --frozen-lockfile
           shell: bash
         - uses: actions/cache@v5

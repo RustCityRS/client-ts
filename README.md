@@ -23,7 +23,7 @@ bunx prettier --check src
 
 ## Client tests
 
-The suite compares the TypeScript client with the stock 530 gamepacks and cache. CI uses Bun 1.2.14, Node 24, Python 3.12 and JDK 21. The reference helper uses JDK 8 to unpack the archived HD gamepack on Windows or Linux x64. The full local suite requires Windows x64, Chrome, and a GPU with WebGPU and native OpenGL 2× and 4× multisampling.
+The suite compares the TypeScript client with the stock 530 gamepacks and cache. CI uses Bun 1.2.14, Node 24, Python 3.12 and JDK 21. On Windows, use Temurin `21.0.7+6` for `java` and `javac` to match the AWT glyph pixels captured for the client. The reference helper uses JDK 8 to unpack the archived HD gamepack on Windows or Linux x64. The full local suite requires Windows x64, Chrome, and a GPU with WebGPU and native OpenGL 2× and 4× multisampling.
 
 Prepare the reference inputs once from Bash.
 
