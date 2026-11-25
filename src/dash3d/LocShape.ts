@@ -1,42 +1,5 @@
-import { LocLayer } from '#/dash3d/LocLayer.js';
-
-export const enum LocShape {
-    WALL_STRAIGHT = 0,
-    WALL_DIAGONAL_CORNER = 1,
-    WALL_L = 2,
-    WALL_SQUARE_CORNER = 3,
-
-    WALLDECOR_STRAIGHT_NOOFFSET = 4,
-    WALLDECOR_STRAIGHT_OFFSET = 5,
-    WALLDECOR_DIAGONAL_OFFSET = 6,
-    WALLDECOR_DIAGONAL_NOOFFSET = 7,
-    WALLDECOR_DIAGONAL_BOTH = 8,
-
-    WALL_DIAGONAL = 9,
-    CENTREPIECE_STRAIGHT = 10,
-    CENTREPIECE_DIAGONAL = 11,
-    ROOF_STRAIGHT = 12,
-    ROOF_DIAGONAL_WITH_ROOFEDGE = 13,
-    ROOF_DIAGONAL = 14,
-    ROOF_L_CONCAVE = 15,
-    ROOF_L_CONVEX = 16,
-    ROOF_FLAT = 17,
-    ROOFEDGE_STRAIGHT = 18,
-    ROOFEDGE_DIAGONAL_CORNER = 19,
-    ROOFEDGE_L = 20,
-    ROOFEDGE_SQUARE_CORNER = 21,
-
-    GROUND_DECOR = 22,
+// Loc shape tables, gathered from scattered statics by the member map.
+export default class LocShape {
+    // th.e:[I. The scene layer each of the 23 loc shapes occupies: 0 wall, 1 wall decor, 2 scenery, 3 ground decor.
+    static readonly shapeToLayer: Int32Array = Int32Array.of(0, 0, 0, 0, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 3);
 }
-
-export const LOC_SHAPE_TO_LAYER = [
-    LocLayer.WALL, LocLayer.WALL, LocLayer.WALL, LocLayer.WALL,
-
-    LocLayer.WALL_DECOR, LocLayer.WALL_DECOR, LocLayer.WALL_DECOR, LocLayer.WALL_DECOR, LocLayer.WALL_DECOR,
-
-    LocLayer.GROUND, LocLayer.GROUND, LocLayer.GROUND, LocLayer.GROUND, LocLayer.GROUND, LocLayer.GROUND,
-    LocLayer.GROUND, LocLayer.GROUND, LocLayer.GROUND, LocLayer.GROUND, LocLayer.GROUND, LocLayer.GROUND,
-    LocLayer.GROUND,
-
-    LocLayer.GROUND_DECOR
-];

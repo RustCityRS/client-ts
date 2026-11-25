@@ -1,62 +1,71 @@
-import Packet from '#/io/Packet.js';
+import type PacketT from '#/io/PacketT';
+import { arrayAtI32 } from '#/util/JavaArray';
+import { intDivide, doubleToInt } from '#/util/IntUtils';
 
 export default class Envelope {
-    length: number = 0;
-    shapeDelta: Int32Array = new Int32Array(0);
-    shapePeak: Int32Array = new Int32Array(0);
-
-    start: number = 0;
-    end: number = 0;
-    form: number = 0;
-    threshold: number = 0;
-    position: number = 0;
-    delta: number = 0;
-    amplitude: number = 0;
-    ticks: number = 0;
-
-    load(buf: Packet): void {
-        this.form = buf.g1();
-        this.start = buf.g4();
-        this.end = buf.g4();
-
-        this.loadPoints(buf);
+    // eb.a:I
+    start = 0;
+    // eb.b:I
+    form = 0;
+    // eb.c:I
+    end = 0;
+    // eb.d:[I
+    private peaks: Int32Array;
+    // eb.e:I
+    private length = 2;
+    // eb.f:[I
+    private durations = new Int32Array(2);
+    // eb.g:I
+    private amplitude = 0;
+    // eb.h:I
+    private threshold = 0;
+    // eb.i:I
+    private step = 0;
+    // eb.j:I
+    private segment = 0;
+    // eb.k:I
+    private ticks = 0;
+    // eb.<init>()V
+    constructor() {
+        this.peaks = new Int32Array(2);
+        this.durations[1] = 65535;
+        this.peaks[1] = 65535;
     }
-
-    loadPoints(buf: Packet) {
-        this.length = buf.g1();
-        this.shapeDelta = new Int32Array(this.length);
-        this.shapePeak = new Int32Array(this.length);
-
-        for (let i = 0; i < this.length; i++) {
-            this.shapeDelta[i] = buf.g2();
-            this.shapePeak[i] = buf.g2();
-        }
-    }
-
-    genInit(): void {
+    // eb.a()V
+    GenInit(): void {
         this.threshold = 0;
-        this.position = 0;
-        this.delta = 0;
+        this.segment = 0;
+        this.step = 0;
         this.amplitude = 0;
         this.ticks = 0;
     }
-
-    genNext(delta: number): number {
-        if (this.ticks >= this.threshold) {
-            this.amplitude = this.shapePeak[this.position++] << 15;
-
-            if (this.position >= this.length) {
-                this.position = this.length - 1;
-            }
-
-            this.threshold = ((this.shapeDelta[this.position] / 65536.0) * delta) | 0;
-            if (this.threshold > this.ticks) {
-                this.delta = (((this.shapePeak[this.position] << 15) - this.amplitude) / (this.threshold - this.ticks)) | 0;
-            }
+    // eb.a(Lgd;)V
+    Load(p: PacketT): void {
+        this.form = p.g1();
+        this.start = p.g4();
+        this.end = p.g4();
+        this.LoadPoints(p);
+    }
+    // eb.b(Lgd;)V
+    LoadPoints(p: PacketT): void {
+        this.length = p.g1();
+        this.durations = new Int32Array(this.length);
+        this.peaks = new Int32Array(this.length);
+        for (let i = 0; i < this.length; i++) {
+            this.durations[i] = p.g2();
+            this.peaks[i] = p.g2();
         }
-
-        this.amplitude += this.delta;
-        this.ticks++;
-        return (this.amplitude - this.delta) >> 15;
+    }
+    // eb.a(I)I
+    GenNext(total: number): number {
+        if (this.ticks >= this.threshold) {
+            this.amplitude = arrayAtI32(this.peaks, this.segment++) << 15;
+            if (this.segment >= this.length) this.segment = this.length - 1;
+            this.threshold = doubleToInt((this.durations[this.segment] / 65536.0) * total);
+            if (this.threshold > this.ticks) this.step = intDivide(((this.peaks[this.segment] << 15) - this.amplitude) | 0, (this.threshold - this.ticks) | 0);
+        }
+        this.amplitude = (this.amplitude + this.step) | 0;
+        this.ticks = (this.ticks + 1) | 0;
+        return (this.amplitude - this.step) >> 15;
     }
 }

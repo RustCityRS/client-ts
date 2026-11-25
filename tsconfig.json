@@ -1,4 +1,6 @@
 {
+    "include": ["src/**/*", "*.ts", "*.js"],
+    "exclude": ["node_modules", "out", "3rdparty"],
     "compilerOptions": {
         "lib": ["ESNext", "DOM"],
         "target": "ESNext",
@@ -6,10 +8,10 @@
         "moduleDetection": "force",
         "allowJs": true,
 
-        "baseUrl": "src",
+        "types": ["bun"],
         "paths": {
-            "#3rdparty/*": ["3rdparty/*"],
-            "#/*": ["*"]
+            "#3rdparty/*": ["./src/3rdparty/*"],
+            "#/*": ["./src/*"]
         },
 
         "moduleResolution": "bundler",

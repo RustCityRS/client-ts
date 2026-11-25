@@ -1,2906 +1,3484 @@
-import Pix2D from '#/graphics/Pix2D.js';
-import Pix8 from '#/graphics/Pix8.js';
+import Pix2D from '#/graphics/Pix2D';
+import { bitCeil, doubleToInt, intDivide, intRemainder } from '#/util/IntUtils';
+import { arrayAtI32, arrayPutI32, arrayPutU8, requireNonNull } from '#/util/JavaArray';
+import { mathRandom } from '#/util/JavaRandom';
+import type SdRasterSpans from './SdRasterSpans';
+import type TextureProvider from './TextureProvider';
 
-import JagFile from '#/io/JagFile.js';
-import { Int32Array2d, TypedArray1d } from '#/util/Arrays.js';
+// dc in the revision 530 SD gamepack: the static software triangle rasterizer.
+// It draws flat, Gouraud (through the HSL colour table) and perspective-textured
+// triangles into Pix2D.pixels, one scanline call per row. The obfuscator left this
+// class clean (no counters, dummy arguments or wrappers). The four clip mirrors
+// oj.j/vf.X/p.l/fl.m live in other classes in the JAR and are written only here.
+//
+// Locals keep the decompiler's varN names, so every method can be diffed against
+// dc.java line by line. Block layout follows the bytecode where the decompiler
+// restructured it: the guards compiled as `if (...) return;` stay early returns, and
+// the twelve `a != b && s < t || a == b && s > u` edge-order tests keep their original
+// condition and arm order (dc.java negates them and swaps the arms).
+// Int arithmetic is Java's: Math.imul for *, | 0 after + and -,
+// (a / b) | 0 for / (each divisor below is provably non-zero unless intDivide is used),
+// and arrayAt/arrayPut wherever Java's iaload/iastore could throw.
+export default class Pix3D {
+    // Optional WebGPU backend at the four dc scanline boundaries.
+    static spanTarget: SdRasterSpans | null = null;
 
-export default class Pix3D extends Pix2D {
-    static lowMem: boolean = false;
+    // Static fields in dc.<clinit> store order.
+
+    // dc.c:[I
+    private static divTable: Int32Array | null = new Int32Array(512);
+    // dc.a:Z
     static lowDetail: boolean = true;
-
-    static divTable: Int32Array = new Int32Array(512);
-    static divTable2: Int32Array = new Int32Array(2048);
-    static sinTable: Int32Array = new Int32Array(2048);
-    static cosTable: Int32Array = new Int32Array(2048);
-    static colourTable: Int32Array = new Int32Array(65536);
-
-    static textures: (Pix8 | null)[] = new TypedArray1d(50, null);
-    private static texTrans: boolean[] = new TypedArray1d(50, false);
-    private static texAverage: Int32Array = new Int32Array(50);
-    static activeTexels: (Int32Array | null)[] = new TypedArray1d(50, null);
-    static texCycle: Int32Array = new Int32Array(50);
-    static texPal: (Int32Array | null)[] = new TypedArray1d(50, null);
-    static numTextures: number = 0;
-    static originX: number = 0;
-    static originY: number = 0;
-    static texelPool: (Int32Array | null)[] | null = null;
-    static poolSize: number = 0;
+    // dc.h:Z
+    static textureFallback: boolean = false;
+    // dc.g:[I
+    static cosTable: Int32Array | null = new Int32Array(2048);
+    // dc.k:[I
+    static divTable2: Int32Array | null = new Int32Array(2048);
+    // dc.m:Z
+    private static lowMemTexture: boolean = false;
+    // dc.n:Z
     private static opaque: boolean = false;
-
-    static cycle: number = 0;
-    static scanline: Int32Array = new Int32Array();
-    static hclip: boolean = false;
+    // dc.l:[I
+    static sinTable: Int32Array | null = new Int32Array(2048);
+    // dc.d:[I
+    private static scanline: Int32Array | null = new Int32Array(1024);
+    // dc.e:I
     static trans: number = 0;
+    // dc.o:[I
+    static colourTable: Int32Array | null = new Int32Array(65536);
+    // dc.i:F
+    private static brightness: number = 1.0;
 
+    // Read access for the legacy renderer bridge (scene/RasterTables.ts). Not in dc, where i stays private.
+    static get legacyBrightness(): number {
+        return Pix3D.brightness;
+    }
+
+    // The stress profile can restore the exact palette without consuming another Java random value.
+    static setRenderBrightness(brightness: number): void {
+        if (Pix3D.brightness === Math.fround(brightness)) return;
+        Pix3D.brightness = Math.fround(brightness);
+        Pix3D.initColourTable(0, 512);
+    }
+    // dc.j:Z
+    static hclip: boolean = false;
+
+    // Not stored by dc.<clinit>.
+
+    // dc.b:I
+    static originY: number = 0;
+    // dc.f:I
+    static originX: number = 0;
+    // dc.p:I
+    static width: number = 0;
+    // dc.q:I
+    private static height: number = 0;
+    // dc.r:Lpc;
+    static textureProvider: TextureProvider | null = null;
+    // oj.j:I
+    static clipMinX: number = 0;
+    // vf.X:I
+    static clipMaxX: number = 0;
+    // p.l:I
+    static clipMinY: number = 0;
+    // fl.m:I
+    static clipMaxY: number = 0;
+
+    // The loops that follow the field stores in the static initializer.
+    // dc.<clinit>()V
     static {
-        for (let i: number = 1; i < 512; i++) {
-            this.divTable[i] = (32768 / i) | 0;
+        for (let var0 = 1; var0 < 512; var0++) {
+            arrayPutI32(Pix3D.divTable, var0, (32768 / var0) | 0);
         }
 
-        for (let i: number = 1; i < 2048; i++) {
-            this.divTable2[i] = (65536 / i) | 0;
+        for (let var1 = 1; var1 < 2048; var1++) {
+            arrayPutI32(Pix3D.divTable2, var1, (65536 / var1) | 0);
         }
 
-        for (let i: number = 0; i < 2048; i++) {
-            // angular frequency: 2 * pi / 2048 = 0.0030679615757712823
-            // * 65536 = maximum amplitude
-            this.sinTable[i] = (Math.sin(i * 0.0030679615757712823) * 65536.0) | 0;
-            this.cosTable[i] = (Math.cos(i * 0.0030679615757712823) * 65536.0) | 0;
+        for (let var2 = 0; var2 < 2048; var2++) {
+            // |65536 * sin| <= 65536, so the d2i cannot saturate.
+            arrayPutI32(Pix3D.sinTable, var2, (65536.0 * Math.sin(var2 * 0.0030679615)) | 0);
+            arrayPutI32(Pix3D.cosTable, var2, (65536.0 * Math.cos(var2 * 0.0030679615)) | 0);
         }
     }
 
-    static setRenderClipping(): void {
-        this.scanline = new Int32Array(Pix2D.height);
-        for (let y: number = 0; y < Pix2D.height; y++) {
-            this.scanline[y] = Pix2D.width * y;
+    // dc.a(F)V
+    static setBrightness(var0: number): void {
+        Pix3D.setRandomBrightness(var0);
+        Pix3D.initColourTable(0, 512);
+    }
+
+    // dc.a()V
+    static resetOrigin(): void {
+        Pix3D.originX = (Pix3D.width / 2) | 0;
+        Pix3D.originY = (Pix3D.height / 2) | 0;
+        Pix3D.clipMinX = -Pix3D.originX | 0;
+        Pix3D.clipMaxX = (Pix3D.width - Pix3D.originX) | 0;
+        Pix3D.clipMinY = -Pix3D.originY | 0;
+        Pix3D.clipMaxY = (Pix3D.height - Pix3D.originY) | 0;
+    }
+
+    // dc.a([IIIIIIII)V
+    // var1 = row offset, var4/var5 = x span, var6/var7 = colour-table index and step (8.8 fixed point).
+    // var2 and var3 are scratch registers the callers pass as 0.
+    private static gouraudRaster(var0: Int32Array | null, var1: number, var2: number, var3: number, var4: number, var5: number, var6: number, var7: number): void {
+        if (Pix3D.hclip) {
+            if (var5 > Pix3D.width) {
+                var5 = Pix3D.width;
+            }
+
+            if (var4 < 0) {
+                var4 = 0;
+            }
         }
-        this.originX = (Pix2D.width / 2) | 0;
-        this.originY = (Pix2D.height / 2) | 0;
-    }
 
-    static override setClipping(width: number, height: number): void {
-        this.scanline = new Int32Array(height);
-        for (let y: number = 0; y < height; y++) {
-            this.scanline[y] = width * y;
-        }
-        this.originX = (width / 2) | 0;
-        this.originY = (height / 2) | 0;
-    }
-
-    static clearTexels(): void {
-        this.texelPool = null;
-        this.activeTexels.fill(null);
-    }
-
-    static initPool(size: number): void {
-        if (this.texelPool) {
+        if (var4 >= var5) {
             return;
         }
 
-        this.poolSize = size;
-
-        if (this.lowMem) {
-            this.texelPool = new Int32Array2d(size, 16384);
-        } else {
-            this.texelPool = new Int32Array2d(size, 65536);
+        const palette = Pix3D.colourTable,
+            trans = Pix3D.trans,
+            lowDetail = Pix3D.lowDetail;
+        const target = Pix3D.spanTarget;
+        const count = var5 - var4;
+        if (target === null && lowDetail && trans === 0) {
+            const first = (var1 + var4) | 0;
+            if (var0 !== null && palette !== null && first >= 0 && count <= 0x7fffffff && first + count <= var0.length) {
+                // dc loads one palette entry for up to four successive pixels. A missing entry
+                // faults at that load, after all stores from preceding groups, including an aliased palette.
+                const end = first + count;
+                let colour = (var6 + Math.imul(var7, var4)) | 0;
+                const step = var7 << 2;
+                let i = first;
+                while (true) {
+                    const shade = colour >> 8;
+                    const rgb = palette[shade] ?? arrayAtI32(palette, shade);
+                    if (end - i >= 4) colour = (colour + step) | 0;
+                    var0[i++] = rgb;
+                    if (i === end) return;
+                    var0[i++] = rgb;
+                    if (i === end) return;
+                    var0[i++] = rgb;
+                    if (i === end) return;
+                    var0[i++] = rgb;
+                    if (i === end) return;
+                }
+            }
         }
-
-        this.activeTexels.fill(null);
+        Pix3D.gouraudRasterChecked(var0, var1, var2, var3, var4, var5, var6, var7, palette, trans, lowDetail, target);
     }
 
-    static unpackTextures(textures: JagFile): void {
-        this.numTextures = 0;
-
-        for (let i: number = 0; i < 50; i++) {
-            try {
-                this.textures[i] = Pix8.depack(textures, i.toString());
-
-                if (this.lowMem && this.textures[i]?.owi === 128) {
-                    this.textures[i]?.halveSize();
-                } else {
-                    this.textures[i]?.trim();
-                }
-
-                this.numTextures++;
-            } catch (_e) {
-                // empty
-            }
-        }
-    }
-
-    static getTextureAverage(id: number): number {
-        if (this.texAverage[id] !== 0) {
-            return this.texAverage[id];
-        }
-
-        const palette: Int32Array | null = this.texPal[id];
-        if (!palette) {
-            return 0;
-        }
-
-        let r: number = 0;
-        let g: number = 0;
-        let b: number = 0;
-        const length: number = palette.length;
-        for (let i: number = 0; i < length; i++) {
-            r += (palette[i] >> 16) & 0xff;
-            g += (palette[i] >> 8) & 0xff;
-            b += palette[i] & 0xff;
-        }
-
-        let rgb: number = (((r / length) | 0) << 16) + (((g / length) | 0) << 8) + ((b / length) | 0);
-        rgb = this.gammaCorrect(rgb, 1.4);
-        if (rgb === 0) {
-            rgb = 1;
-        }
-        this.texAverage[id] = rgb;
-        return rgb;
-    }
-
-    static pushTexture(id: number): void {
-        if (this.activeTexels[id] && this.texelPool) {
-            this.texelPool[this.poolSize++] = this.activeTexels[id];
-            this.activeTexels[id] = null;
-        }
-    }
-
-    private static getTexels(id: number): Int32Array | null {
-        this.texCycle[id] = this.cycle++;
-        if (this.activeTexels[id]) {
-            return this.activeTexels[id];
-        }
-
-        let texels: Int32Array | null;
-        if (this.poolSize > 0 && this.texelPool) {
-            texels = this.texelPool[--this.poolSize];
-            this.texelPool[this.poolSize] = null;
-        } else {
-            let cycle: number = 0;
-            let selected: number = -1;
-            for (let t: number = 0; t < this.numTextures; t++) {
-                if (this.activeTexels[t] && (this.texCycle[t] < cycle || selected === -1)) {
-                    cycle = this.texCycle[t];
-                    selected = t;
-                }
-            }
-            texels = this.activeTexels[selected];
-            this.activeTexels[selected] = null;
-        }
-
-        this.activeTexels[id] = texels;
-        const texture: Pix8 | null = this.textures[id];
-        const palette: Int32Array | null = this.texPal[id];
-
-        if (!texels || !texture || !palette) {
-            return null;
-        }
-
-        if (this.lowMem) {
-            this.texTrans[id] = false;
-            for (let i: number = 0; i < 4096; i++) {
-                const rgb: number = (texels[i] = palette[texture.data[i]] & 0xf8f8ff);
-                if (rgb === 0) {
-                    this.texTrans[id] = true;
-                }
-                texels[i + 4096] = (rgb - (rgb >>> 3)) & 0xf8f8ff;
-                texels[i + 8192] = (rgb - (rgb >>> 2)) & 0xf8f8ff;
-                texels[i + 12288] = (rgb - (rgb >>> 2) - (rgb >>> 3)) & 0xf8f8ff;
-            }
-        } else {
-            if (texture.wi === 64) {
-                for (let y: number = 0; y < 128; y++) {
-                    for (let x: number = 0; x < 128; x++) {
-                        texels[x + ((y << 7) | 0)] = palette[texture.data[(x >> 1) + (((y >> 1) << 6) | 0)]];
-                    }
-                }
-            } else {
-                for (let i: number = 0; i < 16384; i++) {
-                    texels[i] = palette[texture.data[i]];
-                }
-            }
-
-            this.texTrans[id] = false;
-            for (let i: number = 0; i < 16384; i++) {
-                texels[i] &= 0xf8f8ff;
-                const rgb: number = texels[i];
-                if (rgb === 0) {
-                    this.texTrans[id] = true;
-                }
-                texels[i + 16384] = (rgb - (rgb >>> 3)) & 0xf8f8ff;
-                texels[i + 32768] = (rgb - (rgb >>> 2)) & 0xf8f8ff;
-                texels[i + 49152] = (rgb - (rgb >>> 2) - (rgb >>> 3)) & 0xf8f8ff;
-            }
-        }
-
-        return texels;
-    }
-
-    static initColourTable(brightness: number): void {
-        const randomBrightness: number = brightness + Math.random() * 0.03 - 0.015;
-
-        let offset: number = 0;
-        for (let y: number = 0; y < 512; y++) {
-            const hue: number = ((y / 8) | 0) / 64.0 + 0.0078125;
-            const saturation: number = (y & 0x7) / 8.0 + 0.0625;
-
-            for (let x: number = 0; x < 128; x++) {
-                const lightness: number = x / 128.0;
-                let r: number = lightness;
-                let g: number = lightness;
-                let b: number = lightness;
-
-                if (saturation !== 0.0) {
-                    let q: number;
-                    if (lightness < 0.5) {
-                        q = lightness * (saturation + 1.0);
-                    } else {
-                        q = lightness + saturation - lightness * saturation;
-                    }
-
-                    const p: number = lightness * 2.0 - q;
-                    let t: number = hue + 0.3333333333333333;
-                    if (t > 1.0) {
-                        t--;
-                    }
-
-                    let d11: number = hue - 0.3333333333333333;
-                    if (d11 < 0.0) {
-                        d11++;
-                    }
-
-                    if (t * 6.0 < 1.0) {
-                        r = p + (q - p) * 6.0 * t;
-                    } else if (t * 2.0 < 1.0) {
-                        r = q;
-                    } else if (t * 3.0 < 2.0) {
-                        r = p + (q - p) * (0.6666666666666666 - t) * 6.0;
-                    } else {
-                        r = p;
-                    }
-
-                    if (hue * 6.0 < 1.0) {
-                        g = p + (q - p) * 6.0 * hue;
-                    } else if (hue * 2.0 < 1.0) {
-                        g = q;
-                    } else if (hue * 3.0 < 2.0) {
-                        g = p + (q - p) * (0.6666666666666666 - hue) * 6.0;
-                    } else {
-                        g = p;
-                    }
-
-                    if (d11 * 6.0 < 1.0) {
-                        b = p + (q - p) * 6.0 * d11;
-                    } else if (d11 * 2.0 < 1.0) {
-                        b = q;
-                    } else if (d11 * 3.0 < 2.0) {
-                        b = p + (q - p) * (0.6666666666666666 - d11) * 6.0;
-                    } else {
-                        b = p;
-                    }
-                }
-
-                const intR: number = (r * 256.0) | 0;
-                const intG: number = (g * 256.0) | 0;
-                const intB: number = (b * 256.0) | 0;
-                const rgb: number = (intR << 16) + (intG << 8) + intB;
-                this.colourTable[offset++] = this.gammaCorrect(rgb, randomBrightness);
-            }
-        }
-
-        for (let id: number = 0; id < 50; id++) {
-            const texture: Pix8 | null = this.textures[id];
-            if (!texture) {
-                continue;
-            }
-
-            const palette: Int32Array = texture.bpal;
-            this.texPal[id] = new Int32Array(palette.length);
-            for (let i: number = 0; i < palette.length; i++) {
-                const texturePalette: Int32Array | null = this.texPal[id];
-                if (!texturePalette) {
-                    continue;
-                }
-
-                texturePalette[i] = this.gammaCorrect(palette[i], randomBrightness);
-            }
-        }
-
-        for (let id: number = 0; id < 50; id++) {
-            this.pushTexture(id);
-        }
-    }
-
-    private static gammaCorrect(rgb: number, gamma: number): number {
-        const r: number = (rgb >> 16) / 256.0;
-        const g: number = ((rgb >> 8) & 0xff) / 256.0;
-        const b: number = (rgb & 0xff) / 256.0;
-
-        const powR: number = Math.pow(r, gamma);
-        const powG: number = Math.pow(g, gamma);
-        const powB: number = Math.pow(b, gamma);
-
-        const intR: number = (powR * 256.0) | 0;
-        const intG: number = (powG * 256.0) | 0;
-        const intB: number = (powB * 256.0) | 0;
-        return (intR << 16) + (intG << 8) + intB;
-    }
-
-    static gouraudTriangle(
-        xA: number, xB: number, xC: number,
-        yA: number, yB: number, yC: number,
-        colourA: number, colourB: number, colourC: number
+    // Continuation of dc.a([IIIIIIII)V for checked writes, blending and the WebGPU span target.
+    private static gouraudRasterChecked(
+        var0: Int32Array | null,
+        var1: number,
+        var2: number,
+        var3: number,
+        var4: number,
+        var5: number,
+        var6: number,
+        var7: number,
+        palette: Int32Array | null,
+        trans: number,
+        lowDetail: boolean,
+        target: SdRasterSpans | null
     ): void {
-        let xStepAB: number = 0;
-        let colourStepAB: number = 0;
-        if (yB !== yA) {
-            xStepAB = (((xB - xA) << 16) / (yB - yA)) | 0;
-            colourStepAB = (((colourB - colourA) << 15) / (yB - yA)) | 0;
-        }
+        if (target !== null && target.gouraud(var0, var1, var4, var5, var6, var7, trans, lowDetail ? 1 : 0, palette, true)) return;
 
-        let xStepBC: number = 0;
-        let colourStepBC: number = 0;
-        if (yC !== yB) {
-            xStepBC = (((xC - xB) << 16) / (yC - yB)) | 0;
-            colourStepBC = (((colourC - colourB) << 15) / (yC - yB)) | 0;
-        }
-
-        let xStepAC: number = 0;
-        let colourStepAC: number = 0;
-        if (yC !== yA) {
-            xStepAC = (((xA - xC) << 16) / (yA - yC)) | 0;
-            colourStepAC = (((colourA - colourC) << 15) / (yA - yC)) | 0;
-        }
-
-        if (yA <= yB && yA <= yC) {
-            if (yA >= Pix2D.clipMaxY) {
-                return;
-            }
-
-            if (yB > Pix2D.clipMaxY) {
-                yB = Pix2D.clipMaxY;
-            }
-
-            if (yC > Pix2D.clipMaxY) {
-                yC = Pix2D.clipMaxY;
-            }
-
-            if (yB < yC) {
-                xC = xA <<= 16;
-                colourC = colourA <<= 15;
-
-                if (yA < 0) {
-                    xC -= xStepAC * yA;
-                    xA -= xStepAB * yA;
-                    colourC -= colourStepAC * yA;
-                    colourA -= colourStepAB * yA;
-                    yA = 0;
+        var1 = (var1 + var4) | 0;
+        var6 = (var6 + Math.imul(var7, var4)) | 0;
+        if (lowDetail) {
+            var3 = (var5 - var4) >> 2;
+            var7 <<= 2;
+            if (trans === 0) {
+                if (var3 > 0) {
+                    do {
+                        var2 = arrayAtI32(palette, var6 >> 8);
+                        var6 = (var6 + var7) | 0;
+                        arrayPutI32(var0, var1++, var2);
+                        arrayPutI32(var0, var1++, var2);
+                        arrayPutI32(var0, var1++, var2);
+                        arrayPutI32(var0, var1++, var2);
+                    } while (--var3 > 0);
                 }
 
-                xB <<= 16;
-                colourB <<= 15;
+                var3 = (var5 - var4) & 3;
+                if (var3 > 0) {
+                    var2 = arrayAtI32(palette, var6 >> 8);
 
-                if (yB < 0) {
-                    xB -= xStepBC * yB;
-                    colourB -= colourStepBC * yB;
-                    yB = 0;
-                }
+                    do {
+                        arrayPutI32(var0, var1++, var2);
+                    } while (--var3 > 0);
 
-                if ((yA !== yB && xStepAC < xStepAB) || (yA === yB && xStepAC > xStepBC)) {
-                    yC -= yB;
-                    yB -= yA;
-                    yA = this.scanline[yA];
-
-                    while (true) {
-                        yB--;
-
-                        if (yB < 0) {
-                            while (true) {
-                                yC--;
-
-                                if (yC < 0) {
-                                    return;
-                                }
-
-                                this.gouraudRaster(xC >> 16, xB >> 16, colourC >> 7, colourB >> 7, Pix2D.pixels, yA, 0);
-                                xC += xStepAC;
-                                xB += xStepBC;
-                                colourC += colourStepAC;
-                                colourB += colourStepBC;
-                                yA += Pix2D.width;
-                            }
-                        }
-
-                        this.gouraudRaster(xC >> 16, xA >> 16, colourC >> 7, colourA >> 7, Pix2D.pixels, yA, 0);
-                        xC += xStepAC;
-                        xA += xStepAB;
-                        colourC += colourStepAC;
-                        colourA += colourStepAB;
-                        yA += Pix2D.width;
-                    }
-                } else {
-                    yC -= yB;
-                    yB -= yA;
-                    yA = this.scanline[yA];
-
-                    while (true) {
-                        yB--;
-
-                        if (yB < 0) {
-                            while (true) {
-                                yC--;
-
-                                if (yC < 0) {
-                                    return;
-                                }
-
-                                this.gouraudRaster(xB >> 16, xC >> 16, colourB >> 7, colourC >> 7, Pix2D.pixels, yA, 0);
-                                xC += xStepAC;
-                                xB += xStepBC;
-                                colourC += colourStepAC;
-                                colourB += colourStepBC;
-                                yA += Pix2D.width;
-                            }
-                        }
-
-                        this.gouraudRaster(xA >> 16, xC >> 16, colourA >> 7, colourC >> 7, Pix2D.pixels, yA, 0);
-                        xC += xStepAC;
-                        xA += xStepAB;
-                        colourC += colourStepAC;
-                        colourA += colourStepAB;
-                        yA += Pix2D.width;
-                    }
-                }
-            } else {
-                xB = xA <<= 16;
-                colourB = colourA <<= 15;
-
-                if (yA < 0) {
-                    xB -= xStepAC * yA;
-                    xA -= xStepAB * yA;
-                    colourB -= colourStepAC * yA;
-                    colourA -= colourStepAB * yA;
-                    yA = 0;
-                }
-
-                xC <<= 16;
-                colourC <<= 15;
-
-                if (yC < 0) {
-                    xC -= xStepBC * yC;
-                    colourC -= colourStepBC * yC;
-                    yC = 0;
-                }
-
-                if ((yA !== yC && xStepAC < xStepAB) || (yA === yC && xStepBC > xStepAB)) {
-                    yB -= yC;
-                    yC -= yA;
-                    yA = this.scanline[yA];
-
-                    while (true) {
-                        yC--;
-
-                        if (yC < 0) {
-                            while (true) {
-                                yB--;
-
-                                if (yB < 0) {
-                                    return;
-                                }
-
-                                this.gouraudRaster(xC >> 16, xA >> 16, colourC >> 7, colourA >> 7, Pix2D.pixels, yA, 0);
-                                xC += xStepBC;
-                                xA += xStepAB;
-                                colourC += colourStepBC;
-                                colourA += colourStepAB;
-                                yA += Pix2D.width;
-                            }
-                        }
-
-                        this.gouraudRaster(xB >> 16, xA >> 16, colourB >> 7, colourA >> 7, Pix2D.pixels, yA, 0);
-                        xB += xStepAC;
-                        xA += xStepAB;
-                        colourB += colourStepAC;
-                        colourA += colourStepAB;
-                        yA += Pix2D.width;
-                    }
-                } else {
-                    yB -= yC;
-                    yC -= yA;
-                    yA = this.scanline[yA];
-
-                    while (true) {
-                        yC--;
-
-                        if (yC < 0) {
-                            while (true) {
-                                yB--;
-
-                                if (yB < 0) {
-                                    return;
-                                }
-
-                                this.gouraudRaster(xA >> 16, xC >> 16, colourA >> 7, colourC >> 7, Pix2D.pixels, yA, 0);
-                                xC += xStepBC;
-                                xA += xStepAB;
-                                colourC += colourStepBC;
-                                colourA += colourStepAB;
-                                yA += Pix2D.width;
-                            }
-                        }
-
-                        this.gouraudRaster(xA >> 16, xB >> 16, colourA >> 7, colourB >> 7, Pix2D.pixels, yA, 0);
-                        xB += xStepAC;
-                        xA += xStepAB;
-                        colourB += colourStepAC;
-                        colourA += colourStepAB;
-                        yA += Pix2D.width;
-                    }
-                }
-            }
-        } else if (yB <= yC) {
-            if (yB >= Pix2D.clipMaxY) {
-                return;
-            }
-
-            if (yC > Pix2D.clipMaxY) {
-                yC = Pix2D.clipMaxY;
-            }
-
-            if (yA > Pix2D.clipMaxY) {
-                yA = Pix2D.clipMaxY;
-            }
-
-            if (yC < yA) {
-                xA = xB <<= 16;
-                colourA = colourB <<= 15;
-
-                if (yB < 0) {
-                    xA -= xStepAB * yB;
-                    xB -= xStepBC * yB;
-                    colourA -= colourStepAB * yB;
-                    colourB -= colourStepBC * yB;
-                    yB = 0;
-                }
-
-                xC <<= 16;
-                colourC <<= 15;
-
-                if (yC < 0) {
-                    xC -= xStepAC * yC;
-                    colourC -= colourStepAC * yC;
-                    yC = 0;
-                }
-
-                if ((yB !== yC && xStepAB < xStepBC) || (yB === yC && xStepAB > xStepAC)) {
-                    yA -= yC;
-                    yC -= yB;
-                    yB = this.scanline[yB];
-
-                    while (true) {
-                        yC--;
-
-                        if (yC < 0) {
-                            while (true) {
-                                yA--;
-
-                                if (yA < 0) {
-                                    return;
-                                }
-
-                                this.gouraudRaster(xA >> 16, xC >> 16, colourA >> 7, colourC >> 7, Pix2D.pixels, yB, 0);
-                                xA += xStepAB;
-                                xC += xStepAC;
-                                colourA += colourStepAB;
-                                colourC += colourStepAC;
-                                yB += Pix2D.width;
-                            }
-                        }
-
-                        this.gouraudRaster(xA >> 16, xB >> 16, colourA >> 7, colourB >> 7, Pix2D.pixels, yB, 0);
-                        xA += xStepAB;
-                        xB += xStepBC;
-                        colourA += colourStepAB;
-                        colourB += colourStepBC;
-                        yB += Pix2D.width;
-                    }
-                } else {
-                    yA -= yC;
-                    yC -= yB;
-                    yB = this.scanline[yB];
-
-                    while (true) {
-                        yC--;
-
-                        if (yC < 0) {
-                            while (true) {
-                                yA--;
-
-                                if (yA < 0) {
-                                    return;
-                                }
-
-                                this.gouraudRaster(xC >> 16, xA >> 16, colourC >> 7, colourA >> 7, Pix2D.pixels, yB, 0);
-                                xA += xStepAB;
-                                xC += xStepAC;
-                                colourA += colourStepAB;
-                                colourC += colourStepAC;
-                                yB += Pix2D.width;
-                            }
-                        }
-
-                        this.gouraudRaster(xB >> 16, xA >> 16, colourB >> 7, colourA >> 7, Pix2D.pixels, yB, 0);
-                        xA += xStepAB;
-                        xB += xStepBC;
-                        colourA += colourStepAB;
-                        colourB += colourStepBC;
-                        yB += Pix2D.width;
-                    }
-                }
-            } else {
-                xC = xB <<= 16;
-                colourC = colourB <<= 15;
-
-                if (yB < 0) {
-                    xC -= xStepAB * yB;
-                    xB -= xStepBC * yB;
-                    colourC -= colourStepAB * yB;
-                    colourB -= colourStepBC * yB;
-                    yB = 0;
-                }
-
-                xA <<= 16;
-                colourA <<= 15;
-
-                if (yA < 0) {
-                    xA -= xStepAC * yA;
-                    colourA -= colourStepAC * yA;
-                    yA = 0;
-                }
-
-                yC -= yA;
-                yA -= yB;
-                yB = this.scanline[yB];
-
-                if (xStepAB < xStepBC) {
-                    while (true) {
-                        yA--;
-
-                        if (yA < 0) {
-                            while (true) {
-                                yC--;
-
-                                if (yC < 0) {
-                                    return;
-                                }
-
-                                this.gouraudRaster(xA >> 16, xB >> 16, colourA >> 7, colourB >> 7, Pix2D.pixels, yB, 0);
-                                xA += xStepAC;
-                                xB += xStepBC;
-                                colourA += colourStepAC;
-                                colourB += colourStepBC;
-                                yB += Pix2D.width;
-                            }
-                        }
-
-                        this.gouraudRaster(xC >> 16, xB >> 16, colourC >> 7, colourB >> 7, Pix2D.pixels, yB, 0);
-                        xC += xStepAB;
-                        xB += xStepBC;
-                        colourC += colourStepAB;
-                        colourB += colourStepBC;
-                        yB += Pix2D.width;
-                    }
-                } else {
-                    while (true) {
-                        yA--;
-
-                        if (yA < 0) {
-                            while (true) {
-                                yC--;
-
-                                if (yC < 0) {
-                                    return;
-                                }
-
-                                this.gouraudRaster(xB >> 16, xA >> 16, colourB >> 7, colourA >> 7, Pix2D.pixels, yB, 0);
-                                xA += xStepAC;
-                                xB += xStepBC;
-                                colourA += colourStepAC;
-                                colourB += colourStepBC;
-                                yB += Pix2D.width;
-                            }
-                        }
-
-                        this.gouraudRaster(xB >> 16, xC >> 16, colourB >> 7, colourC >> 7, Pix2D.pixels, yB, 0);
-                        xC += xStepAB;
-                        xB += xStepBC;
-                        colourC += colourStepAB;
-                        colourB += colourStepBC;
-                        yB += Pix2D.width;
-                    }
-                }
-            }
-        } else {
-            if (yC >= Pix2D.clipMaxY) {
-                return;
-            }
-
-            if (yA > Pix2D.clipMaxY) {
-                yA = Pix2D.clipMaxY;
-            }
-
-            if (yB > Pix2D.clipMaxY) {
-                yB = Pix2D.clipMaxY;
-            }
-
-            if (yA < yB) {
-                xB = xC <<= 16;
-                colourB = colourC <<= 15;
-
-                if (yC < 0) {
-                    xB -= xStepBC * yC;
-                    xC -= xStepAC * yC;
-                    colourB -= colourStepBC * yC;
-                    colourC -= colourStepAC * yC;
-                    yC = 0;
-                }
-
-                xA <<= 16;
-                colourA <<= 15;
-
-                if (yA < 0) {
-                    xA -= xStepAB * yA;
-                    colourA -= colourStepAB * yA;
-                    yA = 0;
-                }
-
-                yB -= yA;
-                yA -= yC;
-                yC = this.scanline[yC];
-
-                if (xStepBC < xStepAC) {
-                    while (true) {
-                        yA--;
-
-                        if (yA < 0) {
-                            while (true) {
-                                yB--;
-
-                                if (yB < 0) {
-                                    return;
-                                }
-
-                                this.gouraudRaster(xB >> 16, xA >> 16, colourB >> 7, colourA >> 7, Pix2D.pixels, yC, 0);
-                                xB += xStepBC;
-                                xA += xStepAB;
-                                colourB += colourStepBC;
-                                colourA += colourStepAB;
-                                yC += Pix2D.width;
-                            }
-                        }
-
-                        this.gouraudRaster(xB >> 16, xC >> 16, colourB >> 7, colourC >> 7, Pix2D.pixels, yC, 0);
-                        xB += xStepBC;
-                        xC += xStepAC;
-                        colourB += colourStepBC;
-                        colourC += colourStepAC;
-                        yC += Pix2D.width;
-                    }
-                } else {
-                    while (true) {
-                        yA--;
-
-                        if (yA < 0) {
-                            while (true) {
-                                yB--;
-
-                                if (yB < 0) {
-                                    return;
-                                }
-
-                                this.gouraudRaster(xA >> 16, xB >> 16, colourA >> 7, colourB >> 7, Pix2D.pixels, yC, 0);
-                                xB += xStepBC;
-                                xA += xStepAB;
-                                colourB += colourStepBC;
-                                colourA += colourStepAB;
-                                yC += Pix2D.width;
-                            }
-                        }
-
-                        this.gouraudRaster(xC >> 16, xB >> 16, colourC >> 7, colourB >> 7, Pix2D.pixels, yC, 0);
-                        xB += xStepBC;
-                        xC += xStepAC;
-                        colourB += colourStepBC;
-                        colourC += colourStepAC;
-                        yC += Pix2D.width;
-                    }
-                }
-            } else {
-                xA = xC <<= 16;
-                colourA = colourC <<= 15;
-
-                if (yC < 0) {
-                    xA -= xStepBC * yC;
-                    xC -= xStepAC * yC;
-                    colourA -= colourStepBC * yC;
-                    colourC -= colourStepAC * yC;
-                    yC = 0;
-                }
-
-                xB <<= 16;
-                colourB <<= 15;
-
-                if (yB < 0) {
-                    xB -= xStepAB * yB;
-                    colourB -= colourStepAB * yB;
-                    yB = 0;
-                }
-
-                yA -= yB;
-                yB -= yC;
-                yC = this.scanline[yC];
-
-                if (xStepBC < xStepAC) {
-                    while (true) {
-                        yB--;
-
-                        if (yB < 0) {
-                            while (true) {
-                                yA--;
-
-                                if (yA < 0) {
-                                    return;
-                                }
-
-                                this.gouraudRaster(xB >> 16, xC >> 16, colourB >> 7, colourC >> 7, Pix2D.pixels, yC, 0);
-                                xB += xStepAB;
-                                xC += xStepAC;
-                                colourB += colourStepAB;
-                                colourC += colourStepAC;
-                                yC += Pix2D.width;
-                            }
-                        }
-
-                        this.gouraudRaster(xA >> 16, xC >> 16, colourA >> 7, colourC >> 7, Pix2D.pixels, yC, 0);
-                        xA += xStepBC;
-                        xC += xStepAC;
-                        colourA += colourStepBC;
-                        colourC += colourStepAC;
-                        yC += Pix2D.width;
-                    }
-                } else {
-                    while (true) {
-                        yB--;
-
-                        if (yB < 0) {
-                            while (true) {
-                                yA--;
-
-                                if (yA < 0) {
-                                    return;
-                                }
-
-                                this.gouraudRaster(xC >> 16, xB >> 16, colourC >> 7, colourB >> 7, Pix2D.pixels, yC, 0);
-                                xB += xStepAB;
-                                xC += xStepAC;
-                                colourB += colourStepAB;
-                                colourC += colourStepAC;
-                                yC += Pix2D.width;
-                            }
-                        }
-
-                        this.gouraudRaster(xC >> 16, xA >> 16, colourC >> 7, colourA >> 7, Pix2D.pixels, yC, 0);
-                        xA += xStepBC;
-                        xC += xStepAC;
-                        colourA += colourStepBC;
-                        colourC += colourStepAC;
-                        yC += Pix2D.width;
-                    }
-                }
-            }
-        }
-    }
-
-    private static gouraudRaster(
-        xA: number, xB: number,
-        colourA: number, colourB: number,
-        dst: Int32Array, off: number, len: number
-    ): void {
-        let rgb: number;
-
-        if (this.lowDetail) {
-            let colourStep: number;
-
-            if (this.hclip) {
-                if (xB - xA > 3) {
-                    colourStep = ((colourB - colourA) / (xB - xA)) | 0;
-                } else {
-                    colourStep = 0;
-                }
-
-                if (xB > Pix2D.sizeX) {
-                    xB = Pix2D.sizeX;
-                }
-
-                if (xA < 0) {
-                    colourA -= xA * colourStep;
-                    xA = 0;
-                }
-
-                if (xA >= xB) {
                     return;
                 }
-
-                off += xA;
-                len = (xB - xA) >> 2;
-                colourStep <<= 2;
-            } else if (xA < xB) {
-                off += xA;
-                len = (xB - xA) >> 2;
-
-                if (len > 0) {
-                    colourStep = ((colourB - colourA) * this.divTable[len]) >> 15;
-                } else {
-                    colourStep = 0;
-                }
             } else {
-                return;
-            }
-
-            if (this.trans === 0) {
-                while (true) {
-                    len--;
-
-                    if (len < 0) {
-                        len = (xB - xA) & 0x3;
-
-                        if (len > 0) {
-                            rgb = this.colourTable[colourA >> 8];
-
-                            do {
-                                dst[off++] = rgb;
-                                len--;
-                            } while (len > 0);
-
-                            return;
-                        }
-
-                        break;
-                    }
-
-                    rgb = this.colourTable[colourA >> 8];
-                    colourA += colourStep;
-                    dst[off++] = rgb;
-                    dst[off++] = rgb;
-                    dst[off++] = rgb;
-                    dst[off++] = rgb;
-                }
-            } else {
-                const alpha: number = this.trans;
-                const invAlpha: number = 256 - this.trans;
-
-                while (true) {
-                    len--;
-
-                    if (len < 0) {
-                        len = (xB - xA) & 0x3;
-
-                        if (len > 0) {
-                            rgb = this.colourTable[colourA >> 8];
-                            rgb = ((((rgb & 0xff00ff) * invAlpha) >> 8) & 0xff00ff) + ((((rgb & 0xff00) * invAlpha) >> 8) & 0xff00);
-
-                            do {
-                                dst[off++] = rgb + ((((dst[off] & 0xff00ff) * alpha) >> 8) & 0xff00ff) + ((((dst[off] & 0xff00) * alpha) >> 8) & 0xff00);
-                                len--;
-                            } while (len > 0);
-                        }
-
-                        break;
-                    }
-
-                    rgb = this.colourTable[colourA >> 8];
-                    colourA += colourStep;
-                    rgb = ((((rgb & 0xff00ff) * invAlpha) >> 8) & 0xff00ff) + ((((rgb & 0xff00) * invAlpha) >> 8) & 0xff00);
-
-                    dst[off++] = rgb + ((((dst[off] & 0xff00ff) * alpha) >> 8) & 0xff00ff) + ((((dst[off] & 0xff00) * alpha) >> 8) & 0xff00);
-                    dst[off++] = rgb + ((((dst[off] & 0xff00ff) * alpha) >> 8) & 0xff00ff) + ((((dst[off] & 0xff00) * alpha) >> 8) & 0xff00);
-                    dst[off++] = rgb + ((((dst[off] & 0xff00ff) * alpha) >> 8) & 0xff00ff) + ((((dst[off] & 0xff00) * alpha) >> 8) & 0xff00);
-                    dst[off++] = rgb + ((((dst[off] & 0xff00ff) * alpha) >> 8) & 0xff00ff) + ((((dst[off] & 0xff00) * alpha) >> 8) & 0xff00);
-                }
-            }
-        } else if (xA < xB) {
-            const colourStep: number = ((colourB - colourA) / (xB - xA)) | 0;
-
-            if (this.hclip) {
-                if (xB > Pix2D.sizeX) {
-                    xB = Pix2D.sizeX;
+                const var32 = trans;
+                const var33 = (256 - trans) | 0;
+                if (var3 > 0) {
+                    do {
+                        var2 = arrayAtI32(palette, var6 >> 8);
+                        var6 = (var6 + var7) | 0;
+                        var2 = (((Math.imul(var2 & 16711935, var33) >> 8) & 16711935) + ((Math.imul(var2 & 0xff00, var33) >> 8) & 0xff00)) | 0;
+                        let var34 = arrayAtI32(var0, var1);
+                        arrayPutI32(var0, var1++, (var2 + ((Math.imul(var34 & 16711935, var32) >> 8) & 16711935) + ((Math.imul(var34 & 0xff00, var32) >> 8) & 0xff00)) | 0);
+                        var34 = arrayAtI32(var0, var1);
+                        arrayPutI32(var0, var1++, (var2 + ((Math.imul(var34 & 16711935, var32) >> 8) & 16711935) + ((Math.imul(var34 & 0xff00, var32) >> 8) & 0xff00)) | 0);
+                        var34 = arrayAtI32(var0, var1);
+                        arrayPutI32(var0, var1++, (var2 + ((Math.imul(var34 & 16711935, var32) >> 8) & 16711935) + ((Math.imul(var34 & 0xff00, var32) >> 8) & 0xff00)) | 0);
+                        var34 = arrayAtI32(var0, var1);
+                        arrayPutI32(var0, var1++, (var2 + ((Math.imul(var34 & 16711935, var32) >> 8) & 16711935) + ((Math.imul(var34 & 0xff00, var32) >> 8) & 0xff00)) | 0);
+                    } while (--var3 > 0);
                 }
 
-                if (xA < 0) {
-                    colourA -= xA * colourStep;
-                    xA = 0;
-                }
-
-                if (xA >= xB) {
-                    return;
-                }
-            }
-
-            off += xA;
-            len = xB - xA;
-
-            if (this.trans === 0) {
-                do {
-                    dst[off++] = this.colourTable[colourA >> 8];
-                    colourA += colourStep;
-                    len--;
-                } while (len > 0);
-            } else {
-                const alpha: number = this.trans;
-                const invAlpha: number = 256 - this.trans;
-
-                do {
-                    rgb = this.colourTable[colourA >> 8];
-                    colourA += colourStep;
-                    rgb = ((((rgb & 0xff00ff) * invAlpha) >> 8) & 0xff00ff) + ((((rgb & 0xff00) * invAlpha) >> 8) & 0xff00);
-
-                    dst[off++] = rgb + ((((dst[off] & 0xff00ff) * alpha) >> 8) & 0xff00ff) + ((((dst[off] & 0xff00) * alpha) >> 8) & 0xff00);
-                    len--;
-                } while (len > 0);
-            }
-        }
-    }
-
-    static flatTriangle(
-        xA: number, xB: number, xC: number,
-        yA: number, yB: number, yC: number,
-        colour: number
-    ): void {
-        let xStepAB: number = 0;
-        if (yB !== yA) {
-            xStepAB = (((xB - xA) << 16) / (yB - yA)) | 0;
-        }
-
-        let xStepBC: number = 0;
-        if (yC !== yB) {
-            xStepBC = (((xC - xB) << 16) / (yC - yB)) | 0;
-        }
-
-        let xStepAC: number = 0;
-        if (yC !== yA) {
-            xStepAC = (((xA - xC) << 16) / (yA - yC)) | 0;
-        }
-
-        if (yA <= yB && yA <= yC) {
-            if (yA >= Pix2D.clipMaxY) {
-                return;
-            }
-
-            if (yB > Pix2D.clipMaxY) {
-                yB = Pix2D.clipMaxY;
-            }
-
-            if (yC > Pix2D.clipMaxY) {
-                yC = Pix2D.clipMaxY;
-            }
-
-            if (yB < yC) {
-                xC = xA <<= 16;
-
-                if (yA < 0) {
-                    xC -= xStepAC * yA;
-                    xA -= xStepAB * yA;
-                    yA = 0;
-                }
-
-                xB <<= 16;
-
-                if (yB < 0) {
-                    xB -= xStepBC * yB;
-                    yB = 0;
-                }
-
-                if ((yA !== yB && xStepAC < xStepAB) || (yA === yB && xStepAC > xStepBC)) {
-                    yC -= yB;
-                    yB -= yA;
-                    yA = this.scanline[yA];
-
-                    while (true) {
-                        yB--;
-
-                        if (yB < 0) {
-                            while (true) {
-                                yC--;
-
-                                if (yC < 0) {
-                                    return;
-                                }
-
-                                this.flatRaster(xC >> 16, xB >> 16, Pix2D.pixels, yA, colour);
-                                xC += xStepAC;
-                                xB += xStepBC;
-                                yA += Pix2D.width;
-                            }
-                        }
-
-                        this.flatRaster(xC >> 16, xA >> 16, Pix2D.pixels, yA, colour);
-                        xC += xStepAC;
-                        xA += xStepAB;
-                        yA += Pix2D.width;
-                    }
-                } else {
-                    yC -= yB;
-                    yB -= yA;
-                    yA = this.scanline[yA];
-
-                    while (true) {
-                        yB--;
-
-                        if (yB < 0) {
-                            while (true) {
-                                yC--;
-
-                                if (yC < 0) {
-                                    return;
-                                }
-
-                                this.flatRaster(xB >> 16, xC >> 16, Pix2D.pixels, yA, colour);
-                                xC += xStepAC;
-                                xB += xStepBC;
-                                yA += Pix2D.width;
-                            }
-                        }
-
-                        this.flatRaster(xA >> 16, xC >> 16, Pix2D.pixels, yA, colour);
-                        xC += xStepAC;
-                        xA += xStepAB;
-                        yA += Pix2D.width;
-                    }
-                }
-            } else {
-                xB = xA <<= 16;
-
-                if (yA < 0) {
-                    xB -= xStepAC * yA;
-                    xA -= xStepAB * yA;
-                    yA = 0;
-                }
-
-                xC <<= 16;
-
-                if (yC < 0) {
-                    xC -= xStepBC * yC;
-                    yC = 0;
-                }
-
-                if ((yA !== yC && xStepAC < xStepAB) || (yA === yC && xStepBC > xStepAB)) {
-                    yB -= yC;
-                    yC -= yA;
-                    yA = this.scanline[yA];
-
-                    while (true) {
-                        yC--;
-
-                        if (yC < 0) {
-                            while (true) {
-                                yB--;
-
-                                if (yB < 0) {
-                                    return;
-                                }
-
-                                this.flatRaster(xC >> 16, xA >> 16, Pix2D.pixels, yA, colour);
-                                xC += xStepBC;
-                                xA += xStepAB;
-                                yA += Pix2D.width;
-                            }
-                        }
-
-                        this.flatRaster(xB >> 16, xA >> 16, Pix2D.pixels, yA, colour);
-                        xB += xStepAC;
-                        xA += xStepAB;
-                        yA += Pix2D.width;
-                    }
-                } else {
-                    yB -= yC;
-                    yC -= yA;
-                    yA = this.scanline[yA];
-
-                    while (true) {
-                        yC--;
-
-                        if (yC < 0) {
-                            while (true) {
-                                yB--;
-
-                                if (yB < 0) {
-                                    return;
-                                }
-
-                                this.flatRaster(xA >> 16, xC >> 16, Pix2D.pixels, yA, colour);
-                                xC += xStepBC;
-                                xA += xStepAB;
-                                yA += Pix2D.width;
-                            }
-                        }
-
-                        this.flatRaster(xA >> 16, xB >> 16, Pix2D.pixels, yA, colour);
-                        xB += xStepAC;
-                        xA += xStepAB;
-                        yA += Pix2D.width;
-                    }
-                }
-            }
-        } else if (yB <= yC) {
-            if (yB >= Pix2D.clipMaxY) {
-                return;
-            }
-
-            if (yC > Pix2D.clipMaxY) {
-                yC = Pix2D.clipMaxY;
-            }
-
-            if (yA > Pix2D.clipMaxY) {
-                yA = Pix2D.clipMaxY;
-            }
-
-            if (yC < yA) {
-                xA = xB <<= 16;
-
-                if (yB < 0) {
-                    xA -= xStepAB * yB;
-                    xB -= xStepBC * yB;
-                    yB = 0;
-                }
-
-                xC <<= 16;
-
-                if (yC < 0) {
-                    xC -= xStepAC * yC;
-                    yC = 0;
-                }
-
-                if ((yB !== yC && xStepAB < xStepBC) || (yB === yC && xStepAB > xStepAC)) {
-                    yA -= yC;
-                    yC -= yB;
-                    yB = this.scanline[yB];
-
-                    while (true) {
-                        yC--;
-
-                        if (yC < 0) {
-                            while (true) {
-                                yA--;
-
-                                if (yA < 0) {
-                                    return;
-                                }
-
-                                this.flatRaster(xA >> 16, xC >> 16, Pix2D.pixels, yB, colour);
-                                xA += xStepAB;
-                                xC += xStepAC;
-                                yB += Pix2D.width;
-                            }
-                        }
-
-                        this.flatRaster(xA >> 16, xB >> 16, Pix2D.pixels, yB, colour);
-                        xA += xStepAB;
-                        xB += xStepBC;
-                        yB += Pix2D.width;
-                    }
-                } else {
-                    yA -= yC;
-                    yC -= yB;
-                    yB = this.scanline[yB];
-
-                    while (true) {
-                        yC--;
-
-                        if (yC < 0) {
-                            while (true) {
-                                yA--;
-
-                                if (yA < 0) {
-                                    return;
-                                }
-
-                                this.flatRaster(xC >> 16, xA >> 16, Pix2D.pixels, yB, colour);
-                                xA += xStepAB;
-                                xC += xStepAC;
-                                yB += Pix2D.width;
-                            }
-                        }
-
-                        this.flatRaster(xB >> 16, xA >> 16, Pix2D.pixels, yB, colour);
-                        xA += xStepAB;
-                        xB += xStepBC;
-                        yB += Pix2D.width;
-                    }
-                }
-            } else {
-                xC = xB <<= 16;
-
-                if (yB < 0) {
-                    xC -= xStepAB * yB;
-                    xB -= xStepBC * yB;
-                    yB = 0;
-                }
-
-                xA <<= 16;
-
-                if (yA < 0) {
-                    xA -= xStepAC * yA;
-                    yA = 0;
-                }
-
-                yC -= yA;
-                yA -= yB;
-                yB = this.scanline[yB];
-
-                if (xStepAB < xStepBC) {
-                    while (true) {
-                        yA--;
-
-                        if (yA < 0) {
-                            while (true) {
-                                yC--;
-
-                                if (yC < 0) {
-                                    return;
-                                }
-
-                                this.flatRaster(xA >> 16, xB >> 16, Pix2D.pixels, yB, colour);
-                                xA += xStepAC;
-                                xB += xStepBC;
-                                yB += Pix2D.width;
-                            }
-                        }
-
-                        this.flatRaster(xC >> 16, xB >> 16, Pix2D.pixels, yB, colour);
-                        xC += xStepAB;
-                        xB += xStepBC;
-                        yB += Pix2D.width;
-                    }
-                } else {
-                    while (true) {
-                        yA--;
-
-                        if (yA < 0) {
-                            while (true) {
-                                yC--;
-
-                                if (yC < 0) {
-                                    return;
-                                }
-
-                                this.flatRaster(xB >> 16, xA >> 16, Pix2D.pixels, yB, colour);
-                                xA += xStepAC;
-                                xB += xStepBC;
-                                yB += Pix2D.width;
-                            }
-                        }
-
-                        this.flatRaster(xB >> 16, xC >> 16, Pix2D.pixels, yB, colour);
-                        xC += xStepAB;
-                        xB += xStepBC;
-                        yB += Pix2D.width;
-                    }
+                var3 = (var5 - var4) & 3;
+                if (var3 > 0) {
+                    var2 = arrayAtI32(palette, var6 >> 8);
+                    var2 = (((Math.imul(var2 & 16711935, var33) >> 8) & 16711935) + ((Math.imul(var2 & 0xff00, var33) >> 8) & 0xff00)) | 0;
+
+                    do {
+                        const var38 = arrayAtI32(var0, var1);
+                        arrayPutI32(var0, var1++, (var2 + ((Math.imul(var38 & 16711935, var32) >> 8) & 16711935) + ((Math.imul(var38 & 0xff00, var32) >> 8) & 0xff00)) | 0);
+                    } while (--var3 > 0);
                 }
             }
         } else {
-            if (yC >= Pix2D.clipMaxY) {
-                return;
-            }
-
-            if (yA > Pix2D.clipMaxY) {
-                yA = Pix2D.clipMaxY;
-            }
-
-            if (yB > Pix2D.clipMaxY) {
-                yB = Pix2D.clipMaxY;
-            }
-
-            if (yA < yB) {
-                xB = xC <<= 16;
-
-                if (yC < 0) {
-                    xB -= xStepBC * yC;
-                    xC -= xStepAC * yC;
-                    yC = 0;
-                }
-
-                xA <<= 16;
-
-                if (yA < 0) {
-                    xA -= xStepAB * yA;
-                    yA = 0;
-                }
-
-                yB -= yA;
-                yA -= yC;
-                yC = this.scanline[yC];
-
-                if (xStepBC < xStepAC) {
-                    while (true) {
-                        yA--;
-
-                        if (yA < 0) {
-                            while (true) {
-                                yB--;
-
-                                if (yB < 0) {
-                                    return;
-                                }
-
-                                this.flatRaster(xB >> 16, xA >> 16, Pix2D.pixels, yC, colour);
-                                xB += xStepBC;
-                                xA += xStepAB;
-                                yC += Pix2D.width;
-                            }
-                        }
-
-                        this.flatRaster(xB >> 16, xC >> 16, Pix2D.pixels, yC, colour);
-                        xB += xStepBC;
-                        xC += xStepAC;
-                        yC += Pix2D.width;
-                    }
-                } else {
-                    while (true) {
-                        yA--;
-
-                        if (yA < 0) {
-                            while (true) {
-                                yB--;
-
-                                if (yB < 0) {
-                                    return;
-                                }
-
-                                this.flatRaster(xA >> 16, xB >> 16, Pix2D.pixels, yC, colour);
-                                xB += xStepBC;
-                                xA += xStepAB;
-                                yC += Pix2D.width;
-                            }
-                        }
-
-                        this.flatRaster(xC >> 16, xB >> 16, Pix2D.pixels, yC, colour);
-                        xB += xStepBC;
-                        xC += xStepAC;
-                        yC += Pix2D.width;
-                    }
-                }
+            var3 = (var5 - var4) | 0;
+            if (trans === 0) {
+                do {
+                    arrayPutI32(var0, var1++, arrayAtI32(palette, var6 >> 8));
+                    var6 = (var6 + var7) | 0;
+                } while (--var3 > 0);
             } else {
-                xA = xC <<= 16;
+                const var8 = trans;
+                const var9 = (256 - trans) | 0;
 
-                if (yC < 0) {
-                    xA -= xStepBC * yC;
-                    xC -= xStepAC * yC;
-                    yC = 0;
-                }
-
-                xB <<= 16;
-
-                if (yB < 0) {
-                    xB -= xStepAB * yB;
-                    yB = 0;
-                }
-
-                yA -= yB;
-                yB -= yC;
-                yC = this.scanline[yC];
-
-                if (xStepBC < xStepAC) {
-                    while (true) {
-                        yB--;
-
-                        if (yB < 0) {
-                            while (true) {
-                                yA--;
-
-                                if (yA < 0) {
-                                    return;
-                                }
-
-                                this.flatRaster(xB >> 16, xC >> 16, Pix2D.pixels, yC, colour);
-                                xB += xStepAB;
-                                xC += xStepAC;
-                                yC += Pix2D.width;
-                            }
-                        }
-
-                        this.flatRaster(xA >> 16, xC >> 16, Pix2D.pixels, yC, colour);
-                        xA += xStepBC;
-                        xC += xStepAC;
-                        yC += Pix2D.width;
-                    }
-                } else {
-                    while (true) {
-                        yB--;
-
-                        if (yB < 0) {
-                            while (true) {
-                                yA--;
-
-                                if (yA < 0) {
-                                    return;
-                                }
-
-                                this.flatRaster(xC >> 16, xB >> 16, Pix2D.pixels, yC, colour);
-                                xB += xStepAB;
-                                xC += xStepAC;
-                                yC += Pix2D.width;
-                            }
-                        }
-
-                        this.flatRaster(xC >> 16, xA >> 16, Pix2D.pixels, yC, colour);
-                        xA += xStepBC;
-                        xC += xStepAC;
-                        yC += Pix2D.width;
-                    }
-                }
+                do {
+                    var2 = arrayAtI32(palette, var6 >> 8);
+                    var6 = (var6 + var7) | 0;
+                    var2 = (((Math.imul(var2 & 16711935, var9) >> 8) & 16711935) + ((Math.imul(var2 & 0xff00, var9) >> 8) & 0xff00)) | 0;
+                    const var10 = arrayAtI32(var0, var1);
+                    arrayPutI32(var0, var1++, (var2 + ((Math.imul(var10 & 16711935, var8) >> 8) & 16711935) + ((Math.imul(var10 & 0xff00, var8) >> 8) & 0xff00)) | 0);
+                } while (--var3 > 0);
             }
         }
     }
 
-    private static flatRaster(
-        xA: number, xB: number,
-        dst: Int32Array, off: number,
-        colour: number
+    // dc.a([I[IIIIIIIIIIIIII)V
+    // var0 = destination, var1 = texels, var4 = row offset, var5/var6 = x span, var7/var8 = shade and step,
+    // var9..var11 = perspective numerators at the row origin, var12..var14 = their x steps.
+    // var2 and var3 are scratch registers the callers pass as 0.
+    private static terrainTextureRaster(
+        var0: Int32Array | null,
+        var1: Int32Array | null,
+        var2: number,
+        var3: number,
+        var4: number,
+        var5: number,
+        var6: number,
+        var7: number,
+        var8: number,
+        var9: number,
+        var10: number,
+        var11: number,
+        var12: number,
+        var13: number,
+        var14: number
     ): void {
-        if (this.hclip) {
-            if (xB > Pix2D.sizeX) {
-                xB = Pix2D.sizeX;
+        if (Pix3D.hclip) {
+            if (var6 > Pix3D.width) {
+                var6 = Pix3D.width;
             }
 
-            if (xA < 0) {
-                xA = 0;
+            if (var5 < 0) {
+                var5 = 0;
             }
         }
 
-        if (xA >= xB) {
+        if (var5 >= var6) {
             return;
         }
 
-        off += xA;
-        let len: number = (xB - xA) >> 2;
+        if (Pix3D.spanTarget !== null && Pix3D.spanTarget.record(var0, 2, var4, var5, var6, var7, var8, 0, (Pix3D.lowMemTexture ? 1 : 0) | (Pix3D.opaque ? 2 : 0), var1, Pix3D.originX, var9, var10, var11, var12, var13, var14)) return;
 
-        if (this.trans === 0) {
-            while (true) {
-                len--;
+        var4 = (var4 + var5) | 0;
+        var7 = (var7 + Math.imul(var8, var5)) | 0;
+        let var17 = (var6 - var5) | 0;
+        if (Pix3D.lowMemTexture) {
+            const var23 = (var5 - Pix3D.originX) | 0;
+            var9 = (var9 + Math.imul(var12, var23)) | 0;
+            var10 = (var10 + Math.imul(var13, var23)) | 0;
+            var11 = (var11 + Math.imul(var14, var23)) | 0;
+            let var22 = var11 >> 12;
+            let var18: number;
+            let var19: number;
+            if (var22 !== 0) {
+                var18 = (var9 / var22) | 0;
+                var19 = (var10 / var22) | 0;
+            } else {
+                var18 = 0;
+                var19 = 0;
+            }
 
-                if (len < 0) {
-                    len = (xB - xA) & 0x3;
+            var9 = (var9 + Math.imul(var12, var17)) | 0;
+            var10 = (var10 + Math.imul(var13, var17)) | 0;
+            var11 = (var11 + Math.imul(var14, var17)) | 0;
+            var22 = var11 >> 12;
+            let var20: number;
+            let var21: number;
+            if (var22 !== 0) {
+                var20 = (var9 / var22) | 0;
+                var21 = (var10 / var22) | 0;
+            } else {
+                var20 = 0;
+                var21 = 0;
+            }
 
-                    while (true) {
-                        len--;
-
-                        if (len < 0) {
-                            return;
-                        }
-
-                        dst[off++] = colour;
-                    }
+            var2 = ((var18 << 20) + var19) | 0;
+            const var16 = ((((((var20 - var18) | 0) / var17) | 0) << 20) + ((((var21 - var19) | 0) / var17) | 0)) | 0;
+            var17 >>= 3;
+            var8 <<= 3;
+            let var15 = var7 >> 8;
+            if (Pix3D.opaque) {
+                if (var17 > 0) {
+                    do {
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var7 = (var7 + var8) | 0;
+                        var15 = var7 >> 8;
+                    } while (--var17 > 0);
                 }
 
-                dst[off++] = colour;
-                dst[off++] = colour;
-                dst[off++] = colour;
-                dst[off++] = colour;
+                var17 = (var6 - var5) & 7;
+                if (var17 > 0) {
+                    do {
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                    } while (--var17 > 0);
+
+                    return;
+                }
+
+                return;
+            }
+
+            if (var17 > 0) {
+                do {
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    var7 = (var7 + var8) | 0;
+                    var15 = var7 >> 8;
+                } while (--var17 > 0);
+            }
+
+            var17 = (var6 - var5) & 7;
+            if (var17 > 0) {
+                do {
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                } while (--var17 > 0);
+
+                return;
             }
         } else {
-            const alpha: number = this.trans;
-            const invAlpha: number = 256 - this.trans;
-            colour = ((((colour & 0xff00ff) * invAlpha) >> 8) & 0xff00ff) + ((((colour & 0xff00) * invAlpha) >> 8) & 0xff00);
+            const var149 = (var5 - Pix3D.originX) | 0;
+            var9 = (var9 + Math.imul(var12, var149)) | 0;
+            var10 = (var10 + Math.imul(var13, var149)) | 0;
+            var11 = (var11 + Math.imul(var14, var149)) | 0;
+            let var147 = var11 >> 14;
+            let var142: number;
+            let var143: number;
+            if (var147 !== 0) {
+                var142 = (var9 / var147) | 0;
+                var143 = (var10 / var147) | 0;
+            } else {
+                var142 = 0;
+                var143 = 0;
+            }
 
-            while (true) {
-                len--;
+            var9 = (var9 + Math.imul(var12, var17)) | 0;
+            var10 = (var10 + Math.imul(var13, var17)) | 0;
+            var11 = (var11 + Math.imul(var14, var17)) | 0;
+            var147 = var11 >> 14;
+            let var144: number;
+            let var145: number;
+            if (var147 !== 0) {
+                var144 = (var9 / var147) | 0;
+                var145 = (var10 / var147) | 0;
+            } else {
+                var144 = 0;
+                var145 = 0;
+            }
 
-                if (len < 0) {
-                    len = (xB - xA) & 0x3;
-
-                    while (true) {
-                        len--;
-
-                        if (len < 0) {
-                            return;
-                        }
-
-                        dst[off++] = colour + ((((dst[off] & 0xff00ff) * alpha) >> 8) & 0xff00ff) + ((((dst[off] & 0xff00) * alpha) >> 8) & 0xff00);
-                    }
+            var2 = ((var142 << 18) + var143) | 0;
+            const var135 = ((((((var144 - var142) | 0) / var17) | 0) << 18) + ((((var145 - var143) | 0) / var17) | 0)) | 0;
+            var17 >>= 3;
+            var8 <<= 3;
+            let var134 = var7 >> 8;
+            if (Pix3D.opaque) {
+                if (var17 > 0) {
+                    do {
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        var2 = (var2 + var135) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        var2 = (var2 + var135) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        var2 = (var2 + var135) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        var2 = (var2 + var135) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        var2 = (var2 + var135) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        var2 = (var2 + var135) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        var2 = (var2 + var135) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        var2 = (var2 + var135) | 0;
+                        var7 = (var7 + var8) | 0;
+                        var134 = var7 >> 8;
+                    } while (--var17 > 0);
                 }
 
-                dst[off++] = colour + ((((dst[off] & 0xff00ff) * alpha) >> 8) & 0xff00ff) + ((((dst[off] & 0xff00) * alpha) >> 8) & 0xff00);
-                dst[off++] = colour + ((((dst[off] & 0xff00ff) * alpha) >> 8) & 0xff00ff) + ((((dst[off] & 0xff00) * alpha) >> 8) & 0xff00);
-                dst[off++] = colour + ((((dst[off] & 0xff00ff) * alpha) >> 8) & 0xff00ff) + ((((dst[off] & 0xff00) * alpha) >> 8) & 0xff00);
-                dst[off++] = colour + ((((dst[off] & 0xff00ff) * alpha) >> 8) & 0xff00ff) + ((((dst[off] & 0xff00) * alpha) >> 8) & 0xff00);
+                var17 = (var6 - var5) & 7;
+                if (var17 > 0) {
+                    do {
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        var2 = (var2 + var135) | 0;
+                    } while (--var17 > 0);
+
+                    return;
+                }
+            } else {
+                if (var17 > 0) {
+                    do {
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var135) | 0;
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var135) | 0;
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var135) | 0;
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var135) | 0;
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var135) | 0;
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var135) | 0;
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var135) | 0;
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var135) | 0;
+                        var7 = (var7 + var8) | 0;
+                        var134 = var7 >> 8;
+                    } while (--var17 > 0);
+                }
+
+                var17 = (var6 - var5) & 7;
+                if (var17 > 0) {
+                    do {
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var134) & -16711936) + (Math.imul(var3 & 0xff00, var134) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var135) | 0;
+                    } while (--var17 > 0);
+                }
             }
         }
     }
 
-    static textureTriangle(
-        xA: number, xB: number, xC: number,
-        yA: number, yB: number, yC: number,
-        shadeA: number, shadeB: number, shadeC: number,
-        originX: number, originY: number, originZ: number,
-        txB: number, txC: number,
-        tyB: number, tyC: number,
-        tzB: number, tzC: number,
-        texture: number
+    // dc.a(IIIIIIIIIIIIIIIIIII)V
+    // var0..var2 = y, var3..var5 = x, var6..var8 = HSL colours, var9..var17 = view-space texture
+    // basis (origin, u and v points), var18 = texture id.
+    static terrainTextureTriangle(
+        var0: number,
+        var1: number,
+        var2: number,
+        var3: number,
+        var4: number,
+        var5: number,
+        var6: number,
+        var7: number,
+        var8: number,
+        var9: number,
+        var10: number,
+        var11: number,
+        var12: number,
+        var13: number,
+        var14: number,
+        var15: number,
+        var16: number,
+        var17: number,
+        var18: number
     ): void {
-        const texels: Int32Array | null = this.getTexels(texture);
-        this.opaque = !this.texTrans[texture];
-
-        const verticalX: number = originX - txB;
-        const verticalY: number = originY - tyB;
-        const verticalZ: number = originZ - tzB;
-
-        const horizontalX: number = txC - originX;
-        const horizontalY: number = tyC - originY;
-        const horizontalZ: number = tzC - originZ;
-
-        let u: number = (horizontalX * originY - horizontalY * originX) << 14;
-        const uStride: number = (horizontalY * originZ - horizontalZ * originY) << 8;
-        const uStepVertical: number = (horizontalZ * originX - horizontalX * originZ) << 5;
-
-        let v: number = (verticalX * originY - verticalY * originX) << 14;
-        const vStride: number = (verticalY * originZ - verticalZ * originY) << 8;
-        const vStepVertical: number = (verticalZ * originX - verticalX * originZ) << 5;
-
-        let w: number = (verticalY * horizontalX - verticalX * horizontalY) << 14;
-        const wStride: number = (verticalZ * horizontalY - verticalY * horizontalZ) << 8;
-        const wStepVertical: number = (verticalX * horizontalZ - verticalZ * horizontalX) << 5;
-
-        let xStepAB: number = 0;
-        let shadeStepAB: number = 0;
-        if (yB !== yA) {
-            xStepAB = (((xB - xA) << 16) / (yB - yA)) | 0;
-            shadeStepAB = (((shadeB - shadeA) << 16) / (yB - yA)) | 0;
+        const var19 = requireNonNull(Pix3D.textureProvider).getTextureData(var18, Pix3D.brightness);
+        if (var19 === null) {
+            const var105 = requireNonNull(Pix3D.textureProvider).getTextureColour(var18);
+            Pix3D.gouraudTriangle(var0, var1, var2, var3, var4, var5, Pix3D.adjustLightness(var105, var6), Pix3D.adjustLightness(var105, var7), Pix3D.adjustLightness(var105, var8));
+            return;
         }
 
-        let xStepBC: number = 0;
-        let shadeStepBC: number = 0;
-        if (yC !== yB) {
-            xStepBC = (((xC - xB) << 16) / (yC - yB)) | 0;
-            shadeStepBC = (((shadeC - shadeB) << 16) / (yC - yB)) | 0;
+        Pix3D.lowMemTexture = requireNonNull(Pix3D.textureProvider).getTextureSmall(var18);
+        Pix3D.opaque = requireNonNull(Pix3D.textureProvider).getTextureSolid(var18);
+
+        const var20 = (var4 - var3) | 0;
+        const var21 = (var1 - var0) | 0;
+        const var22 = (var5 - var3) | 0;
+        const var23 = (var2 - var0) | 0;
+        const var24 = (var7 - var6) | 0;
+        const var25 = (var8 - var6) | 0;
+        let var26 = 0;
+        if (var1 !== var0) {
+            var26 = (((var4 - var3) << 16) / ((var1 - var0) | 0)) | 0;
         }
 
-        let xStepAC: number = 0;
-        let shadeStepAC: number = 0;
-        if (yC !== yA) {
-            xStepAC = (((xA - xC) << 16) / (yA - yC)) | 0;
-            shadeStepAC = (((shadeA - shadeC) << 16) / (yA - yC)) | 0;
+        let var27 = 0;
+        if (var2 !== var1) {
+            var27 = (((var5 - var4) << 16) / ((var2 - var1) | 0)) | 0;
         }
 
-        if (yA <= yB && yA <= yC) {
-            if (yA >= Pix2D.clipMaxY) {
+        let var28 = 0;
+        if (var2 !== var0) {
+            var28 = (((var3 - var5) << 16) / ((var0 - var2) | 0)) | 0;
+        }
+
+        const var29 = (Math.imul(var20, var23) - Math.imul(var22, var21)) | 0;
+        if (var29 === 0) {
+            return;
+        }
+
+        const var30 = (((Math.imul(var24, var23) - Math.imul(var25, var21)) << 9) / var29) | 0;
+        const var31 = (((Math.imul(var25, var20) - Math.imul(var24, var22)) << 9) / var29) | 0;
+        var10 = (var9 - var10) | 0;
+        var13 = (var12 - var13) | 0;
+        var16 = (var15 - var16) | 0;
+        var11 = (var11 - var9) | 0;
+        var14 = (var14 - var12) | 0;
+        var17 = (var17 - var15) | 0;
+        let var32 = (Math.imul(var11, var12) - Math.imul(var14, var9)) << 14;
+        const var33 = (Math.imul(var14, var15) - Math.imul(var17, var12)) << 5;
+        const var34 = (Math.imul(var17, var9) - Math.imul(var11, var15)) << 5;
+        let var35 = (Math.imul(var10, var12) - Math.imul(var13, var9)) << 14;
+        const var36 = (Math.imul(var13, var15) - Math.imul(var16, var12)) << 5;
+        const var37 = (Math.imul(var16, var9) - Math.imul(var10, var15)) << 5;
+        let var38 = (Math.imul(var13, var11) - Math.imul(var10, var14)) << 14;
+        const var39 = (Math.imul(var16, var14) - Math.imul(var13, var17)) << 5;
+        const var40 = (Math.imul(var10, var17) - Math.imul(var16, var11)) << 5;
+        if (var0 <= var1 && var0 <= var2) {
+            if (var0 >= Pix3D.height) {
                 return;
             }
 
-            if (yB > Pix2D.clipMaxY) {
-                yB = Pix2D.clipMaxY;
+            if (var1 > Pix3D.height) {
+                var1 = Pix3D.height;
             }
 
-            if (yC > Pix2D.clipMaxY) {
-                yC = Pix2D.clipMaxY;
+            if (var2 > Pix3D.height) {
+                var2 = Pix3D.height;
             }
 
-            if (yB < yC) {
-                xC = xA <<= 16;
-                shadeC = shadeA <<= 16;
-
-                if (yA < 0) {
-                    xC -= xStepAC * yA;
-                    xA -= xStepAB * yA;
-                    shadeC -= shadeStepAC * yA;
-                    shadeA -= shadeStepAB * yA;
-                    yA = 0;
+            var6 = ((var6 << 9) - Math.imul(var30, var3) + var30) | 0;
+            if (var1 < var2) {
+                let var83: number;
+                var5 = var83 = var3 << 16;
+                if (var0 < 0) {
+                    var5 = (var5 - Math.imul(var28, var0)) | 0;
+                    var83 = (var83 - Math.imul(var26, var0)) | 0;
+                    var6 = (var6 - Math.imul(var31, var0)) | 0;
+                    var0 = 0;
                 }
 
-                xB <<= 16;
-                shadeB <<= 16;
-
-                if (yB < 0) {
-                    xB -= xStepBC * yB;
-                    shadeB -= shadeStepBC * yB;
-                    yB = 0;
+                var4 <<= 16;
+                if (var1 < 0) {
+                    var4 = (var4 - Math.imul(var27, var1)) | 0;
+                    var1 = 0;
                 }
 
-                const dy: number = yA - this.originY;
-                u += uStepVertical * dy;
-                v += vStepVertical * dy;
-                w += wStepVertical * dy;
-                u |= 0;
-                v |= 0;
-                w |= 0;
+                const var128 = (var0 - Pix3D.originY) | 0;
+                var32 = (var32 + Math.imul(var34, var128)) | 0;
+                var35 = (var35 + Math.imul(var37, var128)) | 0;
+                var38 = (var38 + Math.imul(var40, var128)) | 0;
+                if ((var0 !== var1 && var28 < var26) || (var0 === var1 && var28 > var27)) {
+                    var2 = (var2 - var1) | 0;
+                    var1 = (var1 - var0) | 0;
 
-                if ((yA !== yB && xStepAC < xStepAB) || (yA === yB && xStepAC > xStepBC)) {
-                    yC -= yB;
-                    yB -= yA;
-                    yA = this.scanline[yA];
+                    for (var0 = arrayAtI32(Pix3D.scanline, var0); --var1 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var0, var5 >> 16, var83 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var28) | 0;
+                        var83 = (var83 + var26) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
 
-                    while (true) {
-                        yB--;
-
-                        if (yB < 0) {
-                            while (true) {
-                                yC--;
-
-                                if (yC < 0) {
-                                    return;
-                                }
-
-                                this.textureRaster(xC >> 16, xB >> 16, Pix2D.pixels, yA, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeC >> 8, shadeB >> 8);
-                                xC += xStepAC;
-                                xB += xStepBC;
-                                shadeC += shadeStepAC;
-                                shadeB += shadeStepBC;
-                                yA += Pix2D.width;
-                                u += uStepVertical;
-                                v += vStepVertical;
-                                w += wStepVertical;
-                                u |= 0;
-                                v |= 0;
-                                w |= 0;
-                            }
-                        }
-
-                        this.textureRaster(xC >> 16, xA >> 16, Pix2D.pixels, yA, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeC >> 8, shadeA >> 8);
-                        xC += xStepAC;
-                        xA += xStepAB;
-                        shadeC += shadeStepAC;
-                        shadeA += shadeStepAB;
-                        yA += Pix2D.width;
-                        u += uStepVertical;
-                        v += vStepVertical;
-                        w += wStepVertical;
-                        u |= 0;
-                        v |= 0;
-                        w |= 0;
+                    while (--var2 >= 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var0, var5 >> 16, var4 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var28) | 0;
+                        var4 = (var4 + var27) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
                     }
                 } else {
-                    yC -= yB;
-                    yB -= yA;
-                    yA = this.scanline[yA];
+                    var2 = (var2 - var1) | 0;
+                    var1 = (var1 - var0) | 0;
 
-                    while (true) {
-                        yB--;
+                    for (var0 = arrayAtI32(Pix3D.scanline, var0); --var1 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var0, var83 >> 16, var5 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var28) | 0;
+                        var83 = (var83 + var26) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
 
-                        if (yB < 0) {
-                            while (true) {
-                                yC--;
-
-                                if (yC < 0) {
-                                    return;
-                                }
-
-                                this.textureRaster(xB >> 16, xC >> 16, Pix2D.pixels, yA, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeB >> 8, shadeC >> 8);
-                                xC += xStepAC;
-                                xB += xStepBC;
-                                shadeC += shadeStepAC;
-                                shadeB += shadeStepBC;
-                                yA += Pix2D.width;
-                                u += uStepVertical;
-                                v += vStepVertical;
-                                w += wStepVertical;
-                                u |= 0;
-                                v |= 0;
-                                w |= 0;
-                            }
-                        }
-
-                        this.textureRaster(xA >> 16, xC >> 16, Pix2D.pixels, yA, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeA >> 8, shadeC >> 8);
-                        xC += xStepAC;
-                        xA += xStepAB;
-                        shadeC += shadeStepAC;
-                        shadeA += shadeStepAB;
-                        yA += Pix2D.width;
-                        u += uStepVertical;
-                        v += vStepVertical;
-                        w += wStepVertical;
-                        u |= 0;
-                        v |= 0;
-                        w |= 0;
+                    while (--var2 >= 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var0, var4 >> 16, var5 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var28) | 0;
+                        var4 = (var4 + var27) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
                     }
                 }
             } else {
-                xB = xA <<= 16;
-                shadeB = shadeA <<= 16;
-
-                if (yA < 0) {
-                    xB -= xStepAC * yA;
-                    xA -= xStepAB * yA;
-                    shadeB -= shadeStepAC * yA;
-                    shadeA -= shadeStepAB * yA;
-                    yA = 0;
+                let var82: number;
+                var4 = var82 = var3 << 16;
+                if (var0 < 0) {
+                    var4 = (var4 - Math.imul(var28, var0)) | 0;
+                    var82 = (var82 - Math.imul(var26, var0)) | 0;
+                    var6 = (var6 - Math.imul(var31, var0)) | 0;
+                    var0 = 0;
                 }
 
-                xC <<= 16;
-                shadeC <<= 16;
-
-                if (yC < 0) {
-                    xC -= xStepBC * yC;
-                    shadeC -= shadeStepBC * yC;
-                    yC = 0;
+                var5 <<= 16;
+                if (var2 < 0) {
+                    var5 = (var5 - Math.imul(var27, var2)) | 0;
+                    var2 = 0;
                 }
 
-                const dy: number = yA - this.originY;
-                u += uStepVertical * dy;
-                v += vStepVertical * dy;
-                w += wStepVertical * dy;
-                u |= 0;
-                v |= 0;
-                w |= 0;
+                const var127 = (var0 - Pix3D.originY) | 0;
+                var32 = (var32 + Math.imul(var34, var127)) | 0;
+                var35 = (var35 + Math.imul(var37, var127)) | 0;
+                var38 = (var38 + Math.imul(var40, var127)) | 0;
+                if ((var0 !== var2 && var28 < var26) || (var0 === var2 && var27 > var26)) {
+                    var1 = (var1 - var2) | 0;
+                    var2 = (var2 - var0) | 0;
 
-                if ((yA === yC || xStepAC >= xStepAB) && (yA !== yC || xStepBC <= xStepAB)) {
-                    yB -= yC;
-                    yC -= yA;
-                    yA = this.scanline[yA];
+                    for (var0 = arrayAtI32(Pix3D.scanline, var0); --var2 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var0, var4 >> 16, var82 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var28) | 0;
+                        var82 = (var82 + var26) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
 
-                    while (true) {
-                        yC--;
-
-                        if (yC < 0) {
-                            while (true) {
-                                yB--;
-
-                                if (yB < 0) {
-                                    return;
-                                }
-
-                                this.textureRaster(xA >> 16, xC >> 16, Pix2D.pixels, yA, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeA >> 8, shadeC >> 8);
-                                xC += xStepBC;
-                                xA += xStepAB;
-                                shadeC += shadeStepBC;
-                                shadeA += shadeStepAB;
-                                yA += Pix2D.width;
-                                u += uStepVertical;
-                                v += vStepVertical;
-                                w += wStepVertical;
-                                u |= 0;
-                                v |= 0;
-                                w |= 0;
-                            }
-                        }
-
-                        this.textureRaster(xA >> 16, xB >> 16, Pix2D.pixels, yA, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeA >> 8, shadeB >> 8);
-                        xB += xStepAC;
-                        xA += xStepAB;
-                        shadeB += shadeStepAC;
-                        shadeA += shadeStepAB;
-                        yA += Pix2D.width;
-                        u += uStepVertical;
-                        v += vStepVertical;
-                        w += wStepVertical;
-                        u |= 0;
-                        v |= 0;
-                        w |= 0;
+                    while (--var1 >= 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var0, var5 >> 16, var82 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var27) | 0;
+                        var82 = (var82 + var26) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
                     }
                 } else {
-                    yB -= yC;
-                    yC -= yA;
-                    yA = this.scanline[yA];
+                    var1 = (var1 - var2) | 0;
+                    var2 = (var2 - var0) | 0;
 
-                    while (true) {
-                        yC--;
+                    for (var0 = arrayAtI32(Pix3D.scanline, var0); --var2 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var0, var82 >> 16, var4 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var28) | 0;
+                        var82 = (var82 + var26) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
 
-                        if (yC < 0) {
-                            while (true) {
-                                yB--;
-
-                                if (yB < 0) {
-                                    return;
-                                }
-
-                                this.textureRaster(xC >> 16, xA >> 16, Pix2D.pixels, yA, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeC >> 8, shadeA >> 8);
-                                xC += xStepBC;
-                                xA += xStepAB;
-                                shadeC += shadeStepBC;
-                                shadeA += shadeStepAB;
-                                yA += Pix2D.width;
-                                u += uStepVertical;
-                                v += vStepVertical;
-                                w += wStepVertical;
-                                u |= 0;
-                                v |= 0;
-                                w |= 0;
-                            }
-                        }
-
-                        this.textureRaster(xB >> 16, xA >> 16, Pix2D.pixels, yA, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeB >> 8, shadeA >> 8);
-                        xB += xStepAC;
-                        xA += xStepAB;
-                        shadeB += shadeStepAC;
-                        shadeA += shadeStepAB;
-                        yA += Pix2D.width;
-                        u += uStepVertical;
-                        v += vStepVertical;
-                        w += wStepVertical;
-                        u |= 0;
-                        v |= 0;
-                        w |= 0;
+                    while (--var1 >= 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var0, var82 >> 16, var5 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var27) | 0;
+                        var82 = (var82 + var26) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
                     }
                 }
             }
-        } else if (yB <= yC) {
-            if (yB >= Pix2D.clipMaxY) {
+        } else if (var1 <= var2) {
+            if (var1 >= Pix3D.height) {
                 return;
             }
 
-            if (yC > Pix2D.clipMaxY) {
-                yC = Pix2D.clipMaxY;
+            if (var2 > Pix3D.height) {
+                var2 = Pix3D.height;
             }
 
-            if (yA > Pix2D.clipMaxY) {
-                yA = Pix2D.clipMaxY;
+            if (var0 > Pix3D.height) {
+                var0 = Pix3D.height;
             }
 
-            if (yC < yA) {
-                xA = xB <<= 16;
-                shadeA = shadeB <<= 16;
-
-                if (yB < 0) {
-                    xA -= xStepAB * yB;
-                    xB -= xStepBC * yB;
-                    shadeA -= shadeStepAB * yB;
-                    shadeB -= shadeStepBC * yB;
-                    yB = 0;
+            var7 = ((var7 << 9) - Math.imul(var30, var4) + var30) | 0;
+            if (var2 < var0) {
+                let var87: number;
+                var3 = var87 = var4 << 16;
+                if (var1 < 0) {
+                    var3 = (var3 - Math.imul(var26, var1)) | 0;
+                    var87 = (var87 - Math.imul(var27, var1)) | 0;
+                    var7 = (var7 - Math.imul(var31, var1)) | 0;
+                    var1 = 0;
                 }
 
-                xC <<= 16;
-                shadeC <<= 16;
-
-                if (yC < 0) {
-                    xC -= xStepAC * yC;
-                    shadeC -= shadeStepAC * yC;
-                    yC = 0;
+                var5 <<= 16;
+                if (var2 < 0) {
+                    var5 = (var5 - Math.imul(var28, var2)) | 0;
+                    var2 = 0;
                 }
 
-                const dy: number = yB - this.originY;
-                u += uStepVertical * dy;
-                v += vStepVertical * dy;
-                w += wStepVertical * dy;
-                u |= 0;
-                v |= 0;
-                w |= 0;
+                const var126 = (var1 - Pix3D.originY) | 0;
+                var32 = (var32 + Math.imul(var34, var126)) | 0;
+                var35 = (var35 + Math.imul(var37, var126)) | 0;
+                var38 = (var38 + Math.imul(var40, var126)) | 0;
+                if ((var1 !== var2 && var26 < var27) || (var1 === var2 && var26 > var28)) {
+                    var0 = (var0 - var2) | 0;
+                    var2 = (var2 - var1) | 0;
 
-                if ((yB !== yC && xStepAB < xStepBC) || (yB === yC && xStepAB > xStepAC)) {
-                    yA -= yC;
-                    yC -= yB;
-                    yB = this.scanline[yB];
+                    for (var1 = arrayAtI32(Pix3D.scanline, var1); --var2 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var1, var3 >> 16, var87 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var26) | 0;
+                        var87 = (var87 + var27) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
 
-                    while (true) {
-                        yC--;
-
-                        if (yC < 0) {
-                            while (true) {
-                                yA--;
-
-                                if (yA < 0) {
-                                    return;
-                                }
-
-                                this.textureRaster(xA >> 16, xC >> 16, Pix2D.pixels, yB, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeA >> 8, shadeC >> 8);
-                                xA += xStepAB;
-                                xC += xStepAC;
-                                shadeA += shadeStepAB;
-                                shadeC += shadeStepAC;
-                                yB += Pix2D.width;
-                                u += uStepVertical;
-                                v += vStepVertical;
-                                w += wStepVertical;
-                                u |= 0;
-                                v |= 0;
-                                w |= 0;
-                            }
-                        }
-
-                        this.textureRaster(xA >> 16, xB >> 16, Pix2D.pixels, yB, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeA >> 8, shadeB >> 8);
-                        xA += xStepAB;
-                        xB += xStepBC;
-                        shadeA += shadeStepAB;
-                        shadeB += shadeStepBC;
-                        yB += Pix2D.width;
-                        u += uStepVertical;
-                        v += vStepVertical;
-                        w += wStepVertical;
-                        u |= 0;
-                        v |= 0;
-                        w |= 0;
+                    while (--var0 >= 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var1, var3 >> 16, var5 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var26) | 0;
+                        var5 = (var5 + var28) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
                     }
                 } else {
-                    yA -= yC;
-                    yC -= yB;
-                    yB = this.scanline[yB];
+                    var0 = (var0 - var2) | 0;
+                    var2 = (var2 - var1) | 0;
 
-                    while (true) {
-                        yC--;
+                    for (var1 = arrayAtI32(Pix3D.scanline, var1); --var2 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var1, var87 >> 16, var3 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var26) | 0;
+                        var87 = (var87 + var27) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
 
-                        if (yC < 0) {
-                            while (true) {
-                                yA--;
-
-                                if (yA < 0) {
-                                    return;
-                                }
-
-                                this.textureRaster(xC >> 16, xA >> 16, Pix2D.pixels, yB, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeC >> 8, shadeA >> 8);
-                                xA += xStepAB;
-                                xC += xStepAC;
-                                shadeA += shadeStepAB;
-                                shadeC += shadeStepAC;
-                                yB += Pix2D.width;
-                                u += uStepVertical;
-                                v += vStepVertical;
-                                w += wStepVertical;
-                                u |= 0;
-                                v |= 0;
-                                w |= 0;
-                            }
-                        }
-
-                        this.textureRaster(xB >> 16, xA >> 16, Pix2D.pixels, yB, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeB >> 8, shadeA >> 8);
-                        xA += xStepAB;
-                        xB += xStepBC;
-                        shadeA += shadeStepAB;
-                        shadeB += shadeStepBC;
-                        yB += Pix2D.width;
-                        u += uStepVertical;
-                        v += vStepVertical;
-                        w += wStepVertical;
-                        u |= 0;
-                        v |= 0;
-                        w |= 0;
+                    while (--var0 >= 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var1, var5 >> 16, var3 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var26) | 0;
+                        var5 = (var5 + var28) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
                     }
                 }
             } else {
-                xC = xB <<= 16;
-                shadeC = shadeB <<= 16;
-
-                if (yB < 0) {
-                    xC -= xStepAB * yB;
-                    xB -= xStepBC * yB;
-                    shadeC -= shadeStepAB * yB;
-                    shadeB -= shadeStepBC * yB;
-                    yB = 0;
+                let var86: number;
+                var5 = var86 = var4 << 16;
+                if (var1 < 0) {
+                    var5 = (var5 - Math.imul(var26, var1)) | 0;
+                    var86 = (var86 - Math.imul(var27, var1)) | 0;
+                    var7 = (var7 - Math.imul(var31, var1)) | 0;
+                    var1 = 0;
                 }
 
-                xA <<= 16;
-                shadeA <<= 16;
-
-                if (yA < 0) {
-                    xA -= xStepAC * yA;
-                    shadeA -= shadeStepAC * yA;
-                    yA = 0;
+                var3 <<= 16;
+                if (var0 < 0) {
+                    var3 = (var3 - Math.imul(var28, var0)) | 0;
+                    var0 = 0;
                 }
 
-                const dy: number = yB - this.originY;
-                u += uStepVertical * dy;
-                v += vStepVertical * dy;
-                w += wStepVertical * dy;
-                u |= 0;
-                v |= 0;
-                w |= 0;
+                const var125 = (var1 - Pix3D.originY) | 0;
+                var32 = (var32 + Math.imul(var34, var125)) | 0;
+                var35 = (var35 + Math.imul(var37, var125)) | 0;
+                var38 = (var38 + Math.imul(var40, var125)) | 0;
+                if (var26 < var27) {
+                    var2 = (var2 - var0) | 0;
+                    var0 = (var0 - var1) | 0;
 
-                yC -= yA;
-                yA -= yB;
-                yB = this.scanline[yB];
+                    for (var1 = arrayAtI32(Pix3D.scanline, var1); --var0 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var1, var5 >> 16, var86 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var26) | 0;
+                        var86 = (var86 + var27) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
 
-                if (xStepAB < xStepBC) {
-                    while (true) {
-                        yA--;
-
-                        if (yA < 0) {
-                            while (true) {
-                                yC--;
-
-                                if (yC < 0) {
-                                    return;
-                                }
-
-                                this.textureRaster(xA >> 16, xB >> 16, Pix2D.pixels, yB, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeA >> 8, shadeB >> 8);
-                                xA += xStepAC;
-                                xB += xStepBC;
-                                shadeA += shadeStepAC;
-                                shadeB += shadeStepBC;
-                                yB += Pix2D.width;
-                                u += uStepVertical;
-                                v += vStepVertical;
-                                w += wStepVertical;
-                                u |= 0;
-                                v |= 0;
-                                w |= 0;
-                            }
-                        }
-
-                        this.textureRaster(xC >> 16, xB >> 16, Pix2D.pixels, yB, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeC >> 8, shadeB >> 8);
-                        xC += xStepAB;
-                        xB += xStepBC;
-                        shadeC += shadeStepAB;
-                        shadeB += shadeStepBC;
-                        yB += Pix2D.width;
-                        u += uStepVertical;
-                        v += vStepVertical;
-                        w += wStepVertical;
-                        u |= 0;
-                        v |= 0;
-                        w |= 0;
+                    while (--var2 >= 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var1, var3 >> 16, var86 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var28) | 0;
+                        var86 = (var86 + var27) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
                     }
                 } else {
-                    while (true) {
-                        yA--;
+                    var2 = (var2 - var0) | 0;
+                    var0 = (var0 - var1) | 0;
 
-                        if (yA < 0) {
-                            while (true) {
-                                yC--;
+                    for (var1 = arrayAtI32(Pix3D.scanline, var1); --var0 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var1, var86 >> 16, var5 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var26) | 0;
+                        var86 = (var86 + var27) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
 
-                                if (yC < 0) {
-                                    return;
-                                }
-
-                                this.textureRaster(xB >> 16, xA >> 16, Pix2D.pixels, yB, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeB >> 8, shadeA >> 8);
-                                xA += xStepAC;
-                                xB += xStepBC;
-                                shadeA += shadeStepAC;
-                                shadeB += shadeStepBC;
-                                yB += Pix2D.width;
-                                u += uStepVertical;
-                                v += vStepVertical;
-                                w += wStepVertical;
-                                u |= 0;
-                                v |= 0;
-                                w |= 0;
-                            }
-                        }
-
-                        this.textureRaster(xB >> 16, xC >> 16, Pix2D.pixels, yB, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeB >> 8, shadeC >> 8);
-                        xC += xStepAB;
-                        xB += xStepBC;
-                        shadeC += shadeStepAB;
-                        shadeB += shadeStepBC;
-                        yB += Pix2D.width;
-                        u += uStepVertical;
-                        v += vStepVertical;
-                        w += wStepVertical;
-                        u |= 0;
-                        v |= 0;
-                        w |= 0;
+                    while (--var2 >= 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var1, var86 >> 16, var3 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var28) | 0;
+                        var86 = (var86 + var27) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
                     }
                 }
             }
         } else {
-            if (yC >= Pix2D.clipMaxY) {
+            if (var2 >= Pix3D.height) {
                 return;
             }
 
-            if (yA > Pix2D.clipMaxY) {
-                yA = Pix2D.clipMaxY;
+            if (var0 > Pix3D.height) {
+                var0 = Pix3D.height;
             }
 
-            if (yB > Pix2D.clipMaxY) {
-                yB = Pix2D.clipMaxY;
+            if (var1 > Pix3D.height) {
+                var1 = Pix3D.height;
             }
 
-            if (yA < yB) {
-                xB = xC <<= 16;
-                shadeB = shadeC <<= 16;
-
-                if (yC < 0) {
-                    xB -= xStepBC * yC;
-                    xC -= xStepAC * yC;
-                    shadeB -= shadeStepBC * yC;
-                    shadeC -= shadeStepAC * yC;
-                    yC = 0;
+            var8 = ((var8 << 9) - Math.imul(var30, var5) + var30) | 0;
+            if (var0 < var1) {
+                let var91: number;
+                var4 = var91 = var5 << 16;
+                if (var2 < 0) {
+                    var4 = (var4 - Math.imul(var27, var2)) | 0;
+                    var91 = (var91 - Math.imul(var28, var2)) | 0;
+                    var8 = (var8 - Math.imul(var31, var2)) | 0;
+                    var2 = 0;
                 }
 
-                xA <<= 16;
-                shadeA <<= 16;
-
-                if (yA < 0) {
-                    xA -= xStepAB * yA;
-                    shadeA -= shadeStepAB * yA;
-                    yA = 0;
+                var3 <<= 16;
+                if (var0 < 0) {
+                    var3 = (var3 - Math.imul(var26, var0)) | 0;
+                    var0 = 0;
                 }
 
-                const dy: number = yC - this.originY;
-                u += uStepVertical * dy;
-                v += vStepVertical * dy;
-                w += wStepVertical * dy;
-                u |= 0;
-                v |= 0;
-                w |= 0;
+                const var124 = (var2 - Pix3D.originY) | 0;
+                var32 = (var32 + Math.imul(var34, var124)) | 0;
+                var35 = (var35 + Math.imul(var37, var124)) | 0;
+                var38 = (var38 + Math.imul(var40, var124)) | 0;
+                if (var27 < var28) {
+                    var1 = (var1 - var0) | 0;
+                    var0 = (var0 - var2) | 0;
 
-                yB -= yA;
-                yA -= yC;
-                yC = this.scanline[yC];
+                    for (var2 = arrayAtI32(Pix3D.scanline, var2); --var0 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var2, var4 >> 16, var91 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var27) | 0;
+                        var91 = (var91 + var28) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
 
-                if (xStepBC < xStepAC) {
-                    while (true) {
-                        yA--;
-
-                        if (yA < 0) {
-                            while (true) {
-                                yB--;
-
-                                if (yB < 0) {
-                                    return;
-                                }
-
-                                this.textureRaster(xB >> 16, xA >> 16, Pix2D.pixels, yC, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeB >> 8, shadeA >> 8);
-                                xB += xStepBC;
-                                xA += xStepAB;
-                                shadeB += shadeStepBC;
-                                shadeA += shadeStepAB;
-                                yC += Pix2D.width;
-                                u += uStepVertical;
-                                v += vStepVertical;
-                                w += wStepVertical;
-                                u |= 0;
-                                v |= 0;
-                                w |= 0;
-                            }
-                        }
-
-                        this.textureRaster(xB >> 16, xC >> 16, Pix2D.pixels, yC, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeB >> 8, shadeC >> 8);
-                        xB += xStepBC;
-                        xC += xStepAC;
-                        shadeB += shadeStepBC;
-                        shadeC += shadeStepAC;
-                        yC += Pix2D.width;
-                        u += uStepVertical;
-                        v += vStepVertical;
-                        w += wStepVertical;
-                        u |= 0;
-                        v |= 0;
-                        w |= 0;
+                    while (--var1 >= 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var2, var4 >> 16, var3 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var27) | 0;
+                        var3 = (var3 + var26) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
                     }
                 } else {
-                    while (true) {
-                        yA--;
+                    var1 = (var1 - var0) | 0;
+                    var0 = (var0 - var2) | 0;
 
-                        if (yA < 0) {
-                            while (true) {
-                                yB--;
+                    for (var2 = arrayAtI32(Pix3D.scanline, var2); --var0 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var2, var91 >> 16, var4 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var27) | 0;
+                        var91 = (var91 + var28) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
 
-                                if (yB < 0) {
-                                    return;
-                                }
-
-                                this.textureRaster(xA >> 16, xB >> 16, Pix2D.pixels, yC, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeA >> 8, shadeB >> 8);
-                                xB += xStepBC;
-                                xA += xStepAB;
-                                shadeB += shadeStepBC;
-                                shadeA += shadeStepAB;
-                                yC += Pix2D.width;
-                                u += uStepVertical;
-                                v += vStepVertical;
-                                w += wStepVertical;
-                                u |= 0;
-                                v |= 0;
-                                w |= 0;
-                            }
-                        }
-
-                        this.textureRaster(xC >> 16, xB >> 16, Pix2D.pixels, yC, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeC >> 8, shadeB >> 8);
-                        xB += xStepBC;
-                        xC += xStepAC;
-                        shadeB += shadeStepBC;
-                        shadeC += shadeStepAC;
-                        yC += Pix2D.width;
-                        u += uStepVertical;
-                        v += vStepVertical;
-                        w += wStepVertical;
-                        u |= 0;
-                        v |= 0;
-                        w |= 0;
+                    while (--var1 >= 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var2, var3 >> 16, var4 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var27) | 0;
+                        var3 = (var3 + var26) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
                     }
                 }
             } else {
-                xA = xC <<= 16;
-                shadeA = shadeC <<= 16;
-
-                if (yC < 0) {
-                    xA -= xStepBC * yC;
-                    xC -= xStepAC * yC;
-                    shadeA -= shadeStepBC * yC;
-                    shadeC -= shadeStepAC * yC;
-                    yC = 0;
+                let var90: number;
+                var3 = var90 = var5 << 16;
+                if (var2 < 0) {
+                    var3 = (var3 - Math.imul(var27, var2)) | 0;
+                    var90 = (var90 - Math.imul(var28, var2)) | 0;
+                    var8 = (var8 - Math.imul(var31, var2)) | 0;
+                    var2 = 0;
                 }
 
-                xB <<= 16;
-                shadeB <<= 16;
-
-                if (yB < 0) {
-                    xB -= xStepAB * yB;
-                    shadeB -= shadeStepAB * yB;
-                    yB = 0;
+                var4 <<= 16;
+                if (var1 < 0) {
+                    var4 = (var4 - Math.imul(var26, var1)) | 0;
+                    var1 = 0;
                 }
 
-                const dy: number = yC - this.originY;
-                u += uStepVertical * dy;
-                v += vStepVertical * dy;
-                w += wStepVertical * dy;
-                u |= 0;
-                v |= 0;
-                w |= 0;
+                const var41 = (var2 - Pix3D.originY) | 0;
+                var32 = (var32 + Math.imul(var34, var41)) | 0;
+                var35 = (var35 + Math.imul(var37, var41)) | 0;
+                var38 = (var38 + Math.imul(var40, var41)) | 0;
+                if (var27 < var28) {
+                    var0 = (var0 - var1) | 0;
+                    var1 = (var1 - var2) | 0;
 
-                yA -= yB;
-                yB -= yC;
-                yC = this.scanline[yC];
+                    for (var2 = arrayAtI32(Pix3D.scanline, var2); --var1 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var2, var3 >> 16, var90 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var27) | 0;
+                        var90 = (var90 + var28) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
 
-                if (xStepBC < xStepAC) {
-                    while (true) {
-                        yB--;
-
-                        if (yB < 0) {
-                            while (true) {
-                                yA--;
-
-                                if (yA < 0) {
-                                    return;
-                                }
-
-                                this.textureRaster(xB >> 16, xC >> 16, Pix2D.pixels, yC, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeB >> 8, shadeC >> 8);
-                                xB += xStepAB;
-                                xC += xStepAC;
-                                shadeB += shadeStepAB;
-                                shadeC += shadeStepAC;
-                                yC += Pix2D.width;
-                                u += uStepVertical;
-                                v += vStepVertical;
-                                w += wStepVertical;
-                                u |= 0;
-                                v |= 0;
-                                w |= 0;
-                            }
-                        }
-
-                        this.textureRaster(xA >> 16, xC >> 16, Pix2D.pixels, yC, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeA >> 8, shadeC >> 8);
-                        xA += xStepBC;
-                        xC += xStepAC;
-                        shadeA += shadeStepBC;
-                        shadeC += shadeStepAC;
-                        yC += Pix2D.width;
-                        u += uStepVertical;
-                        v += vStepVertical;
-                        w += wStepVertical;
-                        u |= 0;
-                        v |= 0;
-                        w |= 0;
+                    while (--var0 >= 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var2, var4 >> 16, var90 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var26) | 0;
+                        var90 = (var90 + var28) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
                     }
                 } else {
-                    while (true) {
-                        yB--;
+                    var0 = (var0 - var1) | 0;
+                    var1 = (var1 - var2) | 0;
 
-                        if (yB < 0) {
-                            while (true) {
-                                yA--;
+                    for (var2 = arrayAtI32(Pix3D.scanline, var2); --var1 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var2, var90 >> 16, var3 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var27) | 0;
+                        var90 = (var90 + var28) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
 
-                                if (yA < 0) {
-                                    return;
-                                }
-
-                                this.textureRaster(xC >> 16, xB >> 16, Pix2D.pixels, yC, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeC >> 8, shadeB >> 8);
-                                xB += xStepAB;
-                                xC += xStepAC;
-                                shadeB += shadeStepAB;
-                                shadeC += shadeStepAC;
-                                yC += Pix2D.width;
-                                u += uStepVertical;
-                                v += vStepVertical;
-                                w += wStepVertical;
-                                u |= 0;
-                                v |= 0;
-                                w |= 0;
-                            }
-                        }
-
-                        this.textureRaster(xC >> 16, xA >> 16, Pix2D.pixels, yC, texels, 0, 0, u, v, w, uStride, vStride, wStride, shadeC >> 8, shadeA >> 8);
-                        xA += xStepBC;
-                        xC += xStepAC;
-                        shadeA += shadeStepBC;
-                        shadeC += shadeStepAC;
-                        yC += Pix2D.width;
-                        u += uStepVertical;
-                        v += vStepVertical;
-                        w += wStepVertical;
-                        u |= 0;
-                        v |= 0;
-                        w |= 0;
+                    while (--var0 >= 0) {
+                        Pix3D.terrainTextureRaster(Pix2D.pixels, var19, 0, 0, var2, var90 >> 16, var4 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var26) | 0;
+                        var90 = (var90 + var28) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
                     }
                 }
             }
         }
     }
 
+    // dc.b([I[IIIIIIIIIIIIII)V
+    // Same parameters as terrainTextureRaster; the perspective divide is done every 8 pixels.
     private static textureRaster(
-        xA: number, xB: number,
-        dst: Int32Array, off: number,
-        texels: Int32Array | null,
-        curU: number, curV: number,
-        u: number, v: number, w: number,
-        uStride: number, vStride: number, wStride: number,
-        shadeA: number, shadeB: number
+        var0: Int32Array | null,
+        var1: Int32Array | null,
+        var2: number,
+        var3: number,
+        var4: number,
+        var5: number,
+        var6: number,
+        var7: number,
+        var8: number,
+        var9: number,
+        var10: number,
+        var11: number,
+        var12: number,
+        var13: number,
+        var14: number
     ): void {
-        if (!texels) {
+        if (Pix3D.hclip) {
+            if (var6 > Pix3D.width) {
+                var6 = Pix3D.width;
+            }
+
+            if (var5 < 0) {
+                var5 = 0;
+            }
+        }
+
+        if (var5 >= var6) {
             return;
         }
 
-        if (xA >= xB) {
-            return;
-        }
+        if (Pix3D.spanTarget !== null && Pix3D.spanTarget.record(var0, 3, var4, var5, var6, var7, var8, 0, (Pix3D.lowMemTexture ? 1 : 0) | (Pix3D.opaque ? 2 : 0), var1, Pix3D.originX, var9, var10, var11, var12, var13, var14)) return;
 
-        let shadeStrides: number;
-        let strides: number;
-        if (this.hclip) {
-            shadeStrides = ((shadeB - shadeA) / (xB - xA)) | 0;
-
-            if (xB > Pix2D.sizeX) {
-                xB = Pix2D.sizeX;
+        var4 = (var4 + var5) | 0;
+        var7 = (var7 + Math.imul(var8, var5)) | 0;
+        let var17 = (var6 - var5) | 0;
+        if (Pix3D.lowMemTexture) {
+            const var23 = (var5 - Pix3D.originX) | 0;
+            var9 = (var9 + Math.imul(var12 >> 3, var23)) | 0;
+            var10 = (var10 + Math.imul(var13 >> 3, var23)) | 0;
+            var11 = (var11 + Math.imul(var14 >> 3, var23)) | 0;
+            let var22 = var11 >> 12;
+            let var18: number;
+            let var19: number;
+            if (var22 !== 0) {
+                var18 = (var9 / var22) | 0;
+                var19 = (var10 / var22) | 0;
+            } else {
+                var18 = 0;
+                var19 = 0;
             }
 
-            if (xA < 0) {
-                shadeA -= xA * shadeStrides;
-                xA = 0;
+            var9 = (var9 + var12) | 0;
+            var10 = (var10 + var13) | 0;
+            var11 = (var11 + var14) | 0;
+            var22 = var11 >> 12;
+            let var20: number;
+            let var21: number;
+            if (var22 !== 0) {
+                var20 = (var9 / var22) | 0;
+                var21 = (var10 / var22) | 0;
+            } else {
+                var20 = 0;
+                var21 = 0;
             }
 
-            if (xA >= xB) {
+            var2 = ((var18 << 20) + var19) | 0;
+            let var16 = ((((var20 - var18) >> 3) << 20) + ((var21 - var19) >> 3)) | 0;
+            var17 >>= 3;
+            var8 <<= 3;
+            let var15 = var7 >> 8;
+            if (Pix3D.opaque) {
+                if (var17 > 0) {
+                    do {
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                        var18 = var20;
+                        var19 = var21;
+                        var9 = (var9 + var12) | 0;
+                        var10 = (var10 + var13) | 0;
+                        var11 = (var11 + var14) | 0;
+                        var22 = var11 >> 12;
+                        if (var22 !== 0) {
+                            var20 = (var9 / var22) | 0;
+                            var21 = (var10 / var22) | 0;
+                        } else {
+                            var20 = 0;
+                            var21 = 0;
+                        }
+
+                        var2 = ((var18 << 20) + var19) | 0;
+                        var16 = ((((var20 - var18) >> 3) << 20) + ((var21 - var19) >> 3)) | 0;
+                        var7 = (var7 + var8) | 0;
+                        var15 = var7 >> 8;
+                    } while (--var17 > 0);
+                }
+
+                var17 = (var6 - var5) & 7;
+                if (var17 > 0) {
+                    do {
+                        var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                        var2 = (var2 + var16) | 0;
+                    } while (--var17 > 0);
+
+                    return;
+                }
+
                 return;
             }
 
-            strides = (xB - xA) >> 3;
-            shadeStrides <<= 12;
-        } else {
-            if (xB - xA > 7) {
-                strides = (xB - xA) >> 3;
-                shadeStrides = ((shadeB - shadeA) * this.divTable[strides]) >> 6;
-            } else {
-                strides = 0;
-                shadeStrides = 0;
+            if (var17 > 0) {
+                do {
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
+                    }
+
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                    var18 = var20;
+                    var19 = var21;
+                    var9 = (var9 + var12) | 0;
+                    var10 = (var10 + var13) | 0;
+                    var11 = (var11 + var14) | 0;
+                    var22 = var11 >> 12;
+                    if (var22 !== 0) {
+                        var20 = (var9 / var22) | 0;
+                        var21 = (var10 / var22) | 0;
+                    } else {
+                        var20 = 0;
+                        var21 = 0;
+                    }
+
+                    var2 = ((var18 << 20) + var19) | 0;
+                    var16 = ((((var20 - var18) >> 3) << 20) + ((var21 - var19) >> 3)) | 0;
+                    var7 = (var7 + var8) | 0;
+                    var15 = var7 >> 8;
+                } while (--var17 > 0);
             }
-        }
 
-        shadeA <<= 9;
-        off += xA;
-
-        let nextU: number;
-        let nextV: number;
-        let curW: number;
-        let dx: number;
-        let stepU: number;
-        let stepV: number;
-        let shadeShift: number;
-
-        if (this.lowMem) {
-            nextU = 0;
-            nextV = 0;
-
-            dx = xA - this.originX;
-            u = u + (uStride >> 3) * dx;
-            v = v + (vStride >> 3) * dx;
-            w = w + (wStride >> 3) * dx;
-            u |= 0;
-            v |= 0;
-            w |= 0;
-
-            curW = w >> 12;
-
-            if (curW !== 0) {
-                curU = (u / curW) | 0;
-                curV = (v / curW) | 0;
-
-                if (curU < 0) {
-                    curU = 0;
-                } else if (curU > 4032) {
-                    curU = 4032;
-                }
-            }
-
-            u = u + uStride;
-            v = v + vStride;
-            w = w + wStride;
-            u |= 0;
-            v |= 0;
-            w |= 0;
-
-            curW = w >> 12;
-
-            if (curW !== 0) {
-                nextU = (u / curW) | 0;
-                nextV = (v / curW) | 0;
-
-                if (nextU < 7) {
-                    nextU = 7;
-                } else if (nextU > 4032) {
-                    nextU = 4032;
-                }
-            }
-
-            stepU = (nextU - curU) >> 3;
-            stepV = (nextV - curV) >> 3;
-            curU += (shadeA >> 3) & 0xc0000;
-            shadeShift = shadeA >> 23;
-
-            if (this.opaque) {
-                while (strides-- > 0) {
-                    dst[off++] = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
-
-                    dst[off++] = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
-
-                    dst[off++] = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
-
-                    dst[off++] = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
-
-                    dst[off++] = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
-
-                    dst[off++] = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
-
-                    dst[off++] = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
-
-                    dst[off++] = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift;
-                    curU = nextU;
-                    curV = nextV;
-
-                    u += uStride;
-                    v += vStride;
-                    w += wStride;
-                    u |= 0;
-                    v |= 0;
-                    w |= 0;
-
-                    curW = w >> 12;
-
-                    if (curW !== 0) {
-                        nextU = (u / curW) | 0;
-                        nextV = (v / curW) | 0;
-
-                        if (nextU < 7) {
-                            nextU = 7;
-                        } else if (nextU > 4032) {
-                            nextU = 4032;
-                        }
+            var17 = (var6 - var5) & 7;
+            if (var17 > 0) {
+                do {
+                    if ((var3 = arrayAtI32(var1, (var2 & 4032) + (var2 >>> 26))) !== 0) {
+                        arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var15) & -16711936) + (Math.imul(var3 & 0xff00, var15) & 0xff0000)) >> 8);
                     }
 
-                    stepU = (nextU - curU) >> 3;
-                    stepV = (nextV - curV) >> 3;
-                    shadeA += shadeStrides;
-                    curU += (shadeA >> 3) & 0xc0000;
-                    shadeShift = shadeA >> 23;
-                }
+                    var4++;
+                    var2 = (var2 + var16) | 0;
+                } while (--var17 > 0);
 
-                strides = (xB - xA) & 0x7;
-
-                while (strides-- > 0) {
-                    dst[off++] = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
-                }
-            } else {
-                while (strides-- > 0) {
-                    let rgb: number;
-                    if ((rgb = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
-
-                    if ((rgb = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
-
-                    if ((rgb = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
-
-                    if ((rgb = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
-
-                    if ((rgb = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
-
-                    if ((rgb = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
-
-                    if ((rgb = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
-
-                    if ((rgb = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU = nextU;
-                    curV = nextV;
-
-                    u += uStride;
-                    v += vStride;
-                    w += wStride;
-                    u |= 0;
-                    v |= 0;
-                    w |= 0;
-
-                    curW = w >> 12;
-
-                    if (curW !== 0) {
-                        nextU = (u / curW) | 0;
-                        nextV = (v / curW) | 0;
-
-                        if (nextU < 7) {
-                            nextU = 7;
-                        } else if (nextU > 4032) {
-                            nextU = 4032;
-                        }
-                    }
-
-                    stepU = (nextU - curU) >> 3;
-                    stepV = (nextV - curV) >> 3;
-                    shadeA += shadeStrides;
-                    curU += (shadeA >> 3) & 0xc0000;
-                    shadeShift = shadeA >> 23;
-                }
-
-                strides = (xB - xA) & 0x7;
-
-                while (strides-- > 0) {
-                    let rgb: number;
-                    if ((rgb = texels[(curV & 0xfc0) + (curU >> 6)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
-                }
+                return;
             }
         } else {
-            nextU = 0;
-            nextV = 0;
-
-            dx = xA - this.originX;
-            u = u + (uStride >> 3) * dx;
-            v = v + (vStride >> 3) * dx;
-            w = w + (wStride >> 3) * dx;
-            u |= 0;
-            v |= 0;
-            w |= 0;
-
-            curW = w >> 14;
-
-            if (curW !== 0) {
-                curU = (u / curW) | 0;
-                curV = (v / curW) | 0;
-
-                if (curU < 0) {
-                    curU = 0;
-                } else if (curU > 16256) {
-                    curU = 16256;
-                }
+            const var165 = (var5 - Pix3D.originX) | 0;
+            var9 = (var9 + Math.imul(var12 >> 3, var165)) | 0;
+            var10 = (var10 + Math.imul(var13 >> 3, var165)) | 0;
+            var11 = (var11 + Math.imul(var14 >> 3, var165)) | 0;
+            let var161 = var11 >> 14;
+            let var148: number;
+            let var153: number;
+            if (var161 !== 0) {
+                var148 = (var9 / var161) | 0;
+                var153 = (var10 / var161) | 0;
+            } else {
+                var148 = 0;
+                var153 = 0;
             }
 
-            u = u + uStride;
-            v = v + vStride;
-            w = w + wStride;
-            u |= 0;
-            v |= 0;
-            w |= 0;
-
-            curW = w >> 14;
-
-            if (curW !== 0) {
-                nextU = (u / curW) | 0;
-                nextV = (v / curW) | 0;
-
-                if (nextU < 7) {
-                    nextU = 7;
-                } else if (nextU > 16256) {
-                    nextU = 16256;
-                }
+            var9 = (var9 + var12) | 0;
+            var10 = (var10 + var13) | 0;
+            var11 = (var11 + var14) | 0;
+            var161 = var11 >> 14;
+            let var156: number;
+            let var157: number;
+            if (var161 !== 0) {
+                var156 = (var9 / var161) | 0;
+                var157 = (var10 / var161) | 0;
+            } else {
+                var156 = 0;
+                var157 = 0;
             }
 
-            stepU = (nextU - curU) >> 3;
-            stepV = (nextV - curV) >> 3;
-            curU += shadeA & 0x600000;
-            shadeShift = shadeA >> 23;
-
-            if (this.opaque) {
-                while (strides-- > 0) {
-                    dst[off++] = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
-
-                    dst[off++] = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
-
-                    dst[off++] = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
-
-                    dst[off++] = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
-
-                    dst[off++] = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
-
-                    dst[off++] = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
-
-                    dst[off++] = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
-
-                    dst[off++] = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift;
-                    curU = nextU;
-                    curV = nextV;
-
-                    u += uStride;
-                    v += vStride;
-                    w += wStride;
-                    u |= 0;
-                    v |= 0;
-                    w |= 0;
-
-                    curW = w >> 14;
-
-                    if (curW !== 0) {
-                        nextU = (u / curW) | 0;
-                        nextV = (v / curW) | 0;
-
-                        if (nextU < 7) {
-                            nextU = 7;
-                        } else if (nextU > 16256) {
-                            nextU = 16256;
+            var2 = ((var148 << 18) + var153) | 0;
+            let var139 = ((((var156 - var148) >> 3) << 18) + ((var157 - var153) >> 3)) | 0;
+            var17 >>= 3;
+            var8 <<= 3;
+            let var138 = var7 >> 8;
+            if (Pix3D.opaque) {
+                if (var17 > 0) {
+                    do {
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        var2 = (var2 + var139) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        var2 = (var2 + var139) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        var2 = (var2 + var139) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        var2 = (var2 + var139) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        var2 = (var2 + var139) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        var2 = (var2 + var139) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        var2 = (var2 + var139) | 0;
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        var2 = (var2 + var139) | 0;
+                        var148 = var156;
+                        var153 = var157;
+                        var9 = (var9 + var12) | 0;
+                        var10 = (var10 + var13) | 0;
+                        var11 = (var11 + var14) | 0;
+                        var161 = var11 >> 14;
+                        if (var161 !== 0) {
+                            var156 = (var9 / var161) | 0;
+                            var157 = (var10 / var161) | 0;
+                        } else {
+                            var156 = 0;
+                            var157 = 0;
                         }
-                    }
 
-                    stepU = (nextU - curU) >> 3;
-                    stepV = (nextV - curV) >> 3;
-                    shadeA += shadeStrides;
-                    curU += shadeA & 0x600000;
-                    shadeShift = shadeA >> 23;
+                        var2 = ((var148 << 18) + var153) | 0;
+                        var139 = ((((var156 - var148) >> 3) << 18) + ((var157 - var153) >> 3)) | 0;
+                        var7 = (var7 + var8) | 0;
+                        var138 = var7 >> 8;
+                    } while (--var17 > 0);
                 }
 
-                strides = (xB - xA) & 0x7;
+                var17 = (var6 - var5) & 7;
+                if (var17 > 0) {
+                    do {
+                        var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25));
+                        arrayPutI32(var0, var4++, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        var2 = (var2 + var139) | 0;
+                    } while (--var17 > 0);
 
-                while (strides-- > 0) {
-                    dst[off++] = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift;
-                    curU += stepU;
-                    curV += stepV;
+                    return;
                 }
             } else {
-                while (strides-- > 0 && texels) {
-                    let rgb: number;
-                    if ((rgb = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
-
-                    if ((rgb = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
-
-                    if ((rgb = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
-
-                    if ((rgb = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
-
-                    if ((rgb = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
-
-                    if ((rgb = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
-
-                    if ((rgb = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
-
-                    if ((rgb = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU = nextU;
-                    curV = nextV;
-
-                    u += uStride;
-                    v += vStride;
-                    w += wStride;
-                    u |= 0;
-                    v |= 0;
-                    w |= 0;
-
-                    curW = w >> 14;
-
-                    if (curW !== 0) {
-                        nextU = (u / curW) | 0;
-                        nextV = (v / curW) | 0;
-
-                        if (nextU < 7) {
-                            nextU = 7;
-                        } else if (nextU > 16256) {
-                            nextU = 16256;
+                if (var17 > 0) {
+                    do {
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
                         }
-                    }
 
-                    stepU = (nextU - curU) >> 3;
-                    stepV = (nextV - curV) >> 3;
-                    shadeA += shadeStrides;
-                    curU += shadeA & 0x600000;
-                    shadeShift = shadeA >> 23;
+                        var4++;
+                        var2 = (var2 + var139) | 0;
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var139) | 0;
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var139) | 0;
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var139) | 0;
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var139) | 0;
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var139) | 0;
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var139) | 0;
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        }
+
+                        var4++;
+                        var2 = (var2 + var139) | 0;
+                        var148 = var156;
+                        var153 = var157;
+                        var9 = (var9 + var12) | 0;
+                        var10 = (var10 + var13) | 0;
+                        var11 = (var11 + var14) | 0;
+                        var161 = var11 >> 14;
+                        if (var161 !== 0) {
+                            var156 = (var9 / var161) | 0;
+                            var157 = (var10 / var161) | 0;
+                        } else {
+                            var156 = 0;
+                            var157 = 0;
+                        }
+
+                        var2 = ((var148 << 18) + var153) | 0;
+                        var139 = ((((var156 - var148) >> 3) << 18) + ((var157 - var153) >> 3)) | 0;
+                        var7 = (var7 + var8) | 0;
+                        var138 = var7 >> 8;
+                    } while (--var17 > 0);
                 }
 
-                strides = (xB - xA) & 0x7;
+                var17 = (var6 - var5) & 7;
+                if (var17 > 0) {
+                    do {
+                        if ((var3 = arrayAtI32(var1, (var2 & 16256) + (var2 >>> 25))) !== 0) {
+                            arrayPutI32(var0, var4, ((Math.imul(var3 & 16711935, var138) & -16711936) + (Math.imul(var3 & 0xff00, var138) & 0xff0000)) >> 8);
+                        }
 
-                while (strides-- > 0 && texels) {
-                    let rgb: number;
-                    if ((rgb = texels[(curV & 0x3f80) + (curU >> 7)] >>> shadeShift) !== 0) {
-                        dst[off] = rgb;
-                    }
-                    off++;
-                    curU += stepU;
-                    curV += stepV;
+                        var4++;
+                        var2 = (var2 + var139) | 0;
+                    } while (--var17 > 0);
                 }
             }
         }
+    }
+
+    // dc.a([IIIIII)V
+    // var1 = row offset, var2 = RGB, var4/var5 = x span. var3 is a scratch register the callers pass as 0.
+    private static flatRaster(var0: Int32Array | null, var1: number, var2: number, var3: number, var4: number, var5: number): void {
+        if (Pix3D.hclip) {
+            if (var5 > Pix3D.width) {
+                var5 = Pix3D.width;
+            }
+
+            if (var4 < 0) {
+                var4 = 0;
+            }
+        }
+
+        if (var4 >= var5) {
+            return;
+        }
+
+        if (Pix3D.spanTarget !== null && Pix3D.spanTarget.record(var0, 0, var1, var4, var5, var2, 0, Pix3D.trans, 0, null)) return;
+
+        var1 = (var1 + var4) | 0;
+        var3 = (var5 - var4) >> 2;
+        if (Pix3D.trans === 0) {
+            while (--var3 >= 0) {
+                arrayPutI32(var0, var1++, var2);
+                arrayPutI32(var0, var1++, var2);
+                arrayPutI32(var0, var1++, var2);
+                arrayPutI32(var0, var1++, var2);
+            }
+
+            var3 = (var5 - var4) & 3;
+
+            while (--var3 >= 0) {
+                arrayPutI32(var0, var1++, var2);
+            }
+        } else if (Pix3D.trans === 254) {
+            while (--var3 >= 0) {
+                arrayPutI32(var0, var1++, arrayAtI32(var0, var1));
+                arrayPutI32(var0, var1++, arrayAtI32(var0, var1));
+                arrayPutI32(var0, var1++, arrayAtI32(var0, var1));
+                arrayPutI32(var0, var1++, arrayAtI32(var0, var1));
+            }
+
+            var3 = (var5 - var4) & 3;
+
+            while (--var3 >= 0) {
+                arrayPutI32(var0, var1++, arrayAtI32(var0, var1));
+            }
+        } else {
+            const var6 = Pix3D.trans;
+            const var7 = (256 - Pix3D.trans) | 0;
+            var2 = (((Math.imul(var2 & 16711935, var7) >> 8) & 16711935) + ((Math.imul(var2 & 0xff00, var7) >> 8) & 0xff00)) | 0;
+
+            while (--var3 >= 0) {
+                let var8 = arrayAtI32(var0, var1);
+                arrayPutI32(var0, var1++, (var2 + ((Math.imul(var8 & 16711935, var6) >> 8) & 16711935) + ((Math.imul(var8 & 0xff00, var6) >> 8) & 0xff00)) | 0);
+                var8 = arrayAtI32(var0, var1);
+                arrayPutI32(var0, var1++, (var2 + ((Math.imul(var8 & 16711935, var6) >> 8) & 16711935) + ((Math.imul(var8 & 0xff00, var6) >> 8) & 0xff00)) | 0);
+                var8 = arrayAtI32(var0, var1);
+                arrayPutI32(var0, var1++, (var2 + ((Math.imul(var8 & 16711935, var6) >> 8) & 16711935) + ((Math.imul(var8 & 0xff00, var6) >> 8) & 0xff00)) | 0);
+                var8 = arrayAtI32(var0, var1);
+                arrayPutI32(var0, var1++, (var2 + ((Math.imul(var8 & 16711935, var6) >> 8) & 16711935) + ((Math.imul(var8 & 0xff00, var6) >> 8) & 0xff00)) | 0);
+            }
+
+            var3 = (var5 - var4) & 3;
+
+            while (--var3 >= 0) {
+                const var27 = arrayAtI32(var0, var1);
+                arrayPutI32(var0, var1++, (var2 + ((Math.imul(var27 & 16711935, var6) >> 8) & 16711935) + ((Math.imul(var27 & 0xff00, var6) >> 8) & 0xff00)) | 0);
+            }
+        }
+    }
+
+    // dc.b()V
+    static unload(): void {
+        Pix3D.scanline = null;
+        Pix3D.colourTable = null;
+        Pix3D.textureProvider = null;
+        Pix3D.divTable = null;
+        Pix3D.divTable2 = null;
+        Pix3D.sinTable = null;
+        Pix3D.cosTable = null;
+    }
+
+    // dc.c()I
+    static getOffsetY(): number {
+        return intDivide(arrayAtI32(Pix3D.scanline, 0), Pix2D.width);
+    }
+
+    // dc.d()V
+    static setRenderClipping(): void {
+        Pix3D.setBounds(Pix2D.clipMinX, Pix2D.clipMinY, Pix2D.clipMaxX, Pix2D.clipMaxY);
+    }
+
+    // dc.a(II)I
+    private static adjustLightness(var0: number, var1: number): number {
+        var1 = Math.imul(var1, var0 & 127) >> 7;
+        if (var1 < 2) {
+            var1 = 2;
+        } else if (var1 > 126) {
+            var1 = 126;
+        }
+
+        return ((var0 & 65408) + var1) | 0;
+    }
+
+    // dc.b(IIIIIIIIIIIIIIIIIII)V
+    // Same parameters as terrainTextureTriangle.
+    static textureTriangle(
+        var0: number,
+        var1: number,
+        var2: number,
+        var3: number,
+        var4: number,
+        var5: number,
+        var6: number,
+        var7: number,
+        var8: number,
+        var9: number,
+        var10: number,
+        var11: number,
+        var12: number,
+        var13: number,
+        var14: number,
+        var15: number,
+        var16: number,
+        var17: number,
+        var18: number
+    ): void {
+        const var19 = requireNonNull(Pix3D.textureProvider).getTextureData(var18, Pix3D.brightness);
+        if (var19 === null || Pix3D.trans > 10) {
+            const var20 = requireNonNull(Pix3D.textureProvider).getTextureColour(var18);
+            Pix3D.textureFallback = true;
+            Pix3D.gouraudTriangle(var0, var1, var2, var3, var4, var5, Pix3D.adjustLightness(var20, var6), Pix3D.adjustLightness(var20, var7), Pix3D.adjustLightness(var20, var8));
+            return;
+        }
+
+        Pix3D.lowMemTexture = requireNonNull(Pix3D.textureProvider).getTextureSmall(var18);
+        Pix3D.opaque = requireNonNull(Pix3D.textureProvider).getTextureSolid(var18);
+
+        const var105 = (var4 - var3) | 0;
+        const var21 = (var1 - var0) | 0;
+        const var22 = (var5 - var3) | 0;
+        const var23 = (var2 - var0) | 0;
+        const var24 = (var7 - var6) | 0;
+        const var25 = (var8 - var6) | 0;
+        let var26 = 0;
+        if (var1 !== var0) {
+            var26 = (((var4 - var3) << 16) / ((var1 - var0) | 0)) | 0;
+        }
+
+        let var27 = 0;
+        if (var2 !== var1) {
+            var27 = (((var5 - var4) << 16) / ((var2 - var1) | 0)) | 0;
+        }
+
+        let var28 = 0;
+        if (var2 !== var0) {
+            var28 = (((var3 - var5) << 16) / ((var0 - var2) | 0)) | 0;
+        }
+
+        const var29 = (Math.imul(var105, var23) - Math.imul(var22, var21)) | 0;
+        if (var29 === 0) {
+            return;
+        }
+
+        const var30 = (((Math.imul(var24, var23) - Math.imul(var25, var21)) << 9) / var29) | 0;
+        const var31 = (((Math.imul(var25, var105) - Math.imul(var24, var22)) << 9) / var29) | 0;
+        var10 = (var9 - var10) | 0;
+        var13 = (var12 - var13) | 0;
+        var16 = (var15 - var16) | 0;
+        var11 = (var11 - var9) | 0;
+        var14 = (var14 - var12) | 0;
+        var17 = (var17 - var15) | 0;
+        let var32 = (Math.imul(var11, var12) - Math.imul(var14, var9)) << 14;
+        const var33 = (Math.imul(var14, var15) - Math.imul(var17, var12)) << 8;
+        const var34 = (Math.imul(var17, var9) - Math.imul(var11, var15)) << 5;
+        let var35 = (Math.imul(var10, var12) - Math.imul(var13, var9)) << 14;
+        const var36 = (Math.imul(var13, var15) - Math.imul(var16, var12)) << 8;
+        const var37 = (Math.imul(var16, var9) - Math.imul(var10, var15)) << 5;
+        let var38 = (Math.imul(var13, var11) - Math.imul(var10, var14)) << 14;
+        const var39 = (Math.imul(var16, var14) - Math.imul(var13, var17)) << 8;
+        const var40 = (Math.imul(var10, var17) - Math.imul(var16, var11)) << 5;
+        if (var0 <= var1 && var0 <= var2) {
+            if (var0 >= Pix3D.height) {
+                return;
+            }
+
+            if (var1 > Pix3D.height) {
+                var1 = Pix3D.height;
+            }
+
+            if (var2 > Pix3D.height) {
+                var2 = Pix3D.height;
+            }
+
+            var6 = ((var6 << 9) - Math.imul(var30, var3) + var30) | 0;
+            if (var1 < var2) {
+                let var83: number;
+                var5 = var83 = var3 << 16;
+                if (var0 < 0) {
+                    var5 = (var5 - Math.imul(var28, var0)) | 0;
+                    var83 = (var83 - Math.imul(var26, var0)) | 0;
+                    var6 = (var6 - Math.imul(var31, var0)) | 0;
+                    var0 = 0;
+                }
+
+                var4 <<= 16;
+                if (var1 < 0) {
+                    var4 = (var4 - Math.imul(var27, var1)) | 0;
+                    var1 = 0;
+                }
+
+                const var128 = (var0 - Pix3D.originY) | 0;
+                var32 = (var32 + Math.imul(var34, var128)) | 0;
+                var35 = (var35 + Math.imul(var37, var128)) | 0;
+                var38 = (var38 + Math.imul(var40, var128)) | 0;
+                if ((var0 !== var1 && var28 < var26) || (var0 === var1 && var28 > var27)) {
+                    var2 = (var2 - var1) | 0;
+                    var1 = (var1 - var0) | 0;
+
+                    for (var0 = arrayAtI32(Pix3D.scanline, var0); --var1 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var0, var5 >> 16, var83 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var28) | 0;
+                        var83 = (var83 + var26) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
+
+                    while (--var2 >= 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var0, var5 >> 16, var4 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var28) | 0;
+                        var4 = (var4 + var27) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
+                    }
+                } else {
+                    var2 = (var2 - var1) | 0;
+                    var1 = (var1 - var0) | 0;
+
+                    for (var0 = arrayAtI32(Pix3D.scanline, var0); --var1 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var0, var83 >> 16, var5 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var28) | 0;
+                        var83 = (var83 + var26) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
+
+                    while (--var2 >= 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var0, var4 >> 16, var5 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var28) | 0;
+                        var4 = (var4 + var27) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
+                    }
+                }
+            } else {
+                let var82: number;
+                var4 = var82 = var3 << 16;
+                if (var0 < 0) {
+                    var4 = (var4 - Math.imul(var28, var0)) | 0;
+                    var82 = (var82 - Math.imul(var26, var0)) | 0;
+                    var6 = (var6 - Math.imul(var31, var0)) | 0;
+                    var0 = 0;
+                }
+
+                var5 <<= 16;
+                if (var2 < 0) {
+                    var5 = (var5 - Math.imul(var27, var2)) | 0;
+                    var2 = 0;
+                }
+
+                const var127 = (var0 - Pix3D.originY) | 0;
+                var32 = (var32 + Math.imul(var34, var127)) | 0;
+                var35 = (var35 + Math.imul(var37, var127)) | 0;
+                var38 = (var38 + Math.imul(var40, var127)) | 0;
+                if ((var0 !== var2 && var28 < var26) || (var0 === var2 && var27 > var26)) {
+                    var1 = (var1 - var2) | 0;
+                    var2 = (var2 - var0) | 0;
+
+                    for (var0 = arrayAtI32(Pix3D.scanline, var0); --var2 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var0, var4 >> 16, var82 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var28) | 0;
+                        var82 = (var82 + var26) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
+
+                    while (--var1 >= 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var0, var5 >> 16, var82 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var27) | 0;
+                        var82 = (var82 + var26) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
+                    }
+                } else {
+                    var1 = (var1 - var2) | 0;
+                    var2 = (var2 - var0) | 0;
+
+                    for (var0 = arrayAtI32(Pix3D.scanline, var0); --var2 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var0, var82 >> 16, var4 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var28) | 0;
+                        var82 = (var82 + var26) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
+
+                    while (--var1 >= 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var0, var82 >> 16, var5 >> 16, var6, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var27) | 0;
+                        var82 = (var82 + var26) | 0;
+                        var6 = (var6 + var31) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
+                    }
+                }
+            }
+        } else if (var1 <= var2) {
+            if (var1 >= Pix3D.height) {
+                return;
+            }
+
+            if (var2 > Pix3D.height) {
+                var2 = Pix3D.height;
+            }
+
+            if (var0 > Pix3D.height) {
+                var0 = Pix3D.height;
+            }
+
+            var7 = ((var7 << 9) - Math.imul(var30, var4) + var30) | 0;
+            if (var2 < var0) {
+                let var87: number;
+                var3 = var87 = var4 << 16;
+                if (var1 < 0) {
+                    var3 = (var3 - Math.imul(var26, var1)) | 0;
+                    var87 = (var87 - Math.imul(var27, var1)) | 0;
+                    var7 = (var7 - Math.imul(var31, var1)) | 0;
+                    var1 = 0;
+                }
+
+                var5 <<= 16;
+                if (var2 < 0) {
+                    var5 = (var5 - Math.imul(var28, var2)) | 0;
+                    var2 = 0;
+                }
+
+                const var126 = (var1 - Pix3D.originY) | 0;
+                var32 = (var32 + Math.imul(var34, var126)) | 0;
+                var35 = (var35 + Math.imul(var37, var126)) | 0;
+                var38 = (var38 + Math.imul(var40, var126)) | 0;
+                if ((var1 !== var2 && var26 < var27) || (var1 === var2 && var26 > var28)) {
+                    var0 = (var0 - var2) | 0;
+                    var2 = (var2 - var1) | 0;
+
+                    for (var1 = arrayAtI32(Pix3D.scanline, var1); --var2 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var1, var3 >> 16, var87 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var26) | 0;
+                        var87 = (var87 + var27) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
+
+                    while (--var0 >= 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var1, var3 >> 16, var5 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var26) | 0;
+                        var5 = (var5 + var28) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
+                    }
+                } else {
+                    var0 = (var0 - var2) | 0;
+                    var2 = (var2 - var1) | 0;
+
+                    for (var1 = arrayAtI32(Pix3D.scanline, var1); --var2 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var1, var87 >> 16, var3 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var26) | 0;
+                        var87 = (var87 + var27) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
+
+                    while (--var0 >= 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var1, var5 >> 16, var3 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var26) | 0;
+                        var5 = (var5 + var28) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
+                    }
+                }
+            } else {
+                let var86: number;
+                var5 = var86 = var4 << 16;
+                if (var1 < 0) {
+                    var5 = (var5 - Math.imul(var26, var1)) | 0;
+                    var86 = (var86 - Math.imul(var27, var1)) | 0;
+                    var7 = (var7 - Math.imul(var31, var1)) | 0;
+                    var1 = 0;
+                }
+
+                var3 <<= 16;
+                if (var0 < 0) {
+                    var3 = (var3 - Math.imul(var28, var0)) | 0;
+                    var0 = 0;
+                }
+
+                const var125 = (var1 - Pix3D.originY) | 0;
+                var32 = (var32 + Math.imul(var34, var125)) | 0;
+                var35 = (var35 + Math.imul(var37, var125)) | 0;
+                var38 = (var38 + Math.imul(var40, var125)) | 0;
+                if (var26 < var27) {
+                    var2 = (var2 - var0) | 0;
+                    var0 = (var0 - var1) | 0;
+
+                    for (var1 = arrayAtI32(Pix3D.scanline, var1); --var0 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var1, var5 >> 16, var86 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var26) | 0;
+                        var86 = (var86 + var27) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
+
+                    while (--var2 >= 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var1, var3 >> 16, var86 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var28) | 0;
+                        var86 = (var86 + var27) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
+                    }
+                } else {
+                    var2 = (var2 - var0) | 0;
+                    var0 = (var0 - var1) | 0;
+
+                    for (var1 = arrayAtI32(Pix3D.scanline, var1); --var0 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var1, var86 >> 16, var5 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var5 = (var5 + var26) | 0;
+                        var86 = (var86 + var27) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
+
+                    while (--var2 >= 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var1, var86 >> 16, var3 >> 16, var7, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var28) | 0;
+                        var86 = (var86 + var27) | 0;
+                        var7 = (var7 + var31) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
+                    }
+                }
+            }
+        } else {
+            if (var2 >= Pix3D.height) {
+                return;
+            }
+
+            if (var0 > Pix3D.height) {
+                var0 = Pix3D.height;
+            }
+
+            if (var1 > Pix3D.height) {
+                var1 = Pix3D.height;
+            }
+
+            var8 = ((var8 << 9) - Math.imul(var30, var5) + var30) | 0;
+            if (var0 < var1) {
+                let var91: number;
+                var4 = var91 = var5 << 16;
+                if (var2 < 0) {
+                    var4 = (var4 - Math.imul(var27, var2)) | 0;
+                    var91 = (var91 - Math.imul(var28, var2)) | 0;
+                    var8 = (var8 - Math.imul(var31, var2)) | 0;
+                    var2 = 0;
+                }
+
+                var3 <<= 16;
+                if (var0 < 0) {
+                    var3 = (var3 - Math.imul(var26, var0)) | 0;
+                    var0 = 0;
+                }
+
+                const var124 = (var2 - Pix3D.originY) | 0;
+                var32 = (var32 + Math.imul(var34, var124)) | 0;
+                var35 = (var35 + Math.imul(var37, var124)) | 0;
+                var38 = (var38 + Math.imul(var40, var124)) | 0;
+                if (var27 < var28) {
+                    var1 = (var1 - var0) | 0;
+                    var0 = (var0 - var2) | 0;
+
+                    for (var2 = arrayAtI32(Pix3D.scanline, var2); --var0 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var2, var4 >> 16, var91 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var27) | 0;
+                        var91 = (var91 + var28) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
+
+                    while (--var1 >= 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var2, var4 >> 16, var3 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var27) | 0;
+                        var3 = (var3 + var26) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
+                    }
+                } else {
+                    var1 = (var1 - var0) | 0;
+                    var0 = (var0 - var2) | 0;
+
+                    for (var2 = arrayAtI32(Pix3D.scanline, var2); --var0 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var2, var91 >> 16, var4 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var27) | 0;
+                        var91 = (var91 + var28) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
+
+                    while (--var1 >= 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var2, var3 >> 16, var4 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var27) | 0;
+                        var3 = (var3 + var26) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
+                    }
+                }
+            } else {
+                let var90: number;
+                var3 = var90 = var5 << 16;
+                if (var2 < 0) {
+                    var3 = (var3 - Math.imul(var27, var2)) | 0;
+                    var90 = (var90 - Math.imul(var28, var2)) | 0;
+                    var8 = (var8 - Math.imul(var31, var2)) | 0;
+                    var2 = 0;
+                }
+
+                var4 <<= 16;
+                if (var1 < 0) {
+                    var4 = (var4 - Math.imul(var26, var1)) | 0;
+                    var1 = 0;
+                }
+
+                const var41 = (var2 - Pix3D.originY) | 0;
+                var32 = (var32 + Math.imul(var34, var41)) | 0;
+                var35 = (var35 + Math.imul(var37, var41)) | 0;
+                var38 = (var38 + Math.imul(var40, var41)) | 0;
+                if (var27 < var28) {
+                    var0 = (var0 - var1) | 0;
+                    var1 = (var1 - var2) | 0;
+
+                    for (var2 = arrayAtI32(Pix3D.scanline, var2); --var1 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var2, var3 >> 16, var90 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var27) | 0;
+                        var90 = (var90 + var28) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
+
+                    while (--var0 >= 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var2, var4 >> 16, var90 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var26) | 0;
+                        var90 = (var90 + var28) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
+                    }
+                } else {
+                    var0 = (var0 - var1) | 0;
+                    var1 = (var1 - var2) | 0;
+
+                    for (var2 = arrayAtI32(Pix3D.scanline, var2); --var1 >= 0; var38 = (var38 + var40) | 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var2, var90 >> 16, var3 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var3 = (var3 + var27) | 0;
+                        var90 = (var90 + var28) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                    }
+
+                    while (--var0 >= 0) {
+                        Pix3D.textureRaster(Pix2D.pixels, var19, 0, 0, var2, var90 >> 16, var4 >> 16, var8, var30, var32, var35, var38, var33, var36, var39);
+                        var4 = (var4 + var26) | 0;
+                        var90 = (var90 + var28) | 0;
+                        var8 = (var8 + var31) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                        var32 = (var32 + var34) | 0;
+                        var35 = (var35 + var37) | 0;
+                        var38 = (var38 + var40) | 0;
+                    }
+                }
+            }
+        }
+    }
+
+    // dc.a(Lpc;)V
+    static setTextures(var0: TextureProvider | null): void {
+        Pix3D.textureProvider = var0;
+    }
+
+    // dc.b(F)V
+    // var0 is a Java float.
+    private static setRandomBrightness(var0: number): void {
+        Pix3D.brightness = Math.fround(var0);
+        Pix3D.brightness = Math.fround(Pix3D.brightness + (mathRandom.nextDouble() * 0.03 - 0.015));
+    }
+
+    // dc.a(IIIIIIIII)V
+    // var0..var2 = y, var3..var5 = x, var6..var8 = colour-table indices.
+    static gouraudTriangle(var0: number, var1: number, var2: number, var3: number, var4: number, var5: number, var6: number, var7: number, var8: number): void {
+        // The software raster only writes destination pixels while walking these edges.
+        const pixels = Pix2D.pixels,
+            stride = Pix2D.width,
+            height = Pix3D.height,
+            scanline = Pix3D.scanline;
+        const capture = Pix3D.spanTarget;
+        if (capture !== null && capture.projectedGouraud(pixels, stride, scanline, height, Pix3D.hclip ? Math.max(0, Pix3D.width) : -1, Pix3D.lowDetail, Pix3D.trans, Pix3D.colourTable, var0, var1, var2, var3, var4, var5, var6, var7, var8)) return;
+        const var9 = (var4 - var3) | 0;
+        const var10 = (var1 - var0) | 0;
+        const var11 = (var5 - var3) | 0;
+        const var12 = (var2 - var0) | 0;
+        const var13 = (var7 - var6) | 0;
+        const var14 = (var8 - var6) | 0;
+        let var15: number;
+        if (var2 !== var1) {
+            var15 = (((var5 - var4) << 16) / ((var2 - var1) | 0)) | 0;
+        } else {
+            var15 = 0;
+        }
+
+        let var16: number;
+        if (var1 !== var0) {
+            var16 = ((var9 << 16) / var10) | 0;
+        } else {
+            var16 = 0;
+        }
+
+        let var17: number;
+        if (var2 !== var0) {
+            var17 = ((var11 << 16) / var12) | 0;
+        } else {
+            var17 = 0;
+        }
+
+        const var18 = (Math.imul(var9, var12) - Math.imul(var11, var10)) | 0;
+        if (var18 === 0) {
+            return;
+        }
+
+        const var19 = (((Math.imul(var13, var12) - Math.imul(var14, var10)) << 8) / var18) | 0;
+        const var20 = (((Math.imul(var14, var9) - Math.imul(var13, var11)) << 8) / var18) | 0;
+        if (var0 <= var1 && var0 <= var2) {
+            if (var0 >= height) {
+                return;
+            }
+
+            if (var1 > height) {
+                var1 = height;
+            }
+
+            if (var2 > height) {
+                var2 = height;
+            }
+
+            var6 = ((var6 << 8) - Math.imul(var19, var3) + var19) | 0;
+            if (var1 < var2) {
+                let var62: number;
+                var5 = var62 = var3 << 16;
+                if (var0 < 0) {
+                    var5 = (var5 - Math.imul(var17, var0)) | 0;
+                    var62 = (var62 - Math.imul(var16, var0)) | 0;
+                    var6 = (var6 - Math.imul(var20, var0)) | 0;
+                    var0 = 0;
+                }
+
+                var4 <<= 16;
+                if (var1 < 0) {
+                    var4 = (var4 - Math.imul(var15, var1)) | 0;
+                    var1 = 0;
+                }
+
+                if ((var0 !== var1 && var17 < var16) || (var0 === var1 && var17 > var15)) {
+                    var2 = (var2 - var1) | 0;
+                    var1 = (var1 - var0) | 0;
+
+                    var0 = scanline !== null && var0 >>> 0 < scanline.length ? scanline[var0] : arrayAtI32(scanline, var0);
+                    if (
+                        capture !== null &&
+                        capture.gouraudEdges(pixels, var0, stride, var1, var2, var5, var17, var62, var16, var4, var15, true, var6, var20, var19, Pix3D.hclip ? Math.max(0, Pix3D.width) : -1, Pix3D.lowDetail, Pix3D.trans, Pix3D.colourTable)
+                    )
+                        return;
+                    for (; --var1 >= 0; var0 = (var0 + stride) | 0) {
+                        Pix3D.gouraudRaster(pixels, var0, 0, 0, var5 >> 16, var62 >> 16, var6, var19);
+                        var5 = (var5 + var17) | 0;
+                        var62 = (var62 + var16) | 0;
+                        var6 = (var6 + var20) | 0;
+                    }
+
+                    while (--var2 >= 0) {
+                        Pix3D.gouraudRaster(pixels, var0, 0, 0, var5 >> 16, var4 >> 16, var6, var19);
+                        var5 = (var5 + var17) | 0;
+                        var4 = (var4 + var15) | 0;
+                        var6 = (var6 + var20) | 0;
+                        var0 = (var0 + stride) | 0;
+                    }
+                } else {
+                    var2 = (var2 - var1) | 0;
+                    var1 = (var1 - var0) | 0;
+
+                    var0 = scanline !== null && var0 >>> 0 < scanline.length ? scanline[var0] : arrayAtI32(scanline, var0);
+                    if (
+                        capture !== null &&
+                        capture.gouraudEdges(pixels, var0, stride, var1, var2, var5, var17, var62, var16, var4, var15, false, var6, var20, var19, Pix3D.hclip ? Math.max(0, Pix3D.width) : -1, Pix3D.lowDetail, Pix3D.trans, Pix3D.colourTable)
+                    )
+                        return;
+                    for (; --var1 >= 0; var0 = (var0 + stride) | 0) {
+                        Pix3D.gouraudRaster(pixels, var0, 0, 0, var62 >> 16, var5 >> 16, var6, var19);
+                        var5 = (var5 + var17) | 0;
+                        var62 = (var62 + var16) | 0;
+                        var6 = (var6 + var20) | 0;
+                    }
+
+                    while (--var2 >= 0) {
+                        Pix3D.gouraudRaster(pixels, var0, 0, 0, var4 >> 16, var5 >> 16, var6, var19);
+                        var5 = (var5 + var17) | 0;
+                        var4 = (var4 + var15) | 0;
+                        var6 = (var6 + var20) | 0;
+                        var0 = (var0 + stride) | 0;
+                    }
+                }
+            } else {
+                let var61: number;
+                var4 = var61 = var3 << 16;
+                if (var0 < 0) {
+                    var4 = (var4 - Math.imul(var17, var0)) | 0;
+                    var61 = (var61 - Math.imul(var16, var0)) | 0;
+                    var6 = (var6 - Math.imul(var20, var0)) | 0;
+                    var0 = 0;
+                }
+
+                var5 <<= 16;
+                if (var2 < 0) {
+                    var5 = (var5 - Math.imul(var15, var2)) | 0;
+                    var2 = 0;
+                }
+
+                if ((var0 !== var2 && var17 < var16) || (var0 === var2 && var15 > var16)) {
+                    var1 = (var1 - var2) | 0;
+                    var2 = (var2 - var0) | 0;
+
+                    var0 = scanline !== null && var0 >>> 0 < scanline.length ? scanline[var0] : arrayAtI32(scanline, var0);
+                    if (
+                        capture !== null &&
+                        capture.gouraudEdges(pixels, var0, stride, var2, var1, var61, var16, var4, var17, var5, var15, false, var6, var20, var19, Pix3D.hclip ? Math.max(0, Pix3D.width) : -1, Pix3D.lowDetail, Pix3D.trans, Pix3D.colourTable)
+                    )
+                        return;
+                    for (; --var2 >= 0; var0 = (var0 + stride) | 0) {
+                        Pix3D.gouraudRaster(pixels, var0, 0, 0, var4 >> 16, var61 >> 16, var6, var19);
+                        var4 = (var4 + var17) | 0;
+                        var61 = (var61 + var16) | 0;
+                        var6 = (var6 + var20) | 0;
+                    }
+
+                    while (--var1 >= 0) {
+                        Pix3D.gouraudRaster(pixels, var0, 0, 0, var5 >> 16, var61 >> 16, var6, var19);
+                        var5 = (var5 + var15) | 0;
+                        var61 = (var61 + var16) | 0;
+                        var6 = (var6 + var20) | 0;
+                        var0 = (var0 + stride) | 0;
+                    }
+                } else {
+                    var1 = (var1 - var2) | 0;
+                    var2 = (var2 - var0) | 0;
+
+                    var0 = scanline !== null && var0 >>> 0 < scanline.length ? scanline[var0] : arrayAtI32(scanline, var0);
+                    if (
+                        capture !== null &&
+                        capture.gouraudEdges(pixels, var0, stride, var2, var1, var61, var16, var4, var17, var5, var15, true, var6, var20, var19, Pix3D.hclip ? Math.max(0, Pix3D.width) : -1, Pix3D.lowDetail, Pix3D.trans, Pix3D.colourTable)
+                    )
+                        return;
+                    for (; --var2 >= 0; var0 = (var0 + stride) | 0) {
+                        Pix3D.gouraudRaster(pixels, var0, 0, 0, var61 >> 16, var4 >> 16, var6, var19);
+                        var4 = (var4 + var17) | 0;
+                        var61 = (var61 + var16) | 0;
+                        var6 = (var6 + var20) | 0;
+                    }
+
+                    while (--var1 >= 0) {
+                        Pix3D.gouraudRaster(pixels, var0, 0, 0, var61 >> 16, var5 >> 16, var6, var19);
+                        var5 = (var5 + var15) | 0;
+                        var61 = (var61 + var16) | 0;
+                        var6 = (var6 + var20) | 0;
+                        var0 = (var0 + stride) | 0;
+                    }
+                }
+            }
+        } else if (var1 <= var2) {
+            if (var1 >= height) {
+                return;
+            }
+
+            if (var2 > height) {
+                var2 = height;
+            }
+
+            if (var0 > height) {
+                var0 = height;
+            }
+
+            var7 = ((var7 << 8) - Math.imul(var19, var4) + var19) | 0;
+            if (var2 < var0) {
+                let var66: number;
+                var3 = var66 = var4 << 16;
+                if (var1 < 0) {
+                    var3 = (var3 - Math.imul(var16, var1)) | 0;
+                    var66 = (var66 - Math.imul(var15, var1)) | 0;
+                    var7 = (var7 - Math.imul(var20, var1)) | 0;
+                    var1 = 0;
+                }
+
+                var5 <<= 16;
+                if (var2 < 0) {
+                    var5 = (var5 - Math.imul(var17, var2)) | 0;
+                    var2 = 0;
+                }
+
+                if ((var1 !== var2 && var16 < var15) || (var1 === var2 && var16 > var17)) {
+                    var0 = (var0 - var2) | 0;
+                    var2 = (var2 - var1) | 0;
+
+                    var1 = scanline !== null && var1 >>> 0 < scanline.length ? scanline[var1] : arrayAtI32(scanline, var1);
+                    if (
+                        capture !== null &&
+                        capture.gouraudEdges(pixels, var1, stride, var2, var0, var3, var16, var66, var15, var5, var17, true, var7, var20, var19, Pix3D.hclip ? Math.max(0, Pix3D.width) : -1, Pix3D.lowDetail, Pix3D.trans, Pix3D.colourTable)
+                    )
+                        return;
+                    for (; --var2 >= 0; var1 = (var1 + stride) | 0) {
+                        Pix3D.gouraudRaster(pixels, var1, 0, 0, var3 >> 16, var66 >> 16, var7, var19);
+                        var3 = (var3 + var16) | 0;
+                        var66 = (var66 + var15) | 0;
+                        var7 = (var7 + var20) | 0;
+                    }
+
+                    while (--var0 >= 0) {
+                        Pix3D.gouraudRaster(pixels, var1, 0, 0, var3 >> 16, var5 >> 16, var7, var19);
+                        var3 = (var3 + var16) | 0;
+                        var5 = (var5 + var17) | 0;
+                        var7 = (var7 + var20) | 0;
+                        var1 = (var1 + stride) | 0;
+                    }
+                } else {
+                    var0 = (var0 - var2) | 0;
+                    var2 = (var2 - var1) | 0;
+
+                    var1 = scanline !== null && var1 >>> 0 < scanline.length ? scanline[var1] : arrayAtI32(scanline, var1);
+                    if (
+                        capture !== null &&
+                        capture.gouraudEdges(pixels, var1, stride, var2, var0, var3, var16, var66, var15, var5, var17, false, var7, var20, var19, Pix3D.hclip ? Math.max(0, Pix3D.width) : -1, Pix3D.lowDetail, Pix3D.trans, Pix3D.colourTable)
+                    )
+                        return;
+                    for (; --var2 >= 0; var1 = (var1 + stride) | 0) {
+                        Pix3D.gouraudRaster(pixels, var1, 0, 0, var66 >> 16, var3 >> 16, var7, var19);
+                        var3 = (var3 + var16) | 0;
+                        var66 = (var66 + var15) | 0;
+                        var7 = (var7 + var20) | 0;
+                    }
+
+                    while (--var0 >= 0) {
+                        Pix3D.gouraudRaster(pixels, var1, 0, 0, var5 >> 16, var3 >> 16, var7, var19);
+                        var3 = (var3 + var16) | 0;
+                        var5 = (var5 + var17) | 0;
+                        var7 = (var7 + var20) | 0;
+                        var1 = (var1 + stride) | 0;
+                    }
+                }
+            } else {
+                let var65: number;
+                var5 = var65 = var4 << 16;
+                if (var1 < 0) {
+                    var5 = (var5 - Math.imul(var16, var1)) | 0;
+                    var65 = (var65 - Math.imul(var15, var1)) | 0;
+                    var7 = (var7 - Math.imul(var20, var1)) | 0;
+                    var1 = 0;
+                }
+
+                var3 <<= 16;
+                if (var0 < 0) {
+                    var3 = (var3 - Math.imul(var17, var0)) | 0;
+                    var0 = 0;
+                }
+
+                if (var16 < var15) {
+                    var2 = (var2 - var0) | 0;
+                    var0 = (var0 - var1) | 0;
+
+                    var1 = scanline !== null && var1 >>> 0 < scanline.length ? scanline[var1] : arrayAtI32(scanline, var1);
+                    if (
+                        capture !== null &&
+                        capture.gouraudEdges(pixels, var1, stride, var0, var2, var65, var15, var5, var16, var3, var17, false, var7, var20, var19, Pix3D.hclip ? Math.max(0, Pix3D.width) : -1, Pix3D.lowDetail, Pix3D.trans, Pix3D.colourTable)
+                    )
+                        return;
+                    for (; --var0 >= 0; var1 = (var1 + stride) | 0) {
+                        Pix3D.gouraudRaster(pixels, var1, 0, 0, var5 >> 16, var65 >> 16, var7, var19);
+                        var5 = (var5 + var16) | 0;
+                        var65 = (var65 + var15) | 0;
+                        var7 = (var7 + var20) | 0;
+                    }
+
+                    while (--var2 >= 0) {
+                        Pix3D.gouraudRaster(pixels, var1, 0, 0, var3 >> 16, var65 >> 16, var7, var19);
+                        var3 = (var3 + var17) | 0;
+                        var65 = (var65 + var15) | 0;
+                        var7 = (var7 + var20) | 0;
+                        var1 = (var1 + stride) | 0;
+                    }
+                } else {
+                    var2 = (var2 - var0) | 0;
+                    var0 = (var0 - var1) | 0;
+
+                    var1 = scanline !== null && var1 >>> 0 < scanline.length ? scanline[var1] : arrayAtI32(scanline, var1);
+                    if (
+                        capture !== null &&
+                        capture.gouraudEdges(pixels, var1, stride, var0, var2, var65, var15, var5, var16, var3, var17, true, var7, var20, var19, Pix3D.hclip ? Math.max(0, Pix3D.width) : -1, Pix3D.lowDetail, Pix3D.trans, Pix3D.colourTable)
+                    )
+                        return;
+                    for (; --var0 >= 0; var1 = (var1 + stride) | 0) {
+                        Pix3D.gouraudRaster(pixels, var1, 0, 0, var65 >> 16, var5 >> 16, var7, var19);
+                        var5 = (var5 + var16) | 0;
+                        var65 = (var65 + var15) | 0;
+                        var7 = (var7 + var20) | 0;
+                    }
+
+                    while (--var2 >= 0) {
+                        Pix3D.gouraudRaster(pixels, var1, 0, 0, var65 >> 16, var3 >> 16, var7, var19);
+                        var3 = (var3 + var17) | 0;
+                        var65 = (var65 + var15) | 0;
+                        var7 = (var7 + var20) | 0;
+                        var1 = (var1 + stride) | 0;
+                    }
+                }
+            }
+        } else {
+            if (var2 >= height) {
+                return;
+            }
+
+            if (var0 > height) {
+                var0 = height;
+            }
+
+            if (var1 > height) {
+                var1 = height;
+            }
+
+            var8 = ((var8 << 8) - Math.imul(var19, var5) + var19) | 0;
+            if (var0 < var1) {
+                let var70: number;
+                var4 = var70 = var5 << 16;
+                if (var2 < 0) {
+                    var4 = (var4 - Math.imul(var15, var2)) | 0;
+                    var70 = (var70 - Math.imul(var17, var2)) | 0;
+                    var8 = (var8 - Math.imul(var20, var2)) | 0;
+                    var2 = 0;
+                }
+
+                var3 <<= 16;
+                if (var0 < 0) {
+                    var3 = (var3 - Math.imul(var16, var0)) | 0;
+                    var0 = 0;
+                }
+
+                if (var15 < var17) {
+                    var1 = (var1 - var0) | 0;
+                    var0 = (var0 - var2) | 0;
+
+                    var2 = scanline !== null && var2 >>> 0 < scanline.length ? scanline[var2] : arrayAtI32(scanline, var2);
+                    if (
+                        capture !== null &&
+                        capture.gouraudEdges(pixels, var2, stride, var0, var1, var4, var15, var70, var17, var3, var16, true, var8, var20, var19, Pix3D.hclip ? Math.max(0, Pix3D.width) : -1, Pix3D.lowDetail, Pix3D.trans, Pix3D.colourTable)
+                    )
+                        return;
+                    for (; --var0 >= 0; var2 = (var2 + stride) | 0) {
+                        Pix3D.gouraudRaster(pixels, var2, 0, 0, var4 >> 16, var70 >> 16, var8, var19);
+                        var4 = (var4 + var15) | 0;
+                        var70 = (var70 + var17) | 0;
+                        var8 = (var8 + var20) | 0;
+                    }
+
+                    while (--var1 >= 0) {
+                        Pix3D.gouraudRaster(pixels, var2, 0, 0, var4 >> 16, var3 >> 16, var8, var19);
+                        var4 = (var4 + var15) | 0;
+                        var3 = (var3 + var16) | 0;
+                        var8 = (var8 + var20) | 0;
+                        var2 = (var2 + stride) | 0;
+                    }
+                } else {
+                    var1 = (var1 - var0) | 0;
+                    var0 = (var0 - var2) | 0;
+
+                    var2 = scanline !== null && var2 >>> 0 < scanline.length ? scanline[var2] : arrayAtI32(scanline, var2);
+                    if (
+                        capture !== null &&
+                        capture.gouraudEdges(pixels, var2, stride, var0, var1, var4, var15, var70, var17, var3, var16, false, var8, var20, var19, Pix3D.hclip ? Math.max(0, Pix3D.width) : -1, Pix3D.lowDetail, Pix3D.trans, Pix3D.colourTable)
+                    )
+                        return;
+                    for (; --var0 >= 0; var2 = (var2 + stride) | 0) {
+                        Pix3D.gouraudRaster(pixels, var2, 0, 0, var70 >> 16, var4 >> 16, var8, var19);
+                        var4 = (var4 + var15) | 0;
+                        var70 = (var70 + var17) | 0;
+                        var8 = (var8 + var20) | 0;
+                    }
+
+                    while (--var1 >= 0) {
+                        Pix3D.gouraudRaster(pixels, var2, 0, 0, var3 >> 16, var4 >> 16, var8, var19);
+                        var4 = (var4 + var15) | 0;
+                        var3 = (var3 + var16) | 0;
+                        var8 = (var8 + var20) | 0;
+                        var2 = (var2 + stride) | 0;
+                    }
+                }
+            } else {
+                let var69: number;
+                var3 = var69 = var5 << 16;
+                if (var2 < 0) {
+                    var3 = (var3 - Math.imul(var15, var2)) | 0;
+                    var69 = (var69 - Math.imul(var17, var2)) | 0;
+                    var8 = (var8 - Math.imul(var20, var2)) | 0;
+                    var2 = 0;
+                }
+
+                var4 <<= 16;
+                if (var1 < 0) {
+                    var4 = (var4 - Math.imul(var16, var1)) | 0;
+                    var1 = 0;
+                }
+
+                if (var15 < var17) {
+                    var0 = (var0 - var1) | 0;
+                    var1 = (var1 - var2) | 0;
+
+                    var2 = scanline !== null && var2 >>> 0 < scanline.length ? scanline[var2] : arrayAtI32(scanline, var2);
+                    if (
+                        capture !== null &&
+                        capture.gouraudEdges(pixels, var2, stride, var1, var0, var69, var17, var3, var15, var4, var16, false, var8, var20, var19, Pix3D.hclip ? Math.max(0, Pix3D.width) : -1, Pix3D.lowDetail, Pix3D.trans, Pix3D.colourTable)
+                    )
+                        return;
+                    for (; --var1 >= 0; var2 = (var2 + stride) | 0) {
+                        Pix3D.gouraudRaster(pixels, var2, 0, 0, var3 >> 16, var69 >> 16, var8, var19);
+                        var3 = (var3 + var15) | 0;
+                        var69 = (var69 + var17) | 0;
+                        var8 = (var8 + var20) | 0;
+                    }
+
+                    while (--var0 >= 0) {
+                        Pix3D.gouraudRaster(pixels, var2, 0, 0, var4 >> 16, var69 >> 16, var8, var19);
+                        var4 = (var4 + var16) | 0;
+                        var69 = (var69 + var17) | 0;
+                        var8 = (var8 + var20) | 0;
+                        var2 = (var2 + stride) | 0;
+                    }
+                } else {
+                    var0 = (var0 - var1) | 0;
+                    var1 = (var1 - var2) | 0;
+
+                    var2 = scanline !== null && var2 >>> 0 < scanline.length ? scanline[var2] : arrayAtI32(scanline, var2);
+                    if (
+                        capture !== null &&
+                        capture.gouraudEdges(pixels, var2, stride, var1, var0, var69, var17, var3, var15, var4, var16, true, var8, var20, var19, Pix3D.hclip ? Math.max(0, Pix3D.width) : -1, Pix3D.lowDetail, Pix3D.trans, Pix3D.colourTable)
+                    )
+                        return;
+                    for (; --var1 >= 0; var2 = (var2 + stride) | 0) {
+                        Pix3D.gouraudRaster(pixels, var2, 0, 0, var69 >> 16, var3 >> 16, var8, var19);
+                        var3 = (var3 + var15) | 0;
+                        var69 = (var69 + var17) | 0;
+                        var8 = (var8 + var20) | 0;
+                    }
+
+                    while (--var0 >= 0) {
+                        Pix3D.gouraudRaster(pixels, var2, 0, 0, var69 >> 16, var4 >> 16, var8, var19);
+                        var4 = (var4 + var16) | 0;
+                        var69 = (var69 + var17) | 0;
+                        var8 = (var8 + var20) | 0;
+                        var2 = (var2 + stride) | 0;
+                    }
+                }
+            }
+        }
+    }
+
+    // dc.b(II)V
+    private static initColourTable(var0: number, var1: number): void {
+        Pix3D.spanTarget?.invalidate(Pix3D.colourTable);
+        let var2 = Math.imul(var0, 128);
+
+        for (let var3 = var0; var3 < var1; var3++) {
+            const var4 = (var3 >> 3) / 64.0 + 0.0078125;
+            const var6 = (var3 & 7) / 8.0 + 0.0625;
+
+            for (let var8 = 0; var8 < 128; var8++) {
+                const var9 = var8 / 128.0;
+                let var11 = var9;
+                let var13 = var9;
+                let var15 = var9;
+                if (var6 !== 0.0) {
+                    let var17: number;
+                    if (var9 < 0.5) {
+                        var17 = var9 * (1.0 + var6);
+                    } else {
+                        var17 = var9 + var6 - var9 * var6;
+                    }
+
+                    const var19 = 2.0 * var9 - var17;
+                    let var21 = var4 + 0.3333333333333333;
+                    if (var21 > 1.0) {
+                        var21--;
+                    }
+
+                    // The bytecode copies the hue into a second local (dstore 23) for the green channel.
+                    const var23 = var4;
+                    let var25 = var4 - 0.3333333333333333;
+                    if (var25 < 0.0) {
+                        var25++;
+                    }
+
+                    if (6.0 * var21 < 1.0) {
+                        var11 = var19 + (var17 - var19) * 6.0 * var21;
+                    } else if (2.0 * var21 < 1.0) {
+                        var11 = var17;
+                    } else if (3.0 * var21 < 2.0) {
+                        var11 = var19 + (var17 - var19) * (0.6666666666666666 - var21) * 6.0;
+                    } else {
+                        var11 = var19;
+                    }
+
+                    if (6.0 * var23 < 1.0) {
+                        var13 = var19 + (var17 - var19) * 6.0 * var23;
+                    } else if (2.0 * var23 < 1.0) {
+                        var13 = var17;
+                    } else if (3.0 * var23 < 2.0) {
+                        var13 = var19 + (var17 - var19) * (0.6666666666666666 - var23) * 6.0;
+                    } else {
+                        var13 = var19;
+                    }
+
+                    if (6.0 * var25 < 1.0) {
+                        var15 = var19 + (var17 - var19) * 6.0 * var25;
+                    } else if (2.0 * var25 < 1.0) {
+                        var15 = var17;
+                    } else if (3.0 * var25 < 2.0) {
+                        var15 = var19 + (var17 - var19) * (0.6666666666666666 - var25) * 6.0;
+                    } else {
+                        var15 = var19;
+                    }
+                }
+
+                var11 = Math.pow(var11, Pix3D.brightness);
+                var13 = Math.pow(var13, Pix3D.brightness);
+                var15 = Math.pow(var15, Pix3D.brightness);
+                // d2i: brightness is unconstrained, so pow can give Infinity or NaN.
+                const var30 = doubleToInt(var11 * 256.0);
+                const var18 = doubleToInt(var13 * 256.0);
+                const var31 = doubleToInt(var15 * 256.0);
+                let var20 = ((var30 << 16) + (var18 << 8) + var31) | 0;
+                if (var20 === 0) {
+                    var20 = 1;
+                }
+
+                arrayPutI32(Pix3D.colourTable, var2++, var20);
+            }
+        }
+    }
+
+    // dc.e()I
+    static getOffsetX(): number {
+        return intRemainder(arrayAtI32(Pix3D.scanline, 0), Pix2D.width);
+    }
+
+    // dc.a(III)V
+    static testHclip(var0: number, var1: number, var2: number): void {
+        Pix3D.hclip = var0 < 0 || var0 > Pix3D.width || var1 < 0 || var1 > Pix3D.width || var2 < 0 || var2 > Pix3D.width;
+    }
+
+    // dc.a(IIII)V
+    private static setBounds(var0: number, var1: number, var2: number, var3: number): void {
+        Pix3D.width = (var2 - var0) | 0;
+        Pix3D.height = (var3 - var1) | 0;
+        Pix3D.resetOrigin();
+        if (requireNonNull(Pix3D.scanline).length < Pix3D.height) {
+            Pix3D.scanline = new Int32Array(bitCeil(Pix3D.height));
+        }
+
+        let var4 = (Math.imul(var1, Pix2D.width) + var0) | 0;
+
+        for (let var5 = 0; var5 < Pix3D.height; var5++) {
+            arrayPutI32(Pix3D.scanline, var5, var4);
+            var4 = (var4 + Pix2D.width) | 0;
+        }
+    }
+
+    // dc.a(IIIIIII)V
+    // var0..var2 = y, var3..var5 = x, var6 = RGB.
+    static flatTriangle(var0: number, var1: number, var2: number, var3: number, var4: number, var5: number, var6: number): void {
+        let var7 = 0;
+        if (var1 !== var0) {
+            var7 = (((var4 - var3) << 16) / ((var1 - var0) | 0)) | 0;
+        }
+
+        let var8 = 0;
+        if (var2 !== var1) {
+            var8 = (((var5 - var4) << 16) / ((var2 - var1) | 0)) | 0;
+        }
+
+        let var9 = 0;
+        if (var2 !== var0) {
+            var9 = (((var3 - var5) << 16) / ((var0 - var2) | 0)) | 0;
+        }
+
+        if (var0 <= var1 && var0 <= var2) {
+            if (var0 >= Pix3D.height) {
+                return;
+            }
+
+            if (var1 > Pix3D.height) {
+                var1 = Pix3D.height;
+            }
+
+            if (var2 > Pix3D.height) {
+                var2 = Pix3D.height;
+            }
+
+            if (var1 < var2) {
+                let var51: number;
+                var5 = var51 = var3 << 16;
+                if (var0 < 0) {
+                    var5 = (var5 - Math.imul(var9, var0)) | 0;
+                    var51 = (var51 - Math.imul(var7, var0)) | 0;
+                    var0 = 0;
+                }
+
+                var4 <<= 16;
+                if (var1 < 0) {
+                    var4 = (var4 - Math.imul(var8, var1)) | 0;
+                    var1 = 0;
+                }
+
+                if ((var0 !== var1 && var9 < var7) || (var0 === var1 && var9 > var8)) {
+                    var2 = (var2 - var1) | 0;
+                    var1 = (var1 - var0) | 0;
+
+                    for (var0 = arrayAtI32(Pix3D.scanline, var0); --var1 >= 0; var0 = (var0 + Pix2D.width) | 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var0, var6, 0, var5 >> 16, var51 >> 16);
+                        var5 = (var5 + var9) | 0;
+                        var51 = (var51 + var7) | 0;
+                    }
+
+                    while (--var2 >= 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var0, var6, 0, var5 >> 16, var4 >> 16);
+                        var5 = (var5 + var9) | 0;
+                        var4 = (var4 + var8) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                    }
+                } else {
+                    var2 = (var2 - var1) | 0;
+                    var1 = (var1 - var0) | 0;
+
+                    for (var0 = arrayAtI32(Pix3D.scanline, var0); --var1 >= 0; var0 = (var0 + Pix2D.width) | 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var0, var6, 0, var51 >> 16, var5 >> 16);
+                        var5 = (var5 + var9) | 0;
+                        var51 = (var51 + var7) | 0;
+                    }
+
+                    while (--var2 >= 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var0, var6, 0, var4 >> 16, var5 >> 16);
+                        var5 = (var5 + var9) | 0;
+                        var4 = (var4 + var8) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                    }
+                }
+            } else {
+                let var50: number;
+                var4 = var50 = var3 << 16;
+                if (var0 < 0) {
+                    var4 = (var4 - Math.imul(var9, var0)) | 0;
+                    var50 = (var50 - Math.imul(var7, var0)) | 0;
+                    var0 = 0;
+                }
+
+                var5 <<= 16;
+                if (var2 < 0) {
+                    var5 = (var5 - Math.imul(var8, var2)) | 0;
+                    var2 = 0;
+                }
+
+                if ((var0 !== var2 && var9 < var7) || (var0 === var2 && var8 > var7)) {
+                    var1 = (var1 - var2) | 0;
+                    var2 = (var2 - var0) | 0;
+
+                    for (var0 = arrayAtI32(Pix3D.scanline, var0); --var2 >= 0; var0 = (var0 + Pix2D.width) | 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var0, var6, 0, var4 >> 16, var50 >> 16);
+                        var4 = (var4 + var9) | 0;
+                        var50 = (var50 + var7) | 0;
+                    }
+
+                    while (--var1 >= 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var0, var6, 0, var5 >> 16, var50 >> 16);
+                        var5 = (var5 + var8) | 0;
+                        var50 = (var50 + var7) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                    }
+                } else {
+                    var1 = (var1 - var2) | 0;
+                    var2 = (var2 - var0) | 0;
+
+                    for (var0 = arrayAtI32(Pix3D.scanline, var0); --var2 >= 0; var0 = (var0 + Pix2D.width) | 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var0, var6, 0, var50 >> 16, var4 >> 16);
+                        var4 = (var4 + var9) | 0;
+                        var50 = (var50 + var7) | 0;
+                    }
+
+                    while (--var1 >= 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var0, var6, 0, var50 >> 16, var5 >> 16);
+                        var5 = (var5 + var8) | 0;
+                        var50 = (var50 + var7) | 0;
+                        var0 = (var0 + Pix2D.width) | 0;
+                    }
+                }
+            }
+        } else if (var1 <= var2) {
+            if (var1 >= Pix3D.height) {
+                return;
+            }
+
+            if (var2 > Pix3D.height) {
+                var2 = Pix3D.height;
+            }
+
+            if (var0 > Pix3D.height) {
+                var0 = Pix3D.height;
+            }
+
+            if (var2 < var0) {
+                let var55: number;
+                var3 = var55 = var4 << 16;
+                if (var1 < 0) {
+                    var3 = (var3 - Math.imul(var7, var1)) | 0;
+                    var55 = (var55 - Math.imul(var8, var1)) | 0;
+                    var1 = 0;
+                }
+
+                var5 <<= 16;
+                if (var2 < 0) {
+                    var5 = (var5 - Math.imul(var9, var2)) | 0;
+                    var2 = 0;
+                }
+
+                if ((var1 !== var2 && var7 < var8) || (var1 === var2 && var7 > var9)) {
+                    var0 = (var0 - var2) | 0;
+                    var2 = (var2 - var1) | 0;
+
+                    for (var1 = arrayAtI32(Pix3D.scanline, var1); --var2 >= 0; var1 = (var1 + Pix2D.width) | 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var1, var6, 0, var3 >> 16, var55 >> 16);
+                        var3 = (var3 + var7) | 0;
+                        var55 = (var55 + var8) | 0;
+                    }
+
+                    while (--var0 >= 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var1, var6, 0, var3 >> 16, var5 >> 16);
+                        var3 = (var3 + var7) | 0;
+                        var5 = (var5 + var9) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                    }
+                } else {
+                    var0 = (var0 - var2) | 0;
+                    var2 = (var2 - var1) | 0;
+
+                    for (var1 = arrayAtI32(Pix3D.scanline, var1); --var2 >= 0; var1 = (var1 + Pix2D.width) | 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var1, var6, 0, var55 >> 16, var3 >> 16);
+                        var3 = (var3 + var7) | 0;
+                        var55 = (var55 + var8) | 0;
+                    }
+
+                    while (--var0 >= 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var1, var6, 0, var5 >> 16, var3 >> 16);
+                        var3 = (var3 + var7) | 0;
+                        var5 = (var5 + var9) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                    }
+                }
+            } else {
+                let var54: number;
+                var5 = var54 = var4 << 16;
+                if (var1 < 0) {
+                    var5 = (var5 - Math.imul(var7, var1)) | 0;
+                    var54 = (var54 - Math.imul(var8, var1)) | 0;
+                    var1 = 0;
+                }
+
+                var3 <<= 16;
+                if (var0 < 0) {
+                    var3 = (var3 - Math.imul(var9, var0)) | 0;
+                    var0 = 0;
+                }
+
+                if (var7 < var8) {
+                    var2 = (var2 - var0) | 0;
+                    var0 = (var0 - var1) | 0;
+
+                    for (var1 = arrayAtI32(Pix3D.scanline, var1); --var0 >= 0; var1 = (var1 + Pix2D.width) | 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var1, var6, 0, var5 >> 16, var54 >> 16);
+                        var5 = (var5 + var7) | 0;
+                        var54 = (var54 + var8) | 0;
+                    }
+
+                    while (--var2 >= 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var1, var6, 0, var3 >> 16, var54 >> 16);
+                        var3 = (var3 + var9) | 0;
+                        var54 = (var54 + var8) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                    }
+                } else {
+                    var2 = (var2 - var0) | 0;
+                    var0 = (var0 - var1) | 0;
+
+                    for (var1 = arrayAtI32(Pix3D.scanline, var1); --var0 >= 0; var1 = (var1 + Pix2D.width) | 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var1, var6, 0, var54 >> 16, var5 >> 16);
+                        var5 = (var5 + var7) | 0;
+                        var54 = (var54 + var8) | 0;
+                    }
+
+                    while (--var2 >= 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var1, var6, 0, var54 >> 16, var3 >> 16);
+                        var3 = (var3 + var9) | 0;
+                        var54 = (var54 + var8) | 0;
+                        var1 = (var1 + Pix2D.width) | 0;
+                    }
+                }
+            }
+        } else {
+            if (var2 >= Pix3D.height) {
+                return;
+            }
+
+            if (var0 > Pix3D.height) {
+                var0 = Pix3D.height;
+            }
+
+            if (var1 > Pix3D.height) {
+                var1 = Pix3D.height;
+            }
+
+            if (var0 < var1) {
+                let var59: number;
+                var4 = var59 = var5 << 16;
+                if (var2 < 0) {
+                    var4 = (var4 - Math.imul(var8, var2)) | 0;
+                    var59 = (var59 - Math.imul(var9, var2)) | 0;
+                    var2 = 0;
+                }
+
+                var3 <<= 16;
+                if (var0 < 0) {
+                    var3 = (var3 - Math.imul(var7, var0)) | 0;
+                    var0 = 0;
+                }
+
+                if (var8 < var9) {
+                    var1 = (var1 - var0) | 0;
+                    var0 = (var0 - var2) | 0;
+
+                    for (var2 = arrayAtI32(Pix3D.scanline, var2); --var0 >= 0; var2 = (var2 + Pix2D.width) | 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var2, var6, 0, var4 >> 16, var59 >> 16);
+                        var4 = (var4 + var8) | 0;
+                        var59 = (var59 + var9) | 0;
+                    }
+
+                    while (--var1 >= 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var2, var6, 0, var4 >> 16, var3 >> 16);
+                        var4 = (var4 + var8) | 0;
+                        var3 = (var3 + var7) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                    }
+                } else {
+                    var1 = (var1 - var0) | 0;
+                    var0 = (var0 - var2) | 0;
+
+                    for (var2 = arrayAtI32(Pix3D.scanline, var2); --var0 >= 0; var2 = (var2 + Pix2D.width) | 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var2, var6, 0, var59 >> 16, var4 >> 16);
+                        var4 = (var4 + var8) | 0;
+                        var59 = (var59 + var9) | 0;
+                    }
+
+                    while (--var1 >= 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var2, var6, 0, var3 >> 16, var4 >> 16);
+                        var4 = (var4 + var8) | 0;
+                        var3 = (var3 + var7) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                    }
+                }
+            } else {
+                let var58: number;
+                var3 = var58 = var5 << 16;
+                if (var2 < 0) {
+                    var3 = (var3 - Math.imul(var8, var2)) | 0;
+                    var58 = (var58 - Math.imul(var9, var2)) | 0;
+                    var2 = 0;
+                }
+
+                var4 <<= 16;
+                if (var1 < 0) {
+                    var4 = (var4 - Math.imul(var7, var1)) | 0;
+                    var1 = 0;
+                }
+
+                if (var8 < var9) {
+                    var0 = (var0 - var1) | 0;
+                    var1 = (var1 - var2) | 0;
+
+                    for (var2 = arrayAtI32(Pix3D.scanline, var2); --var1 >= 0; var2 = (var2 + Pix2D.width) | 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var2, var6, 0, var3 >> 16, var58 >> 16);
+                        var3 = (var3 + var8) | 0;
+                        var58 = (var58 + var9) | 0;
+                    }
+
+                    while (--var0 >= 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var2, var6, 0, var4 >> 16, var58 >> 16);
+                        var4 = (var4 + var7) | 0;
+                        var58 = (var58 + var9) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                    }
+                } else {
+                    var0 = (var0 - var1) | 0;
+                    var1 = (var1 - var2) | 0;
+
+                    for (var2 = arrayAtI32(Pix3D.scanline, var2); --var1 >= 0; var2 = (var2 + Pix2D.width) | 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var2, var6, 0, var58 >> 16, var3 >> 16);
+                        var3 = (var3 + var8) | 0;
+                        var58 = (var58 + var9) | 0;
+                    }
+
+                    while (--var0 >= 0) {
+                        Pix3D.flatRaster(Pix2D.pixels, var2, var6, 0, var58 >> 16, var4 >> 16);
+                        var4 = (var4 + var7) | 0;
+                        var58 = (var58 + var9) | 0;
+                        var2 = (var2 + Pix2D.width) | 0;
+                    }
+                }
+            }
+        }
+    }
+
+    // HD hf.a([BIIIIIII)V. The shadow sprite's 16.16 edges are clipped at the top only.
+    static fillShadowTriangle(pixels: Uint8Array | null, y1: number, y2: number, y3: number, x1: number, x2: number, x3: number, stride: number): void {
+        let slope12 = 0;
+        if (y2 !== y1) {
+            slope12 = intDivide((x2 - x1) << 16, (y2 - y1) | 0);
+        }
+
+        let slope23 = 0;
+        if (y3 !== y2) {
+            slope23 = intDivide((x3 - x2) << 16, (y3 - y2) | 0);
+        }
+
+        let slope31 = 0;
+        if (y3 !== y1) {
+            slope31 = intDivide((x1 - x3) << 16, (y1 - y3) | 0);
+        }
+
+        if (y1 <= y2 && y1 <= y3) {
+            if (y2 < y3) {
+                let edgeX: number;
+                x3 = edgeX = x1 << 16;
+                if (y1 < 0) {
+                    x3 = (x3 - Math.imul(slope31, y1)) | 0;
+                    edgeX = (edgeX - Math.imul(slope12, y1)) | 0;
+                    y1 = 0;
+                }
+
+                x2 <<= 16;
+                if (y2 < 0) {
+                    x2 = (x2 - Math.imul(slope23, y2)) | 0;
+                    y2 = 0;
+                }
+
+                if ((y1 === y2 || slope31 >= slope12) && (y1 !== y2 || slope31 <= slope23)) {
+                    y3 = (y3 - y2) | 0;
+                    y2 = (y2 - y1) | 0;
+
+                    for (y1 = Math.imul(y1, stride); (y2 = (y2 - 1) | 0) >= 0; y1 = (y1 + stride) | 0) {
+                        Pix3D.fillShadowRow(pixels, y1, 0, edgeX >> 16, x3 >> 16);
+                        x3 = (x3 + slope31) | 0;
+                        edgeX = (edgeX + slope12) | 0;
+                    }
+
+                    while ((y3 = (y3 - 1) | 0) >= 0) {
+                        Pix3D.fillShadowRow(pixels, y1, 0, x2 >> 16, x3 >> 16);
+                        x3 = (x3 + slope31) | 0;
+                        x2 = (x2 + slope23) | 0;
+                        y1 = (y1 + stride) | 0;
+                    }
+                } else {
+                    y3 = (y3 - y2) | 0;
+                    y2 = (y2 - y1) | 0;
+
+                    for (y1 = Math.imul(y1, stride); (y2 = (y2 - 1) | 0) >= 0; y1 = (y1 + stride) | 0) {
+                        Pix3D.fillShadowRow(pixels, y1, 0, x3 >> 16, edgeX >> 16);
+                        x3 = (x3 + slope31) | 0;
+                        edgeX = (edgeX + slope12) | 0;
+                    }
+
+                    while ((y3 = (y3 - 1) | 0) >= 0) {
+                        Pix3D.fillShadowRow(pixels, y1, 0, x3 >> 16, x2 >> 16);
+                        x3 = (x3 + slope31) | 0;
+                        x2 = (x2 + slope23) | 0;
+                        y1 = (y1 + stride) | 0;
+                    }
+                }
+            } else {
+                let edgeX: number;
+                x2 = edgeX = x1 << 16;
+                if (y1 < 0) {
+                    x2 = (x2 - Math.imul(slope31, y1)) | 0;
+                    edgeX = (edgeX - Math.imul(slope12, y1)) | 0;
+                    y1 = 0;
+                }
+
+                x3 <<= 16;
+                if (y3 < 0) {
+                    x3 = (x3 - Math.imul(slope23, y3)) | 0;
+                    y3 = 0;
+                }
+
+                if ((y1 === y3 || slope31 >= slope12) && (y1 !== y3 || slope23 <= slope12)) {
+                    y2 = (y2 - y3) | 0;
+                    y3 = (y3 - y1) | 0;
+
+                    for (y1 = Math.imul(y1, stride); (y3 = (y3 - 1) | 0) >= 0; y1 = (y1 + stride) | 0) {
+                        Pix3D.fillShadowRow(pixels, y1, 0, edgeX >> 16, x2 >> 16);
+                        x2 = (x2 + slope31) | 0;
+                        edgeX = (edgeX + slope12) | 0;
+                    }
+
+                    while ((y2 = (y2 - 1) | 0) >= 0) {
+                        Pix3D.fillShadowRow(pixels, y1, 0, edgeX >> 16, x3 >> 16);
+                        x3 = (x3 + slope23) | 0;
+                        edgeX = (edgeX + slope12) | 0;
+                        y1 = (y1 + stride) | 0;
+                    }
+                } else {
+                    y2 = (y2 - y3) | 0;
+                    y3 = (y3 - y1) | 0;
+
+                    for (y1 = Math.imul(y1, stride); (y3 = (y3 - 1) | 0) >= 0; y1 = (y1 + stride) | 0) {
+                        Pix3D.fillShadowRow(pixels, y1, 0, x2 >> 16, edgeX >> 16);
+                        x2 = (x2 + slope31) | 0;
+                        edgeX = (edgeX + slope12) | 0;
+                    }
+
+                    while ((y2 = (y2 - 1) | 0) >= 0) {
+                        Pix3D.fillShadowRow(pixels, y1, 0, x3 >> 16, edgeX >> 16);
+                        x3 = (x3 + slope23) | 0;
+                        edgeX = (edgeX + slope12) | 0;
+                        y1 = (y1 + stride) | 0;
+                    }
+                }
+            }
+        } else if (y2 <= y3) {
+            if (y3 < y1) {
+                let edgeX: number;
+                x1 = edgeX = x2 << 16;
+                if (y2 < 0) {
+                    x1 = (x1 - Math.imul(slope12, y2)) | 0;
+                    edgeX = (edgeX - Math.imul(slope23, y2)) | 0;
+                    y2 = 0;
+                }
+
+                x3 <<= 16;
+                if (y3 < 0) {
+                    x3 = (x3 - Math.imul(slope31, y3)) | 0;
+                    y3 = 0;
+                }
+
+                if ((y2 === y3 || slope12 >= slope23) && (y2 !== y3 || slope12 <= slope31)) {
+                    y1 = (y1 - y3) | 0;
+                    y3 = (y3 - y2) | 0;
+
+                    for (y2 = Math.imul(y2, stride); (y3 = (y3 - 1) | 0) >= 0; y2 = (y2 + stride) | 0) {
+                        Pix3D.fillShadowRow(pixels, y2, 0, edgeX >> 16, x1 >> 16);
+                        x1 = (x1 + slope12) | 0;
+                        edgeX = (edgeX + slope23) | 0;
+                    }
+
+                    while ((y1 = (y1 - 1) | 0) >= 0) {
+                        Pix3D.fillShadowRow(pixels, y2, 0, x3 >> 16, x1 >> 16);
+                        x1 = (x1 + slope12) | 0;
+                        x3 = (x3 + slope31) | 0;
+                        y2 = (y2 + stride) | 0;
+                    }
+                } else {
+                    y1 = (y1 - y3) | 0;
+                    y3 = (y3 - y2) | 0;
+
+                    for (y2 = Math.imul(y2, stride); (y3 = (y3 - 1) | 0) >= 0; y2 = (y2 + stride) | 0) {
+                        Pix3D.fillShadowRow(pixels, y2, 0, x1 >> 16, edgeX >> 16);
+                        x1 = (x1 + slope12) | 0;
+                        edgeX = (edgeX + slope23) | 0;
+                    }
+
+                    while ((y1 = (y1 - 1) | 0) >= 0) {
+                        Pix3D.fillShadowRow(pixels, y2, 0, x1 >> 16, x3 >> 16);
+                        x1 = (x1 + slope12) | 0;
+                        x3 = (x3 + slope31) | 0;
+                        y2 = (y2 + stride) | 0;
+                    }
+                }
+            } else {
+                let edgeX: number;
+                x3 = edgeX = x2 << 16;
+                if (y2 < 0) {
+                    x3 = (x3 - Math.imul(slope12, y2)) | 0;
+                    edgeX = (edgeX - Math.imul(slope23, y2)) | 0;
+                    y2 = 0;
+                }
+
+                x1 <<= 16;
+                if (y1 < 0) {
+                    x1 = (x1 - Math.imul(slope31, y1)) | 0;
+                    y1 = 0;
+                }
+
+                if (slope12 < slope23) {
+                    y3 = (y3 - y1) | 0;
+                    y1 = (y1 - y2) | 0;
+
+                    for (y2 = Math.imul(y2, stride); (y1 = (y1 - 1) | 0) >= 0; y2 = (y2 + stride) | 0) {
+                        Pix3D.fillShadowRow(pixels, y2, 0, x3 >> 16, edgeX >> 16);
+                        x3 = (x3 + slope12) | 0;
+                        edgeX = (edgeX + slope23) | 0;
+                    }
+
+                    while ((y3 = (y3 - 1) | 0) >= 0) {
+                        Pix3D.fillShadowRow(pixels, y2, 0, x1 >> 16, edgeX >> 16);
+                        x1 = (x1 + slope31) | 0;
+                        edgeX = (edgeX + slope23) | 0;
+                        y2 = (y2 + stride) | 0;
+                    }
+                } else {
+                    y3 = (y3 - y1) | 0;
+                    y1 = (y1 - y2) | 0;
+
+                    for (y2 = Math.imul(y2, stride); (y1 = (y1 - 1) | 0) >= 0; y2 = (y2 + stride) | 0) {
+                        Pix3D.fillShadowRow(pixels, y2, 0, edgeX >> 16, x3 >> 16);
+                        x3 = (x3 + slope12) | 0;
+                        edgeX = (edgeX + slope23) | 0;
+                    }
+
+                    while ((y3 = (y3 - 1) | 0) >= 0) {
+                        Pix3D.fillShadowRow(pixels, y2, 0, edgeX >> 16, x1 >> 16);
+                        x1 = (x1 + slope31) | 0;
+                        edgeX = (edgeX + slope23) | 0;
+                        y2 = (y2 + stride) | 0;
+                    }
+                }
+            }
+        } else if (y1 < y2) {
+            let edgeX: number;
+            x2 = edgeX = x3 << 16;
+            if (y3 < 0) {
+                x2 = (x2 - Math.imul(slope23, y3)) | 0;
+                edgeX = (edgeX - Math.imul(slope31, y3)) | 0;
+                y3 = 0;
+            }
+
+            x1 <<= 16;
+            if (y1 < 0) {
+                x1 = (x1 - Math.imul(slope12, y1)) | 0;
+                y1 = 0;
+            }
+
+            if (slope23 < slope31) {
+                y2 = (y2 - y1) | 0;
+                y1 = (y1 - y3) | 0;
+
+                for (y3 = Math.imul(y3, stride); (y1 = (y1 - 1) | 0) >= 0; y3 = (y3 + stride) | 0) {
+                    Pix3D.fillShadowRow(pixels, y3, 0, x2 >> 16, edgeX >> 16);
+                    x2 = (x2 + slope23) | 0;
+                    edgeX = (edgeX + slope31) | 0;
+                }
+
+                while ((y2 = (y2 - 1) | 0) >= 0) {
+                    Pix3D.fillShadowRow(pixels, y3, 0, x2 >> 16, x1 >> 16);
+                    x2 = (x2 + slope23) | 0;
+                    x1 = (x1 + slope12) | 0;
+                    y3 = (y3 + stride) | 0;
+                }
+            } else {
+                y2 = (y2 - y1) | 0;
+                y1 = (y1 - y3) | 0;
+
+                for (y3 = Math.imul(y3, stride); (y1 = (y1 - 1) | 0) >= 0; y3 = (y3 + stride) | 0) {
+                    Pix3D.fillShadowRow(pixels, y3, 0, edgeX >> 16, x2 >> 16);
+                    x2 = (x2 + slope23) | 0;
+                    edgeX = (edgeX + slope31) | 0;
+                }
+
+                while ((y2 = (y2 - 1) | 0) >= 0) {
+                    Pix3D.fillShadowRow(pixels, y3, 0, x1 >> 16, x2 >> 16);
+                    x2 = (x2 + slope23) | 0;
+                    x1 = (x1 + slope12) | 0;
+                    y3 = (y3 + stride) | 0;
+                }
+            }
+        } else {
+            let edgeX: number;
+            x1 = edgeX = x3 << 16;
+            if (y3 < 0) {
+                x1 = (x1 - Math.imul(slope23, y3)) | 0;
+                edgeX = (edgeX - Math.imul(slope31, y3)) | 0;
+                y3 = 0;
+            }
+
+            x2 <<= 16;
+            if (y2 < 0) {
+                x2 = (x2 - Math.imul(slope12, y2)) | 0;
+                y2 = 0;
+            }
+
+            if (slope23 < slope31) {
+                y1 = (y1 - y2) | 0;
+                y2 = (y2 - y3) | 0;
+
+                for (y3 = Math.imul(y3, stride); (y2 = (y2 - 1) | 0) >= 0; y3 = (y3 + stride) | 0) {
+                    Pix3D.fillShadowRow(pixels, y3, 0, x1 >> 16, edgeX >> 16);
+                    x1 = (x1 + slope23) | 0;
+                    edgeX = (edgeX + slope31) | 0;
+                }
+
+                while ((y1 = (y1 - 1) | 0) >= 0) {
+                    Pix3D.fillShadowRow(pixels, y3, 0, x2 >> 16, edgeX >> 16);
+                    x2 = (x2 + slope12) | 0;
+                    edgeX = (edgeX + slope31) | 0;
+                    y3 = (y3 + stride) | 0;
+                }
+            } else {
+                y1 = (y1 - y2) | 0;
+                y2 = (y2 - y3) | 0;
+
+                for (y3 = Math.imul(y3, stride); (y2 = (y2 - 1) | 0) >= 0; y3 = (y3 + stride) | 0) {
+                    Pix3D.fillShadowRow(pixels, y3, 0, edgeX >> 16, x1 >> 16);
+                    x1 = (x1 + slope23) | 0;
+                    edgeX = (edgeX + slope31) | 0;
+                }
+
+                while ((y1 = (y1 - 1) | 0) >= 0) {
+                    Pix3D.fillShadowRow(pixels, y3, 0, edgeX >> 16, x2 >> 16);
+                    x2 = (x2 + slope12) | 0;
+                    edgeX = (edgeX + slope31) | 0;
+                    y3 = (y3 + stride) | 0;
+                }
+            }
+        }
+    }
+
+    // HD hf.a([BIIII)V. Four byte stores per group, with the fault occurring at the first invalid pixel.
+    private static fillShadowRow(pixels: Uint8Array | null, row: number, count: number, start: number, end: number): void {
+        if (start < end) {
+            row = (row + start) | 0;
+            count = (end - start) >> 2;
+            while (--count >= 0) {
+                arrayPutU8(pixels, row++, 1);
+                arrayPutU8(pixels, row++, 1);
+                arrayPutU8(pixels, row++, 1);
+                arrayPutU8(pixels, row++, 1);
+            }
+            count = (end - start) & 3;
+            while (--count >= 0) {
+                arrayPutU8(pixels, row++, 1);
+            }
+        }
+    }
+
+    // dc.c(II)V
+    static setOrigin(var0: number, var1: number): void {
+        const var2 = arrayAtI32(Pix3D.scanline, 0);
+        const var3 = intDivide(var2, Pix2D.width);
+        const var4 = (var2 - Math.imul(var3, Pix2D.width)) | 0;
+        Pix3D.originX = (var0 - var4) | 0;
+        Pix3D.originY = (var1 - var3) | 0;
+        Pix3D.clipMinX = -Pix3D.originX | 0;
+        Pix3D.clipMaxX = (Pix3D.width - Pix3D.originX) | 0;
+        Pix3D.clipMinY = -Pix3D.originY | 0;
+        Pix3D.clipMaxY = (Pix3D.height - Pix3D.originY) | 0;
     }
 }

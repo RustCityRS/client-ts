@@ -1,176 +1,177 @@
-import JagFile from '#/io/JagFile.js';
-import Packet from '#/io/Packet.js';
+import { isJavaRuntimeException } from '#/util/JavaException';
+import { releaseReferences } from '#/util/StaticReferences';
+import WrappedException from '#/util/WrappedException';
+import RunetekColour from '#/util/RunetekColour';
+import type Js5 from '#/cache/Js5';
+import { glJar } from '#/client/ClientVariant';
+import LRUHashCache from '#/datastruct/LRUHashCache';
+import PacketT from '#/io/PacketT';
+import { requireNonNull } from '#/util/JavaArray';
+import { loadClient, loadInterfaceList, loadSpriteLoader } from '#/util/GamepackClasses';
 
 export default class FloType {
-    static numDefinitions: number = 0;
-    static list: FloType[] = [];
-
-    colour: number = 0;
-    texture: number = -1;
-    overlay: boolean = false;
-    occlude: boolean = true;
-    debugname: string = '';
-
-    hue: number = 0;
-    saturation: number = 0;
-    lightness: number = 0;
-
-    chroma: number = 0;
-    underlayHue: number = 0;
-    overlayHsl: number = 0;
-
-    static init(config: JagFile): void {
-        const dat: Packet = new Packet(config.read('flo.dat'));
-
-        this.numDefinitions = dat.g2();
-        this.list = new Array(this.numDefinitions);
-
-        for (let id: number = 0; id < this.numDefinitions; id++) {
-            if (!this.list[id]) {
-                this.list[id] = new FloType();
+    // HD wl.a(I)V
+    static releaseHdStatics(guard: number): void {
+        try {
+            const Client = loadClient();
+            releaseReferences(Client, 'fontBold12');
+            if (guard !== -2) {
+                return;
             }
-
-            this.list[id].decode(dat);
+            const SpriteLoader = loadSpriteLoader();
+            releaseReferences(SpriteLoader, 'compassName');
+            releaseReferences(Client, 'locConfigArchive');
+            const InterfaceList = loadInterfaceList();
+            releaseReferences(InterfaceList, 'viewportComponent');
+        } catch (error) {
+            if (!isJavaRuntimeException(error)) throw error;
+            throw WrappedException.wrap(error, 'wl.G(' + guard + ')');
         }
     }
 
-    decode(dat: Packet): void {
-        while (true) {
-            const code = dat.g1();
-            if (code === 0) {
+    // SD ik.V:Lal;, HD cl.J:Lve;
+    static m_pConfigClient: Js5 | null = null;
+    // SD b.J:I, HD hj.a:I
+    static count = 0;
+    // SD vk.gb:I, HD ca.db:I
+    static m_defaultWater = 0;
+    // SD ik.U:Lve;, HD t.p:Ln;
+    static readonly m_list = new LRUHashCache<FloType>(64);
+
+    // SD ic.a(Lal;B)V, HD qc.a(ZLve;)V
+    static Init(archive: Js5 | null): void {
+        FloType.m_pConfigClient = archive;
+        FloType.count = requireNonNull(FloType.m_pConfigClient).GetFileIdLimit(4);
+    }
+
+    // SD jl.a(II)Lwa;, HD um.a(BI)Lwl;
+    static List(id: number): FloType {
+        let type = FloType.m_list.Find(BigInt(id));
+        if (type !== null) {
+            if (!(type instanceof FloType)) throw new TypeError('ClassCastException: not a FloType');
+            return type;
+        }
+        const bytes = requireNonNull(FloType.m_pConfigClient).GetFile(id, 4);
+        type = new FloType();
+        if (bytes !== null) type.Decode(new PacketT(bytes), id);
+        FloType.m_list.Put(BigInt(id), type);
+        return type;
+    }
+
+    // SD la.e(I)V, HD uh.e(I)V
+    static removeSoft(): void {
+        FloType.m_list.removeSoft();
+    }
+    // SD ai.a(II)V, HD aj.c(II)V
+    static clean(age: number): void {
+        FloType.m_list.Clean(age);
+    }
+    // SD ka.b(I)V, HD wh.a(I)V
+    static clear(): void {
+        FloType.m_list.Reset();
+    }
+
+    // SD ec.a(II)I, HD be.a(II)I. wl's two colour opcodes pass 116.
+    static ColourFudge(rgb: number, guard = glJar ? 116 : -110): number {
+        if (glJar) {
+            if (rgb === 0xff00ff) return -1;
+            if (guard < 97) return -63;
+            return RunetekColour.RGBToHSL(rgb);
+        }
+        if (guard >= -109) return -63;
+        return rgb === 0xff00ff ? -1 : RunetekColour.RGBToHSL(rgb);
+    }
+
+    // SD wa.b:Z, HD wl.y:Z
+    occludes: boolean;
+    // SD wa.h:I, HD wl.z:I
+    colour: number;
+    // SD wa.l:I, HD wl.p:I
+    m_materialID: number;
+    // SD wa.n:I, HD wl.t:I
+    secondaryColour: number;
+
+    // HD wl.f:I, 128 units per texture repeat (NXT FloorOverlayType.m_textureScale).
+    declare m_textureScale: number;
+    // HD wl.j:Z and wl.w:I. NXT FloorOverlayType has both names.
+    declare m_hasSmoothEdges: boolean;
+    declare m_priority: number;
+    // NXT FloorOverlayType names these three members by offset. di.a passes
+    // wl.l to tj.a for the floor shadow and packs wl.x:wl.m for the underwater tile.
+    declare field_77: boolean; // HD wl.l:Z
+    declare field_80: number; // HD wl.m:I, underwater colour
+    declare field_84: number; // HD wl.x:I, underwater fog depth (unscaled)
+
+    // SD wa.<init>()V, HD wl.<init>()V, in putfield order.
+    constructor() {
+        if (glJar) {
+            this.m_hasSmoothEdges = false;
+            this.field_77 = true;
+            this.m_materialID = -1;
+            this.m_textureScale = 128;
+            this.m_priority = 8;
+            this.field_84 = 16;
+            this.secondaryColour = -1;
+            this.occludes = true;
+            this.colour = 0;
+            this.field_80 = 1190717;
+            return;
+        }
+        this.m_materialID = -1;
+        this.colour = 0;
+        this.secondaryColour = -1;
+        this.occludes = true;
+    }
+
+    // SD wa.a(Lgd;BI)V, HD wl.a(ILwa;I)V
+    Decode(packet: PacketT, id: number): void {
+        for (let opcode = packet.g1(); opcode !== 0; opcode = packet.g1()) this.DecodeType(id, packet, opcode);
+    }
+
+    // SD wa.a(ILgd;IB)V, HD wl.a(IILwa;I)V
+    private DecodeType(id: number, packet: PacketT, opcode: number): void {
+        switch (opcode) {
+            case 1:
+                this.colour = FloType.ColourFudge(packet.g3());
                 break;
-            }
-
-            if (code === 1) {
-                this.colour = dat.g3();
-                this.getHsl(this.colour);
-            } else if (code === 2) {
-                this.texture = dat.g1();
-            } else if (code === 3) {
-                this.overlay = true;
-            } else if (code === 5) {
-                this.occlude = false;
-            } else if (code === 6) {
-                this.debugname = dat.gjstr();
-            } else {
-                console.log('Error unrecognised config code: ', code);
-            }
+            case 2:
+                this.m_materialID = packet.g1();
+                break;
+            case 3:
+                this.m_materialID = packet.g2();
+                if (this.m_materialID === 65535) this.m_materialID = -1;
+                break;
+            case 5:
+                this.occludes = false;
+                break;
+            case 7:
+                this.secondaryColour = FloType.ColourFudge(packet.g3());
+                break;
+            case 8:
+                FloType.m_defaultWater = id;
+                break;
+            case 9:
+                if (glJar) this.m_textureScale = packet.g2();
+                else packet.g2();
+                break;
+            case 10:
+                if (glJar) this.field_77 = false;
+                break;
+            case 11:
+                if (glJar) this.m_priority = packet.g1();
+                else packet.g1();
+                break;
+            case 12:
+                if (glJar) this.m_hasSmoothEdges = true;
+                break;
+            case 13:
+                if (glJar) this.field_80 = packet.g3();
+                else packet.g3();
+                break;
+            case 14:
+                if (glJar) this.field_84 = packet.g1();
+                else packet.g1();
+                break;
         }
-    }
-
-    private getHsl(rgb: number): void {
-        const red: number = ((rgb >> 16) & 0xff) / 256.0;
-        const green: number = ((rgb >> 8) & 0xff) / 256.0;
-        const blue: number = (rgb & 0xff) / 256.0;
-
-        let min: number = red;
-        if (green < red) {
-            min = green;
-        }
-        if (blue < min) {
-            min = blue;
-        }
-
-        let max: number = red;
-        if (green > red) {
-            max = green;
-        }
-        if (blue > max) {
-            max = blue;
-        }
-
-        let h: number = 0.0;
-        let s: number = 0.0;
-        const l: number = (min + max) / 2.0;
-
-        if (min !== max) {
-            if (l < 0.5) {
-                s = (max - min) / (max + min);
-            }
-            if (l >= 0.5) {
-                s = (max - min) / (2.0 - max - min);
-            }
-
-            if (red === max) {
-                h = (green - blue) / (max - min);
-            } else if (green === max) {
-                h = (blue - red) / (max - min) + 2.0;
-            } else if (blue === max) {
-                h = (red - green) / (max - min) + 4.0;
-            }
-        }
-
-        h /= 6.0;
-
-        this.hue = (h * 256.0) | 0;
-        this.saturation = (s * 256.0) | 0;
-        this.lightness = (l * 256.0) | 0;
-
-        if (this.saturation < 0) {
-            this.saturation = 0;
-        } else if (this.saturation > 255) {
-            this.saturation = 255;
-        }
-
-        if (this.lightness < 0) {
-            this.lightness = 0;
-        } else if (this.lightness > 255) {
-            this.lightness = 255;
-        }
-
-        if (l > 0.5) {
-            this.chroma = ((1.0 - l) * s * 512.0) | 0;
-        } else {
-            this.chroma = (l * s * 512.0) | 0;
-        }
-
-        if (this.chroma < 1) {
-            this.chroma = 1;
-        }
-
-        this.underlayHue = (h * this.chroma) | 0;
-
-        let hue: number = this.hue + ((Math.random() * 16.0) | 0) - 8;
-        if (hue < 0) {
-            hue = 0;
-        } else if (hue > 255) {
-            hue = 255;
-        }
-
-        let saturation: number = this.saturation + ((Math.random() * 48.0) | 0) - 24;
-        if (saturation < 0) {
-            saturation = 0;
-        } else if (saturation > 255) {
-            saturation = 255;
-        }
-
-        let lightness: number = this.lightness + ((Math.random() * 48.0) | 0) - 24;
-        if (lightness < 0) {
-            lightness = 0;
-        } else if (lightness > 255) {
-            lightness = 255;
-        }
-
-        this.overlayHsl = FloType.getTable(hue, saturation, lightness);
-    }
-
-    static getTable(hue: number, saturation: number, lightness: number): number {
-        if (lightness > 179) {
-            saturation = (saturation / 2) | 0;
-        }
-
-        if (lightness > 192) {
-            saturation = (saturation / 2) | 0;
-        }
-
-        if (lightness > 217) {
-            saturation = (saturation / 2) | 0;
-        }
-
-        if (lightness > 243) {
-            saturation = (saturation / 2) | 0;
-        }
-
-        return (((hue / 4) | 0) << 10) + (((saturation / 32) | 0) << 7) + ((lightness / 2) | 0);
     }
 }

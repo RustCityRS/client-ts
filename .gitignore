@@ -7,3 +7,6 @@ private.pem
 public.pem
 
 .idea
+__pycache__/
+*.pyc
+*.stackdump

@@ -1,61 +1,91 @@
-import JagFile from '#/io/JagFile.js';
-import Packet from '#/io/Packet.js';
+import { isJavaRuntimeException } from '#/util/JavaException';
+import { releaseReferences } from '#/util/StaticReferences';
+import WrappedException from '#/util/WrappedException';
+import { requireNonNull } from '#/util/JavaArray';
+import { glJar } from '#/client/ClientVariant';
+import type Js5 from '#/cache/Js5';
+import LRUHashCache from '#/datastruct/LRUHashCache';
+import PacketT from '#/io/PacketT';
+import { loadLocalisedText, loadNpcType, loadWorldMap } from '#/util/GamepackClasses';
 
 export default class VarpType {
-    static numDefinitions: number = 0;
-    static list: VarpType[] = [];
-
-    clientcode: number = 0;
-
-    static init(config: JagFile): void {
-        const dat: Packet = new Packet(config.read('varp.dat'));
-
-        this.numDefinitions = dat.g2();
-        this.list = new Array(this.numDefinitions);
-
-        for (let id: number = 0; id < this.numDefinitions; id++) {
-            if (!this.list[id]) {
-                this.list[id] = new VarpType();
+    // HD eh.a(B)V
+    static releaseHdStatics(guard: number): void {
+        try {
+            const LocalisedText = loadLocalisedText();
+            releaseReferences(LocalisedText, 'germanTradeRequest', 'germanFriendFirst');
+            const NpcType = loadNpcType();
+            releaseReferences(NpcType, 'm_pConfigClient');
+            const WorldMap = loadWorldMap();
+            releaseReferences(WorldMap, 'mapScenes');
+            if (guard !== 62) {
+                releaseReferences(NpcType, 'm_pConfigClient');
             }
-
-            this.list[id].decode(dat);
-        }
-
-        if (dat.pos != dat.data.length) {
-            console.log('varptype load mismatch');
+        } catch (error) {
+            if (!isJavaRuntimeException(error)) throw error;
+            throw WrappedException.wrap(error, 'eh.E(' + guard + ')');
         }
     }
 
-    decode(dat: Packet): void {
-        while (true) {
-            const code = dat.g1();
-            if (code === 0) {
-                break;
-            }
+    // ba.g:Lal;
+    static m_pConfigClient: Js5 | null = null;
+    // vf.S:Lve;
+    static m_recentUse = new LRUHashCache<VarpType>(64);
+    // gg.y:I
+    static m_numDefinitions = 0;
 
-            if (code === 1) {
-                dat.pos += 1;
-            } else if (code === 2) {
-                dat.pos += 1;
-            } else if (code === 3) {
-                // server-side
-            } else if (code === 4) {
-                // server-side
-            } else if (code === 5) {
-                this.clientcode = dat.g2();
-            } else if (code === 6) {
-                // server-side
-            } else if (code === 7) {
-                dat.pos += 4;
-            } else if (code === 8) {
-                // server-side
-            } else if (code === 10) {
-                dat.gjstr();
-            } else if (code === 11) {
-                // server-side
-            } else {
-                console.log('Error unrecognised config code: ', code);
-            }
+    // ai.a(B)V
+    static ResetCache(): void {
+        VarpType.m_recentUse.Reset();
+    }
+
+    // ed.c(I)V
+    static removeSoft(): void {
+        VarpType.m_recentUse.removeSoft();
+    }
+
+    // le.a(BI)V
+    static cleanCache(age: number): void {
+        VarpType.m_recentUse.Clean(age);
+    }
+
+    // tk.a(Lal;B)V
+    static Init(archive: Js5 | null): void {
+        VarpType.m_pConfigClient = archive;
+        VarpType.m_numDefinitions = requireNonNull(VarpType.m_pConfigClient).GetFileIdLimit(16);
+    }
+
+    // SD ck.a(II)Lbb; uses its group argument. HD ub.a(II)Leh; always fetches group 16.
+    static List(id: number, group: number): VarpType {
+        let type = VarpType.m_recentUse.Find(BigInt(id));
+        if (type !== null) {
+            if (!(type instanceof VarpType)) throw new TypeError('ClassCastException: not a VarpType');
+            return type;
         }
+        const bytes = requireNonNull(VarpType.m_pConfigClient).GetFile(id, glJar ? 16 : group);
+        type = new VarpType();
+        if (bytes !== null) type.Decode(new PacketT(bytes));
+        VarpType.m_recentUse.Put(BigInt(id), type);
+        return type;
+    }
+
+    // bb.d:I
+    clientCode = 0;
+
+    // bb.<init>()V
+    constructor() {}
+
+    // bb.a(Lgd;I)V
+    Decode(packet: PacketT): void {
+        for (;;) {
+            const code = packet.g1();
+            if (code === 0) return;
+            this.DecodeType(code, packet);
+        }
+    }
+
+    // bb.a(ILgd;I)V
+    private DecodeType(code: number, packet: PacketT): void {
+        if (code === 5) this.clientCode = packet.g2();
     }
 }

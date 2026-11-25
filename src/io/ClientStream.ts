@@ -1,342 +1,196 @@
+import { releaseReferences } from '#/util/StaticReferences';
+import { glJar } from '#/client/ClientVariant';
+import { isJavaRuntimeException } from '#/util/JavaException';
+import WrappedException from '#/util/WrappedException';
+import { requireNonNull } from '#/util/JavaArray';
+import BrokenInputStream from './BrokenInputStream';
+import BrokenOutputStream from './BrokenOutputStream';
+import { byteAt } from './JavaByteArray';
+import type Signlink from '#/util/Signlink';
+import type { SignlinkThread } from '#/util/Signlink';
+import type SignlinkRequest from '#/util/SignlinkRequest';
+import ThreadUtils from '#/util/ThreadUtils';
+import { reportClientError } from '#/util/ClientError';
+import { SocketIoError, type SocketHandle, type SocketInput, type SocketOutput } from './SocketPlatform';
+import { loadAreaSoundManager, loadWorldMap } from '#/util/GamepackClasses';
+
+// se
 export default class ClientStream {
-    private readonly socket: WebSocket;
-    private readonly wsin: WebSocketReader;
-    private readonly wsout: WebSocketWriter;
-
-    private dummy: boolean = false;
-    private remoteClosed: boolean = false;
-
-    static async openSocket(host: string, secured: boolean): Promise<WebSocket> {
-        return await new Promise<WebSocket>((resolve, reject): void => {
-            const protocol: string = secured ? 'wss' : 'ws';
-            const ws: WebSocket = new WebSocket(`${protocol}://${host}`, 'binary');
-
-            ws.addEventListener('open', (): void => {
-                resolve(ws);
-            });
-
-            ws.addEventListener('error', (): void => {
-                reject(ws);
-            });
-        });
-    }
-
-    constructor(socket: WebSocket) {
-        socket.onclose = this.onclose;
-        socket.onerror = this.onerror;
-        this.wsin = new WebSocketReader(socket, 30000);
-        this.wsout = new WebSocketWriter(socket, 5000);
-        this.socket = socket;
-    }
-
-    get host(): string {
-        return this.socket.url.split('/')[2];
-    }
-
-    get port(): number {
-        return parseInt(this.socket.url.split(':')[2], 10);
-    }
-
-    // note: Java throws IOException on failure
-    get available(): number {
-        if (this.dummy || this.remoteClosed) {
-            return 0;
-        }
-
-        return this.wsin.available;
-    }
-
-    // note: Java throws IOException on failure
-    write(src: Uint8Array, len: number): void {
-        if (this.dummy || this.remoteClosed) {
-            return;
-        }
-
-        this.wsout.write(src, len);
-    }
-
-    // note: Java throws IOException on failure
-    async read(): Promise<number> {
-        if (this.dummy) {
-            return 0;
-        }
-        if (this.remoteClosed) {
-            return -1;
-        }
-
-        return await this.wsin.read();
-    }
-
-    // note: Java throws IOException on failure
-    async readBytes(dst: Uint8Array, off: number, len: number): Promise<void> {
-        if (this.dummy) {
-            return;
-        }
-        if (this.remoteClosed) {
-            throw this.socket;
-        }
-
-        await this.wsin.readBytes(dst, off, len);
-    }
-
-    close(): void {
-        if (this.dummy) {
-            return;
-        }
-
-        this.dummy = true;
-        this.socket.close();
-        this.wsin.close();
-        this.wsout.close();
-    }
-
-    private onclose = (_event: CloseEvent): void => {
-        if (this.dummy) {
-            return;
-        }
-
-        this.remoteClose();
-    };
-
-    private onerror = (_event: Event): void => {
-        if (this.dummy) {
-            return;
-        }
-
-        this.remoteClose();
-    };
-
-    private remoteClose(): void {
-        this.remoteClosed = true;
-        this.wsin.close();
-        this.wsout.close();
-    }
-}
-
-class WebSocketWriter {
-    private readonly socket: WebSocket;
-    private readonly limit: number;
-
-    private closed: boolean = false;
-    private ioerror: boolean = false;
-
-    constructor(socket: WebSocket, limit: number) {
-        this.socket = socket;
-        this.limit = limit;
-    }
-
-    write(src: Uint8Array, len: number): void {
-        if (this.closed) {
-            return;
-        }
-        if (this.ioerror) {
-            this.ioerror = false;
-            throw this.socket;
-        }
-        if (len > this.limit - 100) {
-            throw this.socket;
-        }
-        if (this.socket.readyState !== WebSocket.OPEN) {
-            return;
-        }
+    // HD ma.b(I)V
+    static releaseHdStatics(guard: number): void {
         try {
-            this.socket.send(src.slice(0, len));
-        } catch (_e) {
-            this.ioerror = true;
+            if (guard !== 0) {
+                const AreaSoundManager = loadAreaSoundManager();
+                releaseReferences(AreaSoundManager, 'npcs');
+            }
+            const AreaSoundManager = loadAreaSoundManager();
+            releaseReferences(AreaSoundManager, 'npcs');
+            const WorldMap = loadWorldMap();
+            releaseReferences(WorldMap, 'font12');
+        } catch (error) {
+            if (!isJavaRuntimeException(error)) throw error;
+            throw WrappedException.wrap(error, 'ma.I(' + guard + ')');
         }
     }
 
-    close(): void {
-        this.closed = true;
-    }
+    private output: SocketOutput; // se.c:Ljava/io/OutputStream;
+    private input: SocketInput; // se.f:Ljava/io/InputStream;
+    private readonly signlink: Signlink | null; // se.i:Lfb;
+    private closed = false; // se.m:Z
+    private writer: SignlinkRequest<SignlinkThread> | null = null; // se.n:Ldj;
+    private tail = 0; // se.o:I
+    private readonly socket: SocketHandle | null; // se.p:Ljava/net/Socket;
+    private head = 0; // se.q:I
+    private writeFailed = false; // se.y:Z
+    private buffer: Uint8Array<ArrayBuffer> | null = null; // se.B:[B
 
-    fail(): void {
-        this.ioerror = true;
-    }
-}
+    // Promise waiter for the Java object monitor used by se.run, write and close.
+    private wake: (() => void) | null = null;
 
-class WebSocketEvent {
-    private readonly bytes: Uint8Array;
-    private position: number;
-
-    constructor(bytes: Uint8Array) {
-        this.bytes = bytes;
-        this.position = 0;
-    }
-
-    get available(): number {
-        return this.bytes.length - this.position;
-    }
-
-    get read(): number {
-        return this.bytes[this.position++];
-    }
-
-    get len(): number {
-        return this.bytes.length;
-    }
-
-    readBytes(dst: Uint8Array, off: number, len: number): number {
-        const count = Math.min(len, this.available);
-        dst.set(this.bytes.subarray(this.position, this.position + count), off);
-        this.position += count;
-        return count;
-    }
-}
-
-class WebSocketReader {
-    private readonly timeoutMs: number;
-
-    private queue: WebSocketEvent[] = [];
-    private queueRead: number = 0;
-    private event: WebSocketEvent | null = null;
-    private callback: ((data: WebSocketEvent) => void) | null = null;
-    private timeout: ReturnType<typeof setTimeout> | null = null;
-    private rejectRead: (() => void) | null = null;
-    private closed: boolean = false;
-    private total: number = 0;
-
-    constructor(socket: WebSocket, timeoutMs: number) {
-        this.socket = socket;
-        this.timeoutMs = timeoutMs;
-        socket.binaryType = 'arraybuffer';
-        socket.onmessage = this.onmessage;
-    }
-
-    private readonly socket: WebSocket;
-
-    get available(): number {
-        return this.total;
-    }
-
-    private onmessage = (e: MessageEvent): void => {
-        if (this.closed) {
-            return;
+    // se.<init>(Ljava/net/Socket;Lfb;)V
+    constructor(socket: SocketHandle | null, signlink: Signlink | null) {
+        try {
+            this.signlink = signlink;
+            this.socket = socket;
+            const handle = requireNonNull(socket);
+            handle.setSoTimeout?.(30000);
+            handle.setTcpNoDelay?.(true);
+            this.input = handle.input;
+            this.output = handle.output;
+        } catch (error) {
+            if (!isJavaRuntimeException(error)) throw error;
+            throw WrappedException.wrap(error, (glJar ? 'ma.<init>(' : 'se.<init>(') + (socket === null ? 'null' : '{...}') + ',' + (signlink === null ? 'null' : '{...}') + ')');
         }
-
-        const event: WebSocketEvent = new WebSocketEvent(new Uint8Array(e.data));
-
-        this.total += event.available;
-
-        if (this.callback) {
-            const cb = this.callback;
-            this.callback = null;
-            cb(event);
-        } else {
-            this.queue.push(event);
-        }
-    };
-
-    async read(): Promise<number> {
-        if (this.closed) {
-            throw this.socket;
-        }
-
-        const event = this.nextEvent() ?? (await this.waitForEvent());
-        this.total--;
-        return event.read;
     }
 
-    async readBytes(dst: Uint8Array, off: number, len: number): Promise<Uint8Array> {
-        if (this.closed) {
-            throw this.socket;
+    // se.run()V
+    async run(): Promise<void> {
+        try {
+            for (;;) {
+                if (this.head === this.tail) {
+                    if (this.closed) break;
+                    await new Promise<void>(resolve => {
+                        this.wake = resolve;
+                    });
+                    this.wake = null;
+                }
+                const length = this.tail >= this.head ? (this.tail - this.head) | 0 : (5000 - this.head) | 0;
+                const offset = this.head;
+                if (length > 0) {
+                    try {
+                        this.output.write(requireNonNull(this.buffer), offset, length);
+                    } catch (error) {
+                        if (!(error instanceof SocketIoError)) throw error;
+                        this.writeFailed = true;
+                    }
+                    this.head = (this.head + length) % 5000;
+                    try {
+                        if (this.head === this.tail) this.output.flush();
+                    } catch (error) {
+                        if (!(error instanceof SocketIoError)) throw error;
+                        this.writeFailed = true;
+                    }
+                }
+            }
+            try {
+                this.input?.close();
+                this.output?.close();
+                this.socket?.close();
+            } catch (error) {
+                if (!(error instanceof SocketIoError)) throw error;
+            }
+            this.buffer = null;
+        } catch (error) {
+            await reportClientError(error instanceof Error ? error : new Error(String(error)), null);
         }
-
-        let remaining = len;
-        let dstPos = off;
-
-        while (remaining > 0) {
-            const event = this.nextEvent() ?? (await this.waitForEvent());
-            const count = event.readBytes(dst, dstPos, remaining);
-            this.total -= count;
-            dstPos += count;
-            remaining -= count;
-        }
-
-        return dst;
     }
 
-    close(): void {
-        this.closed = true;
-        this.callback = null;
-        this.clearTimeout();
-        this.rejectRead?.();
-        this.rejectRead = null;
-        this.event = null;
-        this.queue = [];
-        this.queueRead = 0;
+    // se.finalize()V
+    finalize(): Promise<void> {
+        return this.Close();
     }
 
-    fail(): void {
-        this.closed = true;
-        this.callback = null;
-        this.clearTimeout();
-        this.rejectRead?.();
-        this.rejectRead = null;
-    }
-
-    private nextEvent(): WebSocketEvent | null {
-        if (this.event && this.event.available > 0) {
-            return this.event;
+    // SD se.a(I)I / HD ma.c(I)I. Stock HD call sites supply -18358.
+    GetAvailable(site = 1): number {
+        try {
+            return this.closed ? 0 : this.input.available;
+        } catch (error) {
+            if (!isJavaRuntimeException(error)) throw error;
+            throw WrappedException.wrap(error, glJar ? 'ma.B(-18358)' : 'se.D(' + site + ')');
         }
+    }
 
-        this.event = null;
+    // se.b(I)V
+    checkError(): void {
+        if (!this.closed && this.writeFailed) {
+            this.writeFailed = false;
+            throw new SocketIoError();
+        }
+    }
 
-        while (this.queueRead < this.queue.length) {
-            const event = this.queue[this.queueRead++];
-            if (event.available > 0) {
-                this.event = event;
-                this.compactQueue();
-                return event;
+    // se.c(I)V
+    breakConnection(): void {
+        if (!this.closed) {
+            this.input = new BrokenInputStream();
+            this.output = new BrokenOutputStream();
+        }
+    }
+
+    // se.a(B[BII)V
+    async Read(bytes: Uint8Array | null, offset: number, length: number): Promise<void> {
+        if (!this.closed) {
+            while (length > 0) {
+                const count = await this.input.readBytes(requireNonNull(bytes), offset, length);
+                if (count <= 0) throw new SocketIoError('End of stream');
+                length = (length - count) | 0;
+                offset = (offset + count) | 0;
             }
         }
-
-        this.compactQueue();
-        return null;
     }
 
-    private compactQueue(): void {
-        if (this.queueRead > 32 && this.queueRead * 2 > this.queue.length) {
-            this.queue = this.queue.slice(this.queueRead);
-            this.queueRead = 0;
-        } else if (this.queueRead === this.queue.length) {
-            this.queue = [];
-            this.queueRead = 0;
+    // JS5 has already checked the buffered byte count. Other socket hosts keep the blocking Read path.
+    tryReadBuffered(bytes: Uint8Array | null, offset: number, length: number): boolean {
+        if (this.closed || length <= 0) return true;
+        return this.input.tryReadBuffered?.(requireNonNull(bytes), offset, length) ?? false;
+    }
+
+    // se.d(I)I
+    async read(): Promise<number> {
+        try {
+            return this.closed ? 0 : await this.input.read();
+        } catch (error) {
+            if (!isJavaRuntimeException(error)) throw error;
+            throw WrappedException.wrap(error, glJar ? 'ma.E(0)' : 'se.I(17506)');
         }
     }
 
-    private async waitForEvent(): Promise<WebSocketEvent> {
-        if (this.callback) {
-            throw new Error();
+    // se.a(B)V
+    async Close(): Promise<void> {
+        if (!this.closed) {
+            this.closed = true;
+            this.wake?.();
+            if (this.writer !== null) {
+                while (this.writer.status === 0) await ThreadUtils.sleep(1n);
+                if (this.writer.status === 1) await requireNonNull(this.writer.result).join();
+            }
+            this.writer = null;
         }
-
-        return await new Promise<WebSocketEvent>((resolve, reject): void => {
-            this.rejectRead = (): void => {
-                this.callback = null;
-                this.clearTimeout();
-                reject(this.socket);
-            };
-
-            this.timeout = setTimeout((): void => {
-                this.callback = null;
-                this.timeout = null;
-                this.rejectRead = null;
-                reject(this.socket);
-            }, this.timeoutMs);
-
-            this.callback = (event: WebSocketEvent): void => {
-                this.clearTimeout();
-                this.rejectRead = null;
-                this.event = event;
-                resolve(event);
-            };
-        });
     }
 
-    private clearTimeout(): void {
-        if (this.timeout) {
-            clearTimeout(this.timeout);
-            this.timeout = null;
+    // se.a(I[BIB)V
+    Write(offset: number, bytes: Uint8Array | null, length: number): void {
+        if (this.closed) return;
+        if (this.writeFailed) {
+            this.writeFailed = false;
+            throw new SocketIoError();
         }
+        this.buffer ??= new Uint8Array(5000);
+        for (let i = 0; i < length; i++) {
+            this.buffer[this.tail] = byteAt(bytes, (offset + i) | 0);
+            this.tail = (this.tail + 1) % 5000;
+            if (this.tail === (this.head + 4900) % 5000) throw new SocketIoError('Socket buffer full');
+        }
+        if (this.writer === null) this.writer = requireNonNull(this.signlink).startThread(this, 3);
+        this.wake?.();
     }
 }

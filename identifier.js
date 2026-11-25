@@ -6,7 +6,8 @@ function mergeSort(array, cmp) {
             bi = 0,
             i = 0;
         while (ai < a.length && bi < b.length) {
-            cmp(a[ai], b[bi]) <= 0 ? (r[i++] = a[ai++]) : (r[i++] = b[bi++]);
+            if (cmp(a[ai], b[bi]) <= 0) r[i++] = a[ai++];
+            else r[i++] = b[bi++];
         }
         if (ai < a.length) r.push.apply(r, a.slice(ai));
         if (bi < b.length) r.push.apply(r, b.slice(bi));
