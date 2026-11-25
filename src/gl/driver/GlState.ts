@@ -98,6 +98,8 @@ function clamp01(v: number): number {
 export class TexEnvState {
     private cachedShaderKey: string | null = null;
     private cachedCombinerKey: string | null = null;
+    private idTable?: Map<string, number>;
+    private combinerId = 0;
     private readonly combinerValues: number[] = [];
     private readonly recentCombiners: { values: number[]; key: string }[] = [];
     private nextCombiner = 0;
@@ -115,7 +117,24 @@ export class TexEnvState {
 
     invalidateShaderKey(colorOnly = false): void {
         this.cachedShaderKey = null;
-        if (!colorOnly) this.cachedCombinerKey = null;
+        if (!colorOnly) {
+            this.cachedCombinerKey = null;
+            this.combinerId = 0;
+        }
+    }
+
+    // Indexed shaders read constant colour from uniforms. Prewarmed and live GL states
+    // with the same active combiner share a small ID in the owning renderer.
+    indexedCombinerId(ids: Map<string, number>): number {
+        if (this.combinerId !== 0 && this.idTable === ids) return this.combinerId;
+        const key = this.shaderKey(false);
+        let id = ids.get(key);
+        if (id === undefined) {
+            id = ids.size + 1;
+            ids.set(key, id);
+        }
+        this.idTable = ids;
+        return (this.combinerId = id);
     }
 
     usesConstantColor(): boolean {

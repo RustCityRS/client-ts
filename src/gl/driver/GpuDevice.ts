@@ -56,11 +56,16 @@ export default class GpuDevice {
     private readonly pipelines = new Map<string, GPURenderPipeline>();
     private readonly computePipelines = new Map<string, GPUComputePipeline>();
     private readonly samplers = new Map<string, GPUSampler>();
+    private uniformAlignment?: number;
     private clearLayout: GPUBindGroupLayout | null = null;
     private cameraLayout: GPUBindGroupLayout | null = null;
 
     get presentationCameraLayout(): GPUBindGroupLayout {
         return (this.cameraLayout ??= this.device.createBindGroupLayout({ entries: [{ binding: 0, visibility: GPUShaderStage.VERTEX, buffer: { minBindingSize: 64 } }] }));
+    }
+
+    get uniformOffsetAlignment(): number {
+        return (this.uniformAlignment ??= this.device.limits.minUniformBufferOffsetAlignment);
     }
     private readonly clearBindGroups = new Map<GPUBuffer, GPUBindGroup>();
 
@@ -176,6 +181,10 @@ export default class GpuDevice {
 
     get hasRetiredResources(): boolean {
         return this.retired.length !== 0;
+    }
+
+    get hasUnsubmittedWork(): boolean {
+        return this.encoder !== null || this.pendingStreams.size !== 0 || this.uniformOffset !== 0;
     }
 
     // On leaving HD there may never be another swap. Submit any last users before

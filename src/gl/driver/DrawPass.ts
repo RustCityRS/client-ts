@@ -21,6 +21,27 @@ export default class DrawPass {
 
     constructor(private readonly encoder: GPURenderPassEncoder | StressRenderPass) {}
 
+    // Each native render bundle starts with empty bindings. Restore the deduplicated
+    // pass state at its first draw.
+    recordBundleBindings(target: StressRenderPass): void {
+        if (this.pipeline) target.setPipeline(this.pipeline);
+        for (let slot = 0; slot < this.groups.length; slot++) {
+            const group = this.groups[slot];
+            if (!group) continue;
+            const offset = this.dynamicOffsets[slot];
+            if (offset === undefined) target.setBindGroup(slot, group);
+            else {
+                this.oneOffset[0] = offset;
+                target.setBindGroup(slot, group, this.oneOffset);
+            }
+        }
+        for (let slot = 0; slot < this.vertices.length; slot++) {
+            const buffer = this.vertices[slot];
+            if (buffer) target.setVertexBuffer(slot, buffer, this.vertexOffsets[slot], this.vertexSizes[slot]);
+        }
+        if (this.index && this.indexFormat) target.setIndexBuffer(this.index, this.indexFormat, this.indexOffset, this.indexSize);
+    }
+
     setPipeline(pipeline: GPURenderPipeline): void {
         if (this.pipeline === pipeline) return;
         this.flushImmediate();

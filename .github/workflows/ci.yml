@@ -1,0 +1,98 @@
+name: 530 client CI
+
+on:
+    push:
+        branches: ['530']
+    pull_request:
+        branches: ['530']
+    workflow_dispatch:
+
+permissions:
+    contents: read
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+jobs:
+    build:
+        name: Check and build
+        runs-on: ubuntu-24.04
+        timeout-minutes: 20
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  persist-credentials: false
+            - uses: ./.github/actions/setup-tests
+            - run: bun x tsc --noEmit
+            - run: bun x eslint src bundle.ts bundleProperties.ts identifier.js eslint.config.ts --max-warnings 0
+            - run: bun x prettier --check src
+            - run: bun run build
+            - name: Report native test availability
+              if: github.event_name != 'pull_request' && vars.RS530_WINDOWS_GPU_RUNNER == ''
+              run: |
+                  echo "::notice::Windows native tests require the RS530_WINDOWS_GPU_RUNNER repository variable."
+                  echo "Windows hardware coverage is pending. Set RS530_WINDOWS_GPU_RUNNER to the label of a compatible runner." >> "$GITHUB_STEP_SUMMARY"
+
+    tests:
+        needs: build
+        name: ${{ matrix.lane }} tests ${{ matrix.shard }}
+        strategy:
+            fail-fast: false
+            matrix:
+                lane: [cpu]
+                shard: [1, 2, 3, 4, 5, 6]
+                include:
+                    - lane: webgpu
+                      shard: 1
+        # The stock AWT font and Chrome pixel oracles in the CPU suite use Windows fonts.
+        runs-on: ${{ matrix.lane == 'cpu' && 'windows-2025' || 'ubuntu-24.04' }}
+        timeout-minutes: 90
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  persist-credentials: false
+            - uses: ./.github/actions/setup-tests
+            - name: Run CPU tests
+              if: matrix.lane == 'cpu'
+              run: python tools/ci/run-tests.py cpu --shard ${{ matrix.shard }} --shards 6
+            - name: Run portable WebGPU tests on SwiftShader
+              if: matrix.lane == 'webgpu'
+              env:
+                  VK_DRIVER_FILES: /opt/google/chrome/vk_swiftshader_icd.json
+              run: |
+                  test -r "$VK_DRIVER_FILES"
+                  export XDG_RUNTIME_DIR="$RUNNER_TEMP/webgpu-runtime"
+                  install -d -m 700 "$XDG_RUNTIME_DIR"
+                  python tools/ci/run-tests.py gpu --gpu-backend portable
+            - uses: actions/upload-artifact@v6
+              if: ${{ !cancelled() }}
+              with:
+                  name: junit-${{ matrix.lane }}-${{ matrix.shard }}
+                  path: out/test-results/**/*.xml
+                  retention-days: 7
+
+    native:
+        name: Windows hardware and browser tests
+        needs: build
+        if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && vars.RS530_WINDOWS_GPU_RUNNER != '')
+        runs-on: ${{ vars.RS530_WINDOWS_GPU_RUNNER || 'ubuntu-24.04' }}
+        timeout-minutes: 45
+        steps:
+            - name: Require a Windows GPU for a full manual run
+              if: vars.RS530_WINDOWS_GPU_RUNNER == ''
+              run: |
+                  echo "::error::Set RS530_WINDOWS_GPU_RUNNER to a Windows x64 GPU runner label for a full run."
+                  exit 1
+            - uses: actions/checkout@v6
+              with:
+                  persist-credentials: false
+            - uses: ./.github/actions/setup-tests
+            - run: python tools/ci/run-tests.py gpu --gpu-backend native
+            - run: bun test/hd/browser-gl-canvas.mjs
+            - uses: actions/upload-artifact@v6
+              if: ${{ !cancelled() && vars.RS530_WINDOWS_GPU_RUNNER != '' }}
+              with:
+                  name: junit-windows-gpu
+                  path: out/test-results/**/*.xml
+                  retention-days: 7

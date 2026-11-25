@@ -136,6 +136,30 @@ export default class TextureOpVoronoiNoise extends TextureOp {
                     }
                 }
             }
+            // Once the bounds above hold, only the last column's four scratch distances
+            // escape this scanline. The common outputs use the nearest one or two sites.
+            if (i + 1 < width && this.output >= 0 && this.output <= 2) {
+                let first = 2147483647,
+                    second = 2147483647;
+                for (let site = 0; site < 18; site += 2) {
+                    const dx = (x - sites[site]) | 0;
+                    let distance = metric === 3 ? Math.max(Math.abs(dx) | 0, sites[site + 1]) : (Math.imul(dx, dx) + sites[site + 1]) | 0;
+                    // Java casts sqrt of a negative (overflowed) square to zero.
+                    if (metric === 0 && distance < 0) distance = 0;
+                    second = Math.min(second, Math.max(distance, first));
+                    first = Math.min(first, distance);
+                }
+                // Shifting or taking sqrt after ranking gives the same distances at ties.
+                if (metric === 1) {
+                    first >>= 12;
+                    second >>= 12;
+                } else if (metric === 0) {
+                    first = Math.sqrt(Math.fround(first)) | 0;
+                    second = Math.sqrt(Math.fround(second)) | 0;
+                }
+                dst[i] = this.output === 2 ? second - first : this.output === 0 ? first : second;
+                continue;
+            }
             let first = 2147483647,
                 second = 2147483647,
                 third = 2147483647,

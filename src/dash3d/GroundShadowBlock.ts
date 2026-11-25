@@ -8,6 +8,11 @@ import ByteOrder from '#/util/nio/ByteOrder';
 import { GL } from '#/jogl/GL';
 import { arrayAtI32, arrayAtObj, arrayAtU8, arrayPutU8, requireNonNull } from '#/util/JavaArray';
 
+// One in each nonzero byte. The masked addition cannot carry between byte lanes.
+function coverageBytes(word: number): number {
+    return ((((word & 0x7f7f7f7f) + 0x7f7f7f7f) | word) & 0x80808080) >>> 7;
+}
+
 // wm in runescape_gl.jar (HD only): one 8x8-tile block of the ground shadows (GroundShadows.blocks), drawn as a
 // 128x128 GL_ALPHA texture over a quad mesh. NXT has no GL 1.x classes, so the name is descriptive (HD_PLAN.md 1.3).
 //
@@ -46,13 +51,11 @@ export default class GroundShadowBlock {
         for (let row = -128; row < 0; row++) {
             hash = ((hash << 8) - hash) | 0;
             if (words !== null) {
-                // Set one bit per nonzero byte. The masked addition cannot carry between
-                // bytes, and each of the four byte lanes counts at most 32 values per row.
+                // Each of the four byte lanes counts at most 32 values per row.
                 let lanes = 0;
                 const end = offset + 128;
                 while (offset < end) {
-                    const word = words.getUint32(offset, true);
-                    lanes += ((((word & 0x7f7f7f7f) + 0x7f7f7f7f) | word) & 0x80808080) >>> 7;
+                    lanes += coverageBytes(words.getUint32(offset, true));
                     offset += 4;
                 }
                 hash = (hash + (Math.imul(lanes, 0x01010101) >>> 24)) | 0;
@@ -68,16 +71,28 @@ export default class GroundShadowBlock {
         offset = start;
         let dest = 0;
         const scratch = GroundShadowBlock.scratch;
+        const output = words !== null && scratch !== null && scratch.length >= 16384 && scratch.buffer !== words.buffer ? new DataView(scratch.buffer, scratch.byteOffset, scratch.byteLength) : null;
         for (let row = -128; row < 0; row++) {
-            if (bordered && scratch !== null && scratch.length >= 16384) {
+            if (words !== null && output !== null) {
                 const end = offset + 128;
                 while (offset < end) {
-                    if (pixels[offset] !== 0) scratch[dest++] = 68;
-                    else {
-                        const count = Number(pixels[offset - 1] !== 0) + Number(pixels[offset + 1] !== 0) + Number(pixels[offset - width] !== 0) + Number(pixels[offset + width] !== 0);
-                        scratch[dest++] = 17 * count;
+                    const covered = coverageBytes(words.getUint32(offset, true));
+                    let alpha = 0x44444444;
+                    if (covered !== 0x01010101) {
+                        const above = words.getUint32(offset - width, true);
+                        const below = words.getUint32(offset + width, true);
+                        const left = words.getUint32(offset - 1, true);
+                        const right = words.getUint32(offset + 1, true);
+                        if ((above | below | left | right) === 0) alpha = covered * 68;
+                        else {
+                            const mask = covered * 255;
+                            const neighbours = coverageBytes(above) + coverageBytes(below) + coverageBytes(left) + coverageBytes(right);
+                            alpha = (0x44444444 & mask) | ((neighbours * 17) & ~mask);
+                        }
                     }
-                    offset++;
+                    output.setUint32(dest, alpha, true);
+                    offset += 4;
+                    dest += 4;
                 }
             } else
                 for (let col = -128; col < 0; col++) {

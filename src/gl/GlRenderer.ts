@@ -152,9 +152,11 @@ export default class GlRenderer {
     }
 
     // tf.d()V
-    static swapBuffers(): void {
+    static swapBuffers(deferPresentation = false): void {
         try {
-            requireNonNull(GlRenderer.drawable).swapBuffers();
+            const drawable = deferPresentation ? GlRenderer.stressDrawable : null;
+            if (drawable) drawable.submitGameFrame();
+            else requireNonNull(GlRenderer.drawable).swapBuffers();
         } catch (error) {
             if (!(error instanceof Error) || error instanceof JavaError) throw error;
             // empty catch block

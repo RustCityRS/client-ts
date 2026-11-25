@@ -55,7 +55,8 @@ export default class SurfaceTargets implements PassOwner {
     private readonly bundleLayout: GPURenderBundleEncoderDescriptor;
     private recording = false;
     private replayEpoch = -1;
-    private pendingReplay = false;
+    private pendingReplays = 0;
+    private displayPaced = false;
     presentationCamera: PresentationCamera | null = null;
     worldCameraGroup: GPUBindGroup | null = null;
     private cameraBuffer: GPUBuffer | null = null;
@@ -144,7 +145,7 @@ export default class SurfaceTargets implements PassOwner {
             let pass = this.stressPasses[i];
             if (pass) pass.reset(descriptor, native);
             else this.stressPasses[i] = pass = new StressRenderPass(descriptor, native, this.gpu.device, this.bundleLayout);
-            this.pass = new DrawPass(pass);
+            this.pass = pass.beginDrawPass();
         } else this.pass = new DrawPass(native);
         this.passesBegun++;
         return this.pass;
@@ -192,9 +193,10 @@ export default class SurfaceTargets implements PassOwner {
         this.worldCameraGroup = null;
     }
 
-    finishStress(): void {
+    finishStress(displayPaced = false): void {
         if (!this.recording) return;
         this.recording = false;
+        this.displayPaced = displayPaced;
         if (this.stressPasses) this.stressPasses.length = this.recordedPassCount;
         // An intermediate submit or destroyed geometry makes this frame unsuitable.
         if (this.gpu.epoch !== this.replayEpoch + 1 || !this.stressPasses?.some(pass => pass.indexed)) this.stopStress();
@@ -210,20 +212,33 @@ export default class SurfaceTargets implements PassOwner {
         this.presentationCamera?.reset();
     }
 
-    replayStress(present: () => void, now = performance.now()): boolean {
+    replayStress(present: (reuseFront: boolean) => void, now = performance.now(), gameDrawn = false): boolean {
+        if (this.recording || this.gpu.hasUnsubmittedWork) return false;
         if (this.gpu.hasRetiredResources) {
             this.stopStress();
             return false;
         }
-        if (this.stressPasses === null || this.recording || this.pendingReplay || this.gpu.lost || this.replayEpoch !== this.gpu.epoch) return false;
-        if (this.capturedView && this.cameraBuffer && this.presentationCamera?.canAdvance) this.gpu.device.queue.writeBuffer(this.cameraBuffer, 0, this.presentationCamera.sample(now));
-        const encoder = this.gpu.getEncoder();
-        for (const pass of this.stressPasses) pass.encode(encoder.beginRenderPass(pass.descriptor));
-        present();
+        // Completion callbacks can arrive after the next display refresh, especially
+        // during a game draw. Allow one more frame in flight on the refresh clock.
+        if (this.stressPasses === null || this.pendingReplays >= (this.displayPaced ? 2 : 1) || this.gpu.lost || this.replayEpoch !== this.gpu.epoch) return false;
+        const camera = this.presentationCamera;
+        const view = this.capturedView && this.cameraBuffer && camera?.canAdvance ? camera.sample(now) : null;
+        if (view && this.cameraBuffer) {
+            if (gameDrawn && view.every((value, i) => value === (i % 5 === 0 ? 1 : 0))) return false;
+            this.gpu.device.queue.writeBuffer(this.cameraBuffer, 0, view);
+        } else if (gameDrawn) return false;
+        // Without a camera delta the completed source already contains this exact
+        // world, HUD and MSAA resolve. Redraw the scene only for an interpolated view.
+        const reuseFront = this.capturedView && !camera?.canAdvance;
+        if (!reuseFront) {
+            const encoder = this.gpu.getEncoder();
+            for (const pass of this.stressPasses) pass.encode(encoder.beginRenderPass(pass.descriptor));
+        }
+        present(reuseFront);
         this.replayEpoch = this.gpu.epoch;
-        this.pendingReplay = true;
+        this.pendingReplays++;
         const complete = () => {
-            this.pendingReplay = false;
+            this.pendingReplays--;
         };
         void this.gpu.device.queue.onSubmittedWorkDone().then(complete, complete);
         return true;

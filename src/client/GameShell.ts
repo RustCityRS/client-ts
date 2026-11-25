@@ -301,14 +301,18 @@ export default abstract class GameShell {
     static m_fps = 0; // dd.a:I
     private static stressFrames: BrowserStressFrames | null = null;
 
-    static get stressFrame(): (() => boolean) | null {
+    static get stressFrame(): BrowserStressFrames['render'] | null {
         return GameShell.stressFrames?.render ?? null;
     }
 
-    static set stressFrame(render: (() => boolean) | null) {
+    static set stressFrame(render: BrowserStressFrames['render'] | null) {
         if (render === GameShell.stressFrame) return;
         GameShell.stressFrames?.close();
         GameShell.stressFrames = render === null ? null : new BrowserStressFrames(render);
+    }
+
+    static get displayPaced(): boolean {
+        return GameShell.stressFrames?.displayPaced ?? false;
     }
 
     static get stressRenderFps(): number {

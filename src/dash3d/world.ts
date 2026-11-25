@@ -1,5 +1,6 @@
 import { glJar } from '#/client/ClientVariant';
 import SharedPtrList from '#/datastruct/SharedPtrList';
+import SceneOcclusionQueries from './SceneOcclusionQueries';
 import { JavaError } from '#/util/ClientError';
 import { byteAt } from '#/io/JavaByteArray';
 import Preferences from '#/ui/Preferences';
@@ -258,6 +259,7 @@ export default class world {
     // mc.a(IIIIZ)V
     // var0 = level count, var1 = maxTileX, var2 = maxTileZ, var3 = view radius, var4 = with an underwater layer.
     static init(var0: number, var1: number, var2: number, var3: number, var4: boolean): void {
+        sceneOcclusion.active = null;
         world.maxTileX = var1;
         world.maxTileZ = var2;
         world.viewRadius = var3;
@@ -1456,20 +1458,27 @@ export default class world {
         world.roofHideMaxZ = var9;
         world.roofHideMinZ = var10;
         world.CalcOcclude();
-        if (world.underwaterSquares !== null) {
-            world.setUnderwater(true);
-            world.Render(var0, var1, var2, null, 0, 0, var13, var14);
-            if (renderer?.active) {
-                const materials = (materialManagerClass ??= loadMaterialManager());
-                materials.locked = false;
-                materials.setMaterial(0, 0);
-                (lightingClass ??= loadGlLighting()).applyFogColour(null);
-                (pointLightsClass ??= loadPointLightManager()).clearSlots();
+        // CalcOcclude has finished writing the active planes. Neither scene pass edits
+        // them; release the table before any later call can observe a changed plane.
+        if (renderer?.active) sceneOcclusion.begin(world.activeOccluders, world.numActiveOccluders);
+        try {
+            if (world.underwaterSquares !== null) {
+                world.setUnderwater(true);
+                world.Render(var0, var1, var2, null, 0, 0, var13, var14);
+                if (renderer?.active) {
+                    const materials = (materialManagerClass ??= loadMaterialManager());
+                    materials.locked = false;
+                    materials.setMaterial(0, 0);
+                    (lightingClass ??= loadGlLighting()).applyFogColour(null);
+                    (pointLightsClass ??= loadPointLightManager()).clearSlots();
+                }
+                world.setUnderwater(false);
             }
-            world.setUnderwater(false);
-        }
 
-        world.Render(var0, var1, var2, var5, var11, var12, var13, var14);
+            world.Render(var0, var1, var2, var5, var11, var12, var13, var14);
+        } finally {
+            sceneOcclusion.active = null;
+        }
     }
 
     // HD mf.a()V, below-water prepass of the surface's water materials.
@@ -1547,6 +1556,7 @@ export default class world {
     // ke.a()V
     // Picks the occluders that are in view and not inside a hidden-roof area, and computes their per-256 slopes from the eye.
     static CalcOcclude(): void {
+        sceneOcclusion.active = null;
         world.numActiveOccluders = 0;
 
         label190: for (let var0 = 0; var0 < world.numOccluders; var0++) {
@@ -1737,14 +1747,26 @@ export default class world {
             const var13 = arrayAtObj(world.squares, var12);
 
             for (let var14 = world.minX; var14 < world.maxX; var14++) {
+                // Hidden models may update the scene in the animation window. Outside it the
+                // tile and visibility rows are stable for the whole scan.
+                const animateX = var14 >= var8 && var14 <= var9;
+                const squareRow = !animateX && var14 >= 0 ? var13?.[var14] : null;
+                const visibilityX = var14 - world.gx + world.viewRadius;
+                const visibilityZ = world.viewRadius - world.eyeTileZ;
+                const visibilityRow = !animateX && visibilityX >= 0 ? world.visibilityMap?.[visibilityX] : null;
+                const roofRow = !animateX && var12 >= var4 && var12 >= 0 && var14 >= 0 ? var3?.[var12]?.[var14] : null;
+                const directSquares = squareRow && world.minZ >= 0 && world.maxZ <= squareRow.length;
+                const directVisibility = visibilityRow && world.minZ + visibilityZ >= 0 && world.maxZ + visibilityZ <= visibilityRow.length;
+                const directRoof = roofRow && world.minZ >= 0 && world.maxZ <= roofRow.length;
                 for (let var15 = world.minZ; var15 < world.maxZ; var15++) {
-                    const var16 = at2(var13, var14, var15);
+                    const var16 = directSquares ? squareRow[var15] : at2(var13, var14, var15);
                     if (var16 !== null) {
-                        if (!at2(world.visibilityMap, var14 - world.gx + world.viewRadius, var15 - world.eyeTileZ + world.viewRadius) || (var3 !== null && var12 >= var4 && (byteAt(at2(var3, var12, var14), var15) << 24) >> 24 === var5)) {
+                        const visible = directVisibility ? visibilityRow[var15 + visibilityZ] : at2(world.visibilityMap, var14 - world.gx + world.viewRadius, var15 - world.eyeTileZ + world.viewRadius);
+                        if (!visible || (var3 !== null && var12 >= var4 && ((directRoof ? roofRow[var15] : byteAt(at2(var3, var12, var14), var15)) << 24) >> 24 === var5)) {
                             var16.drawFront = false;
                             var16.drawBack = false;
                             var16.cornerSides = 0;
-                            if (var14 >= var8 && var14 <= var9 && var15 >= var10 && var15 <= var11) {
+                            if (animateX && var15 >= var10 && var15 <= var11) {
                                 if (var16.wall !== null) {
                                     const var17 = var16.wall;
                                     requireNonNull(var17.model1).update(0, var12, var17.y, var17.x, var17.z);
@@ -3149,63 +3171,74 @@ export default class world {
     // tj.a(III)Z
     // Whether the world point (var0, var1, var2) is behind an active occluder.
     static Occluded(var0: number, var1: number, var2: number): boolean {
+        if (sceneOcclusion.active !== null) return sceneOcclusion.query(var0, var1, var2, world.projectOccluders);
+        return world.projectOccluders(var0, var1, var2);
+    }
+
+    private static projectOccluders(var0: number, var1: number, var2: number): boolean {
         const active = world.activeOccluders,
             count = world.numActiveOccluders;
         const complete = active !== null && count <= active.length;
+        // Project each successive edge only while the point is still inside the earlier bounds.
         for (let var3 = 0; var3 < count; var3++) {
             const var4 = requireNonNull(complete ? active[var3] : arrayAtObj(active, var3));
             if (var4.mode === 1) {
                 const var5 = (var4.minX - var0) | 0;
                 if (var5 > 0) {
-                    const var6 = (var4.minZ + (Math.imul(var4.minDeltaZ, var5) >> 8)) | 0;
-                    const var7 = (var4.maxZ + (Math.imul(var4.maxDeltaZ, var5) >> 8)) | 0;
-                    const var8 = (var4.minY + (Math.imul(var4.minDeltaY, var5) >> 8)) | 0;
-                    const var9 = (var4.maxY + (Math.imul(var4.maxDeltaY, var5) >> 8)) | 0;
-                    if (var2 >= var6 && var2 <= var7 && var1 >= var8 && var1 <= var9) {
+                    if (
+                        var2 >= ((var4.minZ + (Math.imul(var4.minDeltaZ, var5) >> 8)) | 0) &&
+                        var2 <= ((var4.maxZ + (Math.imul(var4.maxDeltaZ, var5) >> 8)) | 0) &&
+                        var1 >= ((var4.minY + (Math.imul(var4.minDeltaY, var5) >> 8)) | 0) &&
+                        var1 <= ((var4.maxY + (Math.imul(var4.maxDeltaY, var5) >> 8)) | 0)
+                    ) {
                         return true;
                     }
                 }
             } else if (var4.mode === 2) {
                 const var10 = (var0 - var4.minX) | 0;
                 if (var10 > 0) {
-                    const var14 = (var4.minZ + (Math.imul(var4.minDeltaZ, var10) >> 8)) | 0;
-                    const var18 = (var4.maxZ + (Math.imul(var4.maxDeltaZ, var10) >> 8)) | 0;
-                    const var22 = (var4.minY + (Math.imul(var4.minDeltaY, var10) >> 8)) | 0;
-                    const var26 = (var4.maxY + (Math.imul(var4.maxDeltaY, var10) >> 8)) | 0;
-                    if (var2 >= var14 && var2 <= var18 && var1 >= var22 && var1 <= var26) {
+                    if (
+                        var2 >= ((var4.minZ + (Math.imul(var4.minDeltaZ, var10) >> 8)) | 0) &&
+                        var2 <= ((var4.maxZ + (Math.imul(var4.maxDeltaZ, var10) >> 8)) | 0) &&
+                        var1 >= ((var4.minY + (Math.imul(var4.minDeltaY, var10) >> 8)) | 0) &&
+                        var1 <= ((var4.maxY + (Math.imul(var4.maxDeltaY, var10) >> 8)) | 0)
+                    ) {
                         return true;
                     }
                 }
             } else if (var4.mode === 3) {
                 const var11 = (var4.minZ - var2) | 0;
                 if (var11 > 0) {
-                    const var15 = (var4.minX + (Math.imul(var4.minDeltaX, var11) >> 8)) | 0;
-                    const var19 = (var4.maxX + (Math.imul(var4.maxDeltaX, var11) >> 8)) | 0;
-                    const var23 = (var4.minY + (Math.imul(var4.minDeltaY, var11) >> 8)) | 0;
-                    const var27 = (var4.maxY + (Math.imul(var4.maxDeltaY, var11) >> 8)) | 0;
-                    if (var0 >= var15 && var0 <= var19 && var1 >= var23 && var1 <= var27) {
+                    if (
+                        var0 >= ((var4.minX + (Math.imul(var4.minDeltaX, var11) >> 8)) | 0) &&
+                        var0 <= ((var4.maxX + (Math.imul(var4.maxDeltaX, var11) >> 8)) | 0) &&
+                        var1 >= ((var4.minY + (Math.imul(var4.minDeltaY, var11) >> 8)) | 0) &&
+                        var1 <= ((var4.maxY + (Math.imul(var4.maxDeltaY, var11) >> 8)) | 0)
+                    ) {
                         return true;
                     }
                 }
             } else if (var4.mode === 4) {
                 const var12 = (var2 - var4.minZ) | 0;
                 if (var12 > 0) {
-                    const var16 = (var4.minX + (Math.imul(var4.minDeltaX, var12) >> 8)) | 0;
-                    const var20 = (var4.maxX + (Math.imul(var4.maxDeltaX, var12) >> 8)) | 0;
-                    const var24 = (var4.minY + (Math.imul(var4.minDeltaY, var12) >> 8)) | 0;
-                    const var28 = (var4.maxY + (Math.imul(var4.maxDeltaY, var12) >> 8)) | 0;
-                    if (var0 >= var16 && var0 <= var20 && var1 >= var24 && var1 <= var28) {
+                    if (
+                        var0 >= ((var4.minX + (Math.imul(var4.minDeltaX, var12) >> 8)) | 0) &&
+                        var0 <= ((var4.maxX + (Math.imul(var4.maxDeltaX, var12) >> 8)) | 0) &&
+                        var1 >= ((var4.minY + (Math.imul(var4.minDeltaY, var12) >> 8)) | 0) &&
+                        var1 <= ((var4.maxY + (Math.imul(var4.maxDeltaY, var12) >> 8)) | 0)
+                    ) {
                         return true;
                     }
                 }
             } else if (var4.mode === 5) {
                 const var13 = (var1 - var4.minY) | 0;
                 if (var13 > 0) {
-                    const var17 = (var4.minX + (Math.imul(var4.minDeltaX, var13) >> 8)) | 0;
-                    const var21 = (var4.maxX + (Math.imul(var4.maxDeltaX, var13) >> 8)) | 0;
-                    const var25 = (var4.minZ + (Math.imul(var4.minDeltaZ, var13) >> 8)) | 0;
-                    const var29 = (var4.maxZ + (Math.imul(var4.maxDeltaZ, var13) >> 8)) | 0;
-                    if (var0 >= var17 && var0 <= var21 && var2 >= var25 && var2 <= var29) {
+                    if (
+                        var0 >= ((var4.minX + (Math.imul(var4.minDeltaX, var13) >> 8)) | 0) &&
+                        var0 <= ((var4.maxX + (Math.imul(var4.maxDeltaX, var13) >> 8)) | 0) &&
+                        var2 >= ((var4.minZ + (Math.imul(var4.minDeltaZ, var13) >> 8)) | 0) &&
+                        var2 <= ((var4.maxZ + (Math.imul(var4.maxDeltaZ, var13) >> 8)) | 0)
+                    ) {
                         return true;
                     }
                 }
@@ -3215,6 +3248,8 @@ export default class world {
         return false;
     }
 }
+
+const sceneOcclusion = new SceneOcclusionQueries();
 
 const originalTestColumn = world.testColumn;
 

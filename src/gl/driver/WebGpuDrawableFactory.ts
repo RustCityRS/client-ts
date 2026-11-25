@@ -110,6 +110,7 @@ export class WebGpuDrawable implements GLDrawable {
     private worldDrawDepth = 0;
     private sceneTargets: SurfaceTargets | null = null;
     private presenter: Presenter | null = null;
+    private pendingFront: GPUTexture | null = null;
     // Completed swaps (diagnostics).
     swaps = 0;
 
@@ -130,11 +131,15 @@ export class WebGpuDrawable implements GLDrawable {
         let t = this.surfaceTargets;
         if (t !== null && t === this.sceneTargets && t.gpu === gpu) return t;
         if (t === null || t.gpu !== gpu) {
+            this.pendingFront = null;
             t = new SurfaceTargets(gpu, this.sampleCount, this.capabilities.getAlphaBits());
             this.surfaceTargets = t;
             this.presenter = presenterFor(gpu, this.target, this.surface);
         }
-        t.ensureSize(this.surface.width(), this.surface.height());
+        const width = this.surface.width();
+        const height = this.surface.height();
+        if (t.width !== width || t.height !== height) this.pendingFront = null;
+        t.ensureSize(width, height);
         if (this.worldDrawDepth !== 0) this.sceneTargets = t;
         return t;
     }
@@ -158,10 +163,19 @@ export class WebGpuDrawable implements GLDrawable {
         return this.presenter;
     }
 
-    replayStress(): boolean {
+    replayStress(gameDrawn = false, time = performance.now()): boolean {
         const t = this.surfaceTargets;
         if (!t || this.surface.width() !== t.width || this.surface.height() !== t.height) return false;
-        return t.replayStress(() => this.swapBuffers());
+        if (t.replayStress(reuseFront => this.swap(true, reuseFront), time, gameDrawn)) return true;
+        // Present a newly submitted game frame even when its bundles cannot be replayed.
+        // A separate encoder leaves any unfinished game pass alone.
+        const presenter = this.presenter;
+        if (!this.pendingFront || this.pendingFront !== presenter?.front || t.gpu.lost) return false;
+        const encoder = t.gpu.device.createCommandEncoder();
+        presenter.present(encoder);
+        t.gpu.device.queue.submit([encoder.finish()]);
+        this.pendingFront = null;
+        return true;
     }
 
     // javax.media.opengl.GLDrawable.createContext(Ljavax/media/opengl/GLContext;)Ljavax/media/opengl/GLContext;
@@ -174,6 +188,7 @@ export class WebGpuDrawable implements GLDrawable {
     // unrealize drawables whose contexts are already destroyed). The window's front buffer stays with the Presenter.
     setRealized(realized: boolean): void {
         this.realized = realized;
+        if (!realized) this.pendingFront = null;
         if (!realized && this.surfaceTargets !== null) {
             const targets = this.surfaceTargets;
             targets.dispose();
@@ -184,17 +199,26 @@ export class WebGpuDrawable implements GLDrawable {
 
     // javax.media.opengl.GLDrawable.swapBuffers()V
     swapBuffers(): void {
+        this.swap(true);
+    }
+
+    submitGameFrame(): void {
+        this.swap(false);
+    }
+
+    private swap(display: boolean, reuseFront = false): void {
         const t = this.surfaceTargets;
         const p = this.presenter;
         if (t === null || p === null) return; // no context has drawn into this drawable yet
         const gpu = t.gpu;
         if (gpu.lost) throw new GLException('WebGPU device lost: ' + gpu.lostMessage);
         const front = p.ensureFront(t.width, t.height);
-        t.copyTo(front);
-        p.present();
+        if (!reuseFront) t.copyTo(front);
+        if (display) p.present();
         if (gpu.hasRetiredResources) t.stopStress();
         gpu.submit();
-        t.finishStress();
+        t.finishStress(!display);
+        this.pendingFront = display ? null : front;
         this.swaps++;
     }
 }

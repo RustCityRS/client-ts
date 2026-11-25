@@ -43,6 +43,12 @@ export default class TextureOpCurve extends TextureOp {
         const output = requireNonNull(this.monochromeImageCache).get(row);
         if (requireNonNull(this.monochromeImageCache).invalid) {
             const child = this.getChildMonochromeOutput(0, row);
+            const width = TextureOp.width;
+            const table = this.table;
+            if (output !== null && output.length >= width && child !== null && child.length >= width && table !== null && table.length >= 257) {
+                for (let x = 0; x < width; x++) output[x] = table[Math.max(0, Math.min(256, child[x] >> 4))];
+                return output;
+            }
             for (let x = 0; x < TextureOp.width; x++) {
                 let i = arrayAtI32(child, x) >> 4;
                 if (i < 0) i = 0;

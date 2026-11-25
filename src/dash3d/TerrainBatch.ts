@@ -236,8 +236,15 @@ export default class TerrainBatch extends Linkable {
         } else {
             const opaqueWords = indexWords(TerrainBatch.indices);
             const blendWords = indexWords(TerrainBatch.blendIndices);
+            const levels = this.tileLevel,
+                xs = this.tileX,
+                zs = this.tileZ;
+            const haveCoords = levels && xs && zs && levels.length >= this.tileCount && xs.length >= this.tileCount && zs.length >= this.tileCount;
             for (let tile = 0; tile < this.tileCount; tile++) {
-                const square = arrayAtObj(arrayAtObj(arrayAtObj(tiles, arrayAtI32(this.tileLevel, tile)), arrayAtI32(this.tileX, tile)), arrayAtI32(this.tileZ, tile));
+                // A null square is valid. A missing row or out-of-range coordinate
+                // takes the checked path so it faults after the same index prefix.
+                const entry = haveCoords ? tiles?.[levels[tile]]?.[xs[tile]]?.[zs[tile]] : undefined;
+                const square = entry === undefined ? arrayAtObj(arrayAtObj(arrayAtObj(tiles, arrayAtI32(levels, tile)), arrayAtI32(xs, tile)), arrayAtI32(zs, tile)) : entry;
                 if (square === null || !square.drawFront) continue;
                 const polygon = arrayAtObj(this.polygons, tile);
                 let indices: PacketT;

@@ -118,7 +118,7 @@ export default class Presenter {
 
     // Blits the front texture into the canvas (if the surface has one). Encoded on the frame encoder; the caller
     // submits.
-    present(): void {
+    present(encoder?: GPUCommandEncoder): void {
         this.presents++;
         const front = this.front;
         const context = this.surface.canvasContext();
@@ -134,8 +134,8 @@ export default class Presenter {
             const group = this.gpu.device.createBindGroup({ layout: pipeline.getBindGroupLayout(0), entries: [{ binding: 0, resource: front.createView() }] });
             this.binding = binding = { front, pipeline, group };
         }
-        this.gpu.endPass();
-        const pass = this.gpu.getEncoder().beginRenderPass({
+        if (!encoder) this.gpu.endPass();
+        const pass = (encoder ?? this.gpu.getEncoder()).beginRenderPass({
             label: 'gl-present',
             colorAttachments: [{ view: target.createView(), loadOp: 'clear', clearValue: { r: 0, g: 0, b: 0, a: 1 }, storeOp: 'store' }]
         });

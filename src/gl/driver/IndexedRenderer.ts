@@ -79,6 +79,7 @@ interface PipelineVariants {
     lastKey?: number | string;
     lastChild?: PipelineVariants;
     pipeline?: Pipeline;
+    lastTextured?: { raster: number; blend: number; alphaRef: number; combiner: number; choice: PipelineVariants };
 }
 
 function variant(node: PipelineVariants, key: number | string): PipelineVariants {
@@ -302,7 +303,47 @@ function uniformInputs(s: GlState, slots: number[], stages: IndexedStage[], wate
     return inputs;
 }
 
-function pipelineChoice(root: PipelineVariants, s: GlState, stages: IndexedStage[], program: boolean, sampleCount: number, alphaBits: number, presentationView = false): PipelineVariants {
+function pipelineChoice(root: PipelineVariants, s: GlState, stages: IndexedStage[], combinerIds: Map<string, number>, program: boolean, sampleCount: number, alphaBits: number, presentationView = false): PipelineVariants {
+    // Scenery models alternate vertex buffers and textures thousands of times per draw.
+    // For a single ordinary RGBA stage its shader depends only on the combiner and raster state.
+    if (!program && stages.length === 1) {
+        const stage = stages[0];
+        const gen = s.units[0].genEnabled;
+        if (stage.unit === 0 && stage.target === E.GL_TEXTURE_2D && stage.format === E.GL_RGBA && !(gen[0] || gen[1] || gen[2] || gen[3])) {
+            // The seven fixed-function enables occupy bits 0–6. Both compare functions
+            // run from GL_NEVER to GL_ALWAYS (three bits each). Preserve the float
+            // cutoff separately. Each draw still binds its own texture and light uniforms.
+            const raster =
+                sampleCount * 0x200000 +
+                ((s.enabled.mask & 127) |
+                    (+s.depthMask << 7) |
+                    ((s.depthFunc - E.GL_NEVER) << 8) |
+                    ((s.alphaFunc - E.GL_NEVER) << 11) |
+                    (+(s.cullFaceMode === E.GL_FRONT) << 14) |
+                    (+(s.frontFace === E.GL_CCW) << 15) |
+                    (+(s.colorMaterialFace !== E.GL_BACK) << 16) |
+                    ((s.fog.mode === E.GL_LINEAR ? 0 : s.fog.mode === E.GL_EXP ? 1 : 2) << 17) |
+                    (+(alphaBits !== 0) << 19) |
+                    (+presentationView << 20));
+            const blend = s.blendSrc * 65536 + s.blendDst;
+            const combiner = stage.env.indexedCombinerId(combinerIds);
+            const hit = root.lastTextured;
+            if (hit && hit.raster === raster && hit.blend === blend && hit.alphaRef === s.alphaRef && hit.combiner === combiner) return hit.choice;
+            const choice = resolvePipelineChoice(root, s, stages, combinerIds, program, sampleCount, alphaBits, presentationView);
+            if (hit) {
+                hit.raster = raster;
+                hit.blend = blend;
+                hit.alphaRef = s.alphaRef;
+                hit.combiner = combiner;
+                hit.choice = choice;
+            } else root.lastTextured = { raster, blend, alphaRef: s.alphaRef, combiner, choice };
+            return choice;
+        }
+    }
+    return resolvePipelineChoice(root, s, stages, combinerIds, program, sampleCount, alphaBits, presentationView);
+}
+
+function resolvePipelineChoice(root: PipelineVariants, s: GlState, stages: IndexedStage[], combinerIds: Map<string, number>, program: boolean, sampleCount: number, alphaBits: number, presentationView: boolean): PipelineVariants {
     const flags = s.enabled.mask;
     const cull = flags & ServerFlag.Cull ? (s.cullFaceMode === E.GL_FRONT ? 1 : 2) : 0;
     const depth = (flags & ServerFlag.Depth) !== 0;
@@ -348,8 +389,10 @@ function pipelineChoice(root: PipelineVariants, s: GlState, stages: IndexedStage
         // The four supported GL texture targets fit in two bits, including 1D
         // textures, which use a 2D WebGPU view and different shader coordinates.
         const target = stage.target === E.GL_TEXTURE_2D ? 0 : stage.target === E.GL_TEXTURE_1D ? 1 : stage.target === E.GL_TEXTURE_3D ? 2 : 3;
-        choice = variant(choice, stage.format * 4096 + texgen * 16 + stage.unit * 4 + target);
-        choice = variant(choice, stage.env.shaderKey(false));
+        // Base formats run from GL_ALPHA through GL_LUMINANCE_ALPHA. Their three bits,
+        // the eight texgen bits, two unit bits and two target bits leave one exact key per stage.
+        const shape = (stage.format - E.GL_ALPHA) * 4096 + texgen * 16 + stage.unit * 4 + target;
+        choice = variant(choice, stage.env.indexedCombinerId(combinerIds) * 32768 + shape);
     }
     return choice;
 }
@@ -420,6 +463,7 @@ export default class IndexedRenderer {
     private generation = 0;
     private warming?: Promise<void>;
     private readonly formats: PipelineVariants = {};
+    private combinerIds = new Map<string, number>();
     private readonly modules = new Map<string, GPUShaderModule>();
     private readonly textureLayouts = new Map<string, GPUBindGroupLayout>();
     private readonly uniformInputs = new Map<string, UniformInputs>();
@@ -520,7 +564,7 @@ export default class IndexedRenderer {
                     layouts = loginVertexLayouts[geometry];
                 const { variants, slots } = capturedInput(layouts, this.formats);
                 const program = state.isEnabled(E.GL_VERTEX_PROGRAM_ARB);
-                const choice = pipelineChoice(variants, state, stages, program, sampleCount, alphaBits);
+                const choice = pipelineChoice(variants, state, stages, this.combinerIds, program, sampleCount, alphaBits);
                 if (choice.pipeline) continue;
                 const block = program ? this.vertexProgram : state.isEnabled(E.GL_LIGHTING) ? this.lit : this.unlit;
                 try {
@@ -815,7 +859,7 @@ export default class IndexedRenderer {
         const input = this.lastInput && this.vertexEpoch === gpu.epoch ? this.lastInput : this.resolveVertexInput(gl, gpu, pointers, data, firstByte, count, typeof indices === 'bigint' && indices >= 0n ? element : undefined);
         const slots = input.slots;
         const viewGroup = target.worldCameraGroup;
-        const choice = pipelineChoice(input.variants, s, stages, !!program, target.sampleCount, target.alphaBits, !!viewGroup);
+        const choice = pipelineChoice(input.variants, s, stages, this.combinerIds, !!program, target.sampleCount, target.alphaBits, !!viewGroup);
         const device = gpu.device;
         const block = program ? this.vertexProgram : s.enabled.mask & ServerFlag.Lighting ? this.lit : this.unlit;
         const size = block.values.byteLength;
@@ -843,7 +887,7 @@ export default class IndexedRenderer {
         // slot remains immutable until submit, even if client vertices have advanced the stream.
         const compared = stateChanged ? block.words : block.transformWords;
         if (!uniform || block.epoch !== gpu.epoch || (changed && !block.matchesUpload(compared.length))) {
-            uniform = this.upload(gpu, block.bytes, device.limits.minUniformBufferOffsetAlignment, uniform);
+            uniform = this.upload(gpu, block.bytes, gpu.uniformOffsetAlignment, uniform);
             block.slice = uniform;
             block.epoch = gpu.epoch;
             block.uploaded.set(compared);
@@ -887,6 +931,8 @@ export default class IndexedRenderer {
         this.unlit.slice = this.lit.slice = this.vertexProgram.slice = undefined;
         this.formats.next?.clear();
         this.formats.lastChild = undefined;
+        this.combinerIds.clear();
+        this.combinerIds = new Map();
         this.modules.clear();
         this.textureLayouts.clear();
         this.uniformInputs.clear();

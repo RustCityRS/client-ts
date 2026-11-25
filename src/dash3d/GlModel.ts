@@ -3092,17 +3092,29 @@ export default class GlModel extends ModelLit {
                 const var43: number = labels[var37];
                 if (var43 < requireNonNull(this.labelVertices).length) {
                     const var49 = requireNonNull(arrayAtObj(this.labelVertices, var43));
-                    for (let var55: number = 0; var55 < var49.length; var55++) {
-                        const var61: number = var49[var55];
-                        if (px !== null && py !== null && pz !== null && var61 >>> 0 < vertices) {
-                            GlModel.pivotX = (GlModel.pivotX + px[var61]) | 0;
-                            GlModel.pivotY = (GlModel.pivotY + py[var61]) | 0;
-                            GlModel.pivotZ = (GlModel.pivotZ + pz[var61]) | 0;
-                        } else {
-                            GlModel.pivotX = (GlModel.pivotX + arrayAtI32(this.pointX, var61)) | 0;
-                            GlModel.pivotY = (GlModel.pivotY + arrayAtI32(this.pointY, var61)) | 0;
-                            GlModel.pivotZ = (GlModel.pivotZ + arrayAtI32(this.pointZ, var61)) | 0;
+                    let i = 0;
+                    if (px && py && pz) {
+                        let sumX = GlModel.pivotX,
+                            sumY = GlModel.pivotY,
+                            sumZ = GlModel.pivotZ;
+                        for (; i < var49.length; i++) {
+                            const vertex = var49[i];
+                            if (vertex >>> 0 >= vertices) break;
+                            sumX = (sumX + px[vertex]) | 0;
+                            sumY = (sumY + py[vertex]) | 0;
+                            sumZ = (sumZ + pz[vertex]) | 0;
                         }
+                        GlModel.pivotX = sumX;
+                        GlModel.pivotY = sumY;
+                        GlModel.pivotZ = sumZ;
+                        var31 += i;
+                    }
+                    // Publish the complete vertices before the JVM's first failing coordinate load.
+                    for (; i < var49.length; i++) {
+                        const vertex = var49[i];
+                        GlModel.pivotX = (GlModel.pivotX + arrayAtI32(this.pointX, vertex)) | 0;
+                        GlModel.pivotY = (GlModel.pivotY + arrayAtI32(this.pointY, vertex)) | 0;
+                        GlModel.pivotZ = (GlModel.pivotZ + arrayAtI32(this.pointZ, vertex)) | 0;
                         var31++;
                     }
                 }
@@ -3152,45 +3164,57 @@ export default class GlModel extends ModelLit {
                         cos = Pix3D.cosTable;
                     const vertices = Math.min(px?.length ?? 0, py?.length ?? 0, pz?.length ?? 0);
                     const angles = Math.min(sin?.length ?? 0, cos?.length ?? 0);
-                    const ordinaryAngles = x >>> 0 < angles && y >>> 0 < angles && z >>> 0 < angles;
+                    // A model normally owns three independent coordinate arrays. Overlapping views
+                    // take the ordered loads/stores below, as do invalid animation indices.
+                    const xb = px?.buffer,
+                        yb = py?.buffer,
+                        zb = pz?.buffer;
+                    const sb = sin?.buffer,
+                        cb = cos?.buffer;
+                    const independent = px && py && pz && sin && cos && x >>> 0 < angles && y >>> 0 < angles && z >>> 0 < angles && xb !== yb && xb !== zb && yb !== zb && xb !== sb && yb !== sb && zb !== sb && xb !== cb && yb !== cb && zb !== cb;
+                    const sx = independent ? sin[x] : 0,
+                        cx = independent ? cos[x] : 0;
+                    const sy = independent ? sin[y] : 0,
+                        cy = independent ? cos[y] : 0;
+                    const sz = independent ? sin[z] : 0,
+                        cz = independent ? cos[z] : 0;
+                    const pivotX = GlModel.pivotX,
+                        pivotY = GlModel.pivotY,
+                        pivotZ = GlModel.pivotZ;
                     for (let var28: number = 0; var28 < labelCount; var28++) {
                         const var34: number = labels[var28];
                         if (var34 < requireNonNull(this.labelVertices).length) {
                             const var40 = requireNonNull(arrayAtObj(this.labelVertices, var34));
-                            for (let var46: number = 0; var46 < var40.length; var46++) {
-                                const var52: number = var40[var46];
-                                // JVM array-store order also matters if coordinate fields share an array.
-                                // On a bad angle/index the checked operations below retain the partial transform.
-                                if (ordinaryAngles && var52 >>> 0 < vertices && px && py && pz && sin && cos) {
-                                    px[var52] = (px[var52] - GlModel.pivotX) | 0;
-                                    py[var52] = (py[var52] - GlModel.pivotY) | 0;
-                                    pz[var52] = (pz[var52] - GlModel.pivotZ) | 0;
+                            let i = 0;
+                            if (independent) {
+                                for (; i < var40.length; i++) {
+                                    const vertex = var40[i];
+                                    if (vertex >>> 0 >= vertices) break;
+                                    let vx = (px[vertex] - pivotX) | 0,
+                                        vy = (py[vertex] - pivotY) | 0,
+                                        vz = (pz[vertex] - pivotZ) | 0;
                                     if (z !== 0) {
-                                        const sz = sin[z],
-                                            cz = cos[z];
-                                        const nextX = (Math.imul(py[var52], sz) + Math.imul(px[var52], cz) + 32767) >> 16;
-                                        py[var52] = (Math.imul(py[var52], cz) - Math.imul(px[var52], sz) + 32767) >> 16;
-                                        px[var52] = nextX;
+                                        const nextX = (Math.imul(vy, sz) + Math.imul(vx, cz) + 32767) >> 16;
+                                        vy = (Math.imul(vy, cz) - Math.imul(vx, sz) + 32767) >> 16;
+                                        vx = nextX;
                                     }
                                     if (x !== 0) {
-                                        const sx = sin[x],
-                                            cx = cos[x];
-                                        const nextY = (Math.imul(py[var52], cx) - Math.imul(pz[var52], sx) + 32767) >> 16;
-                                        pz[var52] = (Math.imul(py[var52], sx) + Math.imul(pz[var52], cx) + 32767) >> 16;
-                                        py[var52] = nextY;
+                                        const nextY = (Math.imul(vy, cx) - Math.imul(vz, sx) + 32767) >> 16;
+                                        vz = (Math.imul(vy, sx) + Math.imul(vz, cx) + 32767) >> 16;
+                                        vy = nextY;
                                     }
                                     if (y !== 0) {
-                                        const sy = sin[y],
-                                            cy = cos[y];
-                                        const nextX = (Math.imul(pz[var52], sy) + Math.imul(px[var52], cy) + 32767) >> 16;
-                                        pz[var52] = (Math.imul(pz[var52], cy) - Math.imul(px[var52], sy) + 32767) >> 16;
-                                        px[var52] = nextX;
+                                        const nextX = (Math.imul(vz, sy) + Math.imul(vx, cy) + 32767) >> 16;
+                                        vz = (Math.imul(vz, cy) - Math.imul(vx, sy) + 32767) >> 16;
+                                        vx = nextX;
                                     }
-                                    px[var52] = (px[var52] + GlModel.pivotX) | 0;
-                                    py[var52] = (py[var52] + GlModel.pivotY) | 0;
-                                    pz[var52] = (pz[var52] + GlModel.pivotZ) | 0;
-                                    continue;
+                                    px[vertex] = (vx + pivotX) | 0;
+                                    py[vertex] = (vy + pivotY) | 0;
+                                    pz[vertex] = (vz + pivotZ) | 0;
                                 }
+                            }
+                            for (; i < var40.length; i++) {
+                                const var52 = var40[i];
                                 arrayPutI32(this.pointX, var52, (arrayAtI32(this.pointX, var52) - GlModel.pivotX) | 0);
                                 arrayPutI32(this.pointY, var52, (arrayAtI32(this.pointY, var52) - GlModel.pivotY) | 0);
                                 arrayPutI32(this.pointZ, var52, (arrayAtI32(this.pointZ, var52) - GlModel.pivotZ) | 0);

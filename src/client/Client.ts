@@ -5765,7 +5765,7 @@ export default class Client extends GameShell {
         try {
             await Client.setStressGraphics(enabled);
             if (enabled && GlRendererClass.active && GlRendererClass.stressDrawable) {
-                GameShell.stressFrame = () => Client.gameState === 30 && (GlRendererClass.stressDrawable?.replayStress() ?? false);
+                GameShell.stressFrame = (gameDrawn, time) => Client.gameState === 30 && (GlRendererClass.stressDrawable?.replayStress(gameDrawn, time) ?? false);
             } else if (enabled) {
                 await Client.setStressGraphics(false);
             }
@@ -11944,7 +11944,7 @@ export default class Client extends GameShell {
                 Client.MessageBox(JagString.join([LocalisedText.conlost, LocalisedText.TAG_BREAK, LocalisedText.attempt_to_reestablish]), false, -95);
             }
             if (renderer !== null && renderer.active && Client.gameState !== 0) {
-                renderer.swapBuffers();
+                renderer.swapBuffers(GameShell.displayPaced && Client.gameState === 30 && !globalThis.document?.hidden);
                 for (let i = 0; i < InterfaceList.rootCount; i++) arrayPutObj(InterfaceList.rectangleRedraw, i, false);
             } else {
                 const partial = (Client.gameState === 30 || Client.gameState === 10) && Client.rectDebug === 0 && !fullRedraw;

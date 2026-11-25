@@ -1,0 +1,178 @@
+import java.nio.*;
+import java.nio.file.Path;
+import javax.media.opengl.*;
+
+/** Appendix A of GLTRACE.md, invoked through the shipped JOGL signatures. */
+public final class GlTraceGoldenOracle {
+    public static void main(String[] args) throws Exception {
+        try (GlRecorder recorder = new GlRecorder(Path.of(args[0]), "fallback-gl21"); AutoCloseable factory = recorder.installFactory()) {
+            golden(recorder);
+        }
+    }
+
+    static void golden(GlRecorder writer) {
+        var caps = new GLCapabilities();
+        caps.setSampleBuffers(true);
+        caps.setNumSamples(4);
+        var canvas = new java.awt.Canvas();
+        var drawable = GLDrawableFactory.getFactory().getGLDrawable(canvas, caps, null);
+        drawable.setRealized(true);
+        var context = drawable.createContext(null);
+        context.makeCurrent();
+        GL gl = context.getGL();
+        gl.glGetString(7936);
+        gl.isExtensionAvailable("GL_ARB_vertex_program");
+        gl.isExtensionAvailable("GL_NV_fence");
+        var ints = new int[3];
+        gl.glGetIntegerv(34018, ints, 1);
+        gl.setSwapInterval(0);
+        var tex = new int[3];
+        gl.glGenTextures(2, tex, 1);
+        var vbo = new int[1];
+        gl.glGenBuffersARB(1, vbo, 0);
+        var prog = new int[1];
+        gl.glGenProgramsARB(1, prog, 0);
+        var lists = gl.glGenLists(2);
+        gl.glNewList(lists + 1, 4864);
+        gl.glBegin(6);
+        gl.glColor4ub((byte)-128, (byte)1, (byte)2, (byte)127);
+        gl.glTexCoord2f(0.5f, 1);
+        gl.glVertex2f(-1.5f, 2);
+        gl.glEnd();
+        gl.glEndList();
+        gl.glCallList(lists + 1);
+        gl.glActiveTexture(33985);
+        gl.glBindTexture(3553, tex[2]);
+        gl.glBindTexture(3553, 0);
+        gl.glBindTexture(3553, 999);
+        gl.glBindBufferARB(34962, vbo[0]);
+        gl.glBindProgramARB(34336, prog[0]);
+        gl.glEnable(2929);
+        gl.glDisable(3042);
+        gl.glAlphaFunc(516, 0);
+        gl.glBlendFunc(770, 771);
+        gl.glClearColor(0.25f, 0.5f, 1, 0);
+        gl.glClear(16640);
+        gl.glClearDepth(1);
+        gl.glClientActiveTexture(33984);
+        gl.glColor3ub((byte)-1, (byte)0, (byte)127);
+        gl.glColor4f(1, 0, -0.0f, 0.5f);
+        var color = new float[6];
+        color[2] = Float.intBitsToFloat(0x7fa00001); // a NaN with a payload
+        color[3] = 0.75f;
+        gl.glColor4fv(color, 1);
+        gl.glColorMaterial(1032, 5634);
+        var bytes = ByteBuffer.allocateDirect(16).order(ByteOrder.nativeOrder());
+        for (int i = 0; i < 16; i++) bytes.put(i, (byte)(i * 17));
+        bytes.position(12);
+        gl.glColorPointer(4, 5121, 16, bytes);
+        gl.glColorPointer(4, 5121, 16, 12L);
+        gl.glCopyPixels(0, 0, 765, 503, 6144);
+        gl.glCullFace(1029);
+        gl.glDepthFunc(515);
+        gl.glDepthMask(false);
+        gl.glDisableClientState(32886);
+        gl.glEnableClientState(32884);
+        gl.glDrawBuffer(1026);
+        gl.glReadBuffer(1024);
+        var indexBytes = ByteBuffer.allocateDirect(12).order(ByteOrder.LITTLE_ENDIAN);
+        var indices = indexBytes.asIntBuffer();
+        indices.put(0, 0).put(1, 1).put(2, 2);
+        gl.glDrawElements(4, 3, 5125, indices);
+        gl.glDrawElements(4, 6, 5125, 36L);
+        gl.glDrawPixels(2, 1, 32993, 5121, IntBuffer.wrap(new int[]{0x11223344, -1}));
+        var fog = new float[]{0.5f, 0.25f, 0.125f, 1, 3000};
+        gl.glFogfv(2918, fog, 0);
+        gl.glFogfv(2915, fog, 4);
+        gl.glFogf(2916, 3584);
+        gl.glFogi(2917, 9729);
+        var out4 = new float[5];
+        gl.glGetFloatv(2899, out4, 1);
+        var pointMax = FloatBuffer.allocate(1);
+        gl.glGetFloatv(33063, pointMax);
+        var width = new int[1];
+        gl.glTexImage2D(32868, 1, 4, 64, 32, 0, 6408, 5121, null);
+        gl.glGetTexLevelParameteriv(32868, 1, 4096, width, 0);
+        gl.glHint(3156, 4353);
+        var interleaved = ByteBuffer.allocateDirect(40).order(ByteOrder.nativeOrder()).asFloatBuffer();
+        interleaved.put(0, 1).put(9, -2);
+        gl.glInterleavedArrays(10791, 20, interleaved);
+        gl.glInterleavedArrays(10787, 16, 0L);
+        var ambient = new float[]{0.2f, 0.3f, 0.4f, 1};
+        gl.glLightModelfv(2899, ambient, 0);
+        gl.glLightf(16388, 4617, 0.001f);
+        var light = new float[]{0, 1, 0, 0, 0.5f};
+        gl.glLightfv(16384, 4611, light, 0);
+        gl.glLightfv(16385, 4615, light, 4);
+        gl.glMatrixMode(5889);
+        gl.glLoadIdentity();
+        var matrix = new float[16];
+        for (int i = 0; i < 16; i++) matrix[i] = i == 0 || i == 5 || i == 10 || i == 15 ? 1 : 0;
+        gl.glLoadMatrixf(matrix, 0);
+        gl.glMultiTexCoord2f(33985, 0.25f, 0.75f);
+        var normals = FloatBuffer.allocate(100);
+        for (int i = 0; i < 100; i++) normals.put(i, i / 8.0f);
+        gl.glNormalPointer(5126, 12, normals);
+        gl.glNormalPointer(5126, 40, 16L);
+        gl.glOrtho(0, 765, 0, 503, -1, 1);
+        gl.glPixelStorei(3317, 1);
+        gl.glPixelZoom(1, -1);
+        gl.glPointParameterfARB(33062, 1);
+        gl.glPointParameterfvARB(33065, new float[]{1, 0, 0.0005f}, 0);
+        gl.glPolygonMode(1032, 6914);
+        gl.glPushAttrib(8192);
+        gl.glPopAttrib();
+        gl.glPushMatrix();
+        gl.glPopMatrix();
+        gl.glProgramLocalParameter4fARB(34336, 65, 0.005f, 0, 0, 1);
+        var table = ByteBuffer.allocateDirect(48).order(ByteOrder.nativeOrder());
+        for (int i = 0; i < 12; i++) table.putFloat(i * 4, i + 0.5f);
+        var noise = table.asFloatBuffer().asReadOnlyBuffer();
+        noise.position(4);
+        gl.glProgramLocalParameter4fvARB(34336, 1, noise);
+        gl.glProgramLocalParameter4fvARB(34336, 66, ambient, 0);
+        gl.glProgramStringARB(34336, 34933, 300, "!!ARBvp1.0\n" + "MOV result.position, vertex.position;\n".repeat(7) + "END");
+        gl.glRasterPos2i(0, 0);
+        gl.glRotatef(180, 1, 0, 0);
+        gl.glScalef(1, -1, 1);
+        gl.glScissor(0, 0, 0, 0);
+        gl.glShadeModel(7425);
+        var big = ByteBuffer.allocateDirect(8).order(ByteOrder.BIG_ENDIAN);
+        big.putFloat(0, 1).putFloat(4, -2);
+        gl.glTexCoordPointer(2, 5126, 8, big.asFloatBuffer());
+        gl.glTexCoordPointer(2, 5126, 36, 28L);
+        gl.glTexEnvf(8960, 34163, 2);
+        gl.glTexEnvfv(8960, 8705, ambient, 0);
+        gl.glTexEnvi(8960, 8704, 34160);
+        gl.glTexGenfv(8192, 9474, ambient, 0);
+        gl.glTexGenfv(8193, 9473, new float[2], 0);
+        gl.glTexGeni(8194, 9472, 34065);
+        gl.glTexImage1D(3552, 0, 6408, 2, 0, 6408, 5121, ByteBuffer.wrap(new byte[]{1, 2, 3, 4, -1, -2, -3, -4}));
+        var empty = ByteBuffer.allocate(4);
+        empty.position(4);
+        gl.glTexImage3D(32879, 0, 6410, 1, 1, 0, 0, 6410, 5121, empty);
+        gl.glTexParameteri(3553, 10241, 9729);
+        gl.glTranslatef(1.5f, -2.5f, 0);
+        var shorts = ShortBuffer.wrap(new short[]{1, -1, 32767, -32768});
+        gl.glVertexPointer(2, 5122, 4, shorts);
+        gl.glVertexPointer(3, 5126, 36, 0L);
+        gl.glViewport(0, 0, 765, 503);
+        bytes.position(0);
+        gl.glBufferDataARB(34962, 16, bytes, 35044);
+        gl.glBufferSubDataARB(34962, 4, 8, IntBuffer.wrap(new int[]{1, 2, 3, 4, 5}, 1, 2));
+        gl.glDeleteTextures(1, tex, 1);
+        gl.glDeleteLists(lists, 2);
+        gl.glDeleteBuffersARB(1, vbo, 0);
+        drawable.swapBuffers();
+        gl.glClear(16384);
+        try {
+            gl.glGenTextures(0, new int[2], 2);
+        } catch (GLException expected) {
+            // GLException: array offset argument "textures_offset" (2) equals or exceeds array length (2)
+        }
+        writer.mark("teardown");
+        context.release();
+        context.destroy();
+        drawable.setRealized(false);
+    }
+}

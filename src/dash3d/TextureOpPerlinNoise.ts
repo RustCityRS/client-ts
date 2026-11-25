@@ -182,18 +182,19 @@ export default class TextureOpPerlinNoise extends TextureOp {
         const permutation = this.permutation;
         const width = TextureOp.width;
         if (xs === null || xs.length < width || dst === null || dst.length < width || fade === null || fade.length < 4096 || permutation === null || permutation.length < 511 || permutation.buffer === dst.buffer) return false;
+        const scale = Math.imul(frequency, this.xScale);
         let lastCell = -2147483648;
         let topLeftX = 0,
-            topRightX = 0,
             bottomLeftX = 0,
-            bottomRightX = 0;
-        let topLeftY = 0,
-            topRightY = 0,
-            bottomLeftY = 0,
-            bottomRightY = 0;
+            topLeftY = 0,
+            bottomLeftY = 0;
+        let topSlopeX = 0,
+            bottomSlopeX = 0,
+            topDeltaY = 0,
+            bottomDeltaY = 0;
         const y1 = y - 4096;
         for (let i = 0; i < width; i++) {
-            const sampleX = Math.imul(frequency, Math.imul(this.xScale, xs[i])) >> 12;
+            const sampleX = Math.imul(scale, xs[i]) >> 12;
             const cell = sampleX >> 12;
             if (cell !== lastCell) {
                 lastCell = cell;
@@ -203,24 +204,23 @@ export default class TextureOpPerlinNoise extends TextureOp {
                 const topRight = permutation[x1 + hash];
                 const bottomLeft = permutation[x0 + nextHash];
                 const bottomRight = permutation[x1 + nextHash];
-                topLeftX = (topLeft & 1) === 0 ? 1 : -1;
-                topRightX = (topRight & 1) === 0 ? 1 : -1;
-                bottomLeftX = (bottomLeft & 1) === 0 ? 1 : -1;
-                bottomRightX = (bottomRight & 1) === 0 ? 1 : -1;
-                topLeftY = (topLeft & 2) === 0 ? y : -y;
-                topRightY = (topRight & 2) === 0 ? y : -y;
-                bottomLeftY = (bottomLeft & 2) === 0 ? y1 : -y1;
-                bottomRightY = (bottomRight & 2) === 0 ? y1 : -y1;
+                // Each hash chooses ±X and ±Y. The difference between a pair of
+                // corner gradients is linear in X until the next lattice cell.
+                topLeftX = 1 - ((topLeft & 1) << 1);
+                bottomLeftX = 1 - ((bottomLeft & 1) << 1);
+                const topRightX = 1 - ((topRight & 1) << 1);
+                const bottomRightX = 1 - ((bottomRight & 1) << 1);
+                topLeftY = Math.imul(1 - (topLeft & 2), y);
+                bottomLeftY = Math.imul(1 - (bottomLeft & 2), y1);
+                topSlopeX = topRightX - topLeftX;
+                bottomSlopeX = bottomRightX - bottomLeftX;
+                topDeltaY = Math.imul(1 - (topRight & 2), y) - topLeftY - (topRightX << 12);
+                bottomDeltaY = Math.imul(1 - (bottomRight & 2), y1) - bottomLeftY - (bottomRightX << 12);
             }
             const x = sampleX & 4095;
-            const x1 = x - 4096;
             const xFade = fade[x];
-            const a = (Math.imul(topLeftX, x) + topLeftY) | 0;
-            const b = (Math.imul(topRightX, x1) + topRightY) | 0;
-            const c = (Math.imul(bottomLeftX, x) + bottomLeftY) | 0;
-            const d = (Math.imul(bottomRightX, x1) + bottomRightY) | 0;
-            const top = (a + (Math.imul(b - a, xFade) >> 12)) | 0;
-            const bottom = (c + (Math.imul(d - c, xFade) >> 12)) | 0;
+            const top = (Math.imul(topLeftX, x) + topLeftY + (Math.imul(Math.imul(topSlopeX, x) + topDeltaY, xFade) >> 12)) | 0;
+            const bottom = (Math.imul(bottomLeftX, x) + bottomLeftY + (Math.imul(Math.imul(bottomSlopeX, x) + bottomDeltaY, xFade) >> 12)) | 0;
             const noise = (top + (Math.imul(yFade, bottom - top) >> 12)) | 0;
             const scaled = Math.imul(amplitude, noise) >> 12;
             const value = accumulate ? (scaled + dst[i]) | 0 : scaled;

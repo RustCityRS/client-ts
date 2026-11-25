@@ -1,0 +1,1371 @@
+method	hd	sd	target	evidence
+client.c(Z)V	client.lb:[I	fd.X:[I	Client.mapBuildGroundFile	Original regional rebuild HD gd.c(I)V and SD gj.e(I)V. Fetches the normal ground group into we.H/mk.G without XTEA keys. TS src/client/Client.ts mapBuildGroundFile.
+client.c(Z)V	client.X:Lna;	la.fb:Lid;	LocalisedText.chatcol3	unique incoming localized constants ('blaugr-Un:', 'cyan:')
+client.c(Z)V	client.eb:Lna;	la.V:Lid;	LocalisedText.englishChatcol3	initializer supplies verified alias client.X:Lna; / la.fb:Lid;
+client.c(Z)V	client.U:Lsc;	jd.d:Lnc;	DelayedStateChange.changes	Unique lookup of DelayedStateChange.changes in paired consumer; te.a(III)Lda; @0,39 and pi.a(IZI)Lce; @8,49 getstatic.
+client.c(Z)V	client.cb:Lna;	la.X:Lid;	LocalisedText.defaultChatcol3	only remaining initializer alias of client.eb:Lna; / la.V:Lid;
+client.c(Z)V	client.kb:[[Lhg;		world.mainTerrainBatches	HD storage declaration
+na.e(I)V	na.D:Lna;	pg.A:Lid;	LocalisedText.allocatedMemory	unique incoming localized constants ('M-Bmoire attribu-Be', 'Zugewiesener Speicher)3')
+na.e(I)V	na.mb:[I	u.r:[I	Client.soundEffectDelays	HD ca.a(IIII)V and ma.a(ILtk;IIZI)V / SD uj.a(ZIII)V and sf.a(Lek;IIIZI)V. Animation sound inserts zero for delay; the nonspatial enqueue inserts the requested delay. TS src/client/Client.ts soundEffectDelays.
+na.e(I)V	na.cb:Lna;	ed.o:Lid;	Protocol.allyReqSuffix	unique ('literal', ':allyreq:')
+na.e(I)V	na.p:Lna;	kg.u:Lid;	LocalisedText.germanAttemptToReestablish	unique ('literal', 'Bitte warten Sie )2 es wird versucht)1 die Verbindung wiederherzustellen)3')
+na.e(I)V	na.ob:Lna;	pg.F:Lid;	LocalisedText.englishAllocatedMemory	unique ('literal', 'Allocated memory')
+fk.a(I)V	fk.b:Lna;	pe.Z:Lid;	LocalisedText.englishRemoveFriend	unique ('literal', 'Please remove ')
+fk.a(I)V	fk.p:Lna;	lf.k:Lid;	LocalisedText.frenchChateffect2	unique ('literal', 'ondulation2:')
+fk.a(I)V	fk.k:[I	tb.y:[I	NpcType.slotFrameDelays	Original HD me.a([Lub;IBIIIILtk;ILtk;)Lak; and SD ja.a([Lci;ILek;IIIBIILek;)Lnd;. Layer duration read from the current sequence's frame delays. TS src/config/NpcType.ts slotFrameDelays.
+fk.a(I)V	fk.j:[[I	we.z:[[I	TextureShapeRaster.raster	unique typed field in fl.a(IIIIII)V, nk.a(IIIIIB)V, th.a(BIIIII)V
+fk.a(I)V	fk.q:Luc;	lj.k:Lle;	MouseWheel.instance	only shutdown field of paired type Lle;
+fk.a(I)V	fk.l:Lll;	tj.m:Lfb;	GameShell.signlink	reviewed operand Signlink instance. Both shell implementations assign and subsequently query this object for privileged platform requests.
+fk.a(I)V	fk.c:Lna;	b.M:Lid;	LocalisedText.frenchCheckingForUpdates	unique ('literal', 'V-Brification des mises -9 jour )2 ')
+fk.a(I)V	fk.h:Lna;	pe.W:Lid;	LocalisedText.removeIgnore	Unique 'Please remove ' operand in paired consumer fb.a(JB)V @200 and o.a(IJ)V @173.
+fk.a(I)V	fk.o:Lna;	pe.H:Lid;	LocalisedText.removeFriend	Unique 'Please remove ' operand in paired consumer la.a(IJ)V @171 and he.a(JI)V @156.
+bn.g(B)V	bn.N:Lbe;	mf.h:Laj;	WorldMap.component	Map component width/height divided by map zoom; gf.a(BII)V @30,51,73,103,124,157,182,209 and uh.a(III)V @20,50,72,92,119,139,173,199 getstatic.
+se.b(I)V	se.t:[I	sc.P:[I	TitleFlames.flameColours	identical primitive array initializer 18 instructions
+se.b(I)V	se.l:Lve;	uk.d:Lal;	AnimFrameSet.basesArchive	Frame bases passed first to frameset factory, before flag; fl.b(II)Lcl; @50 and gb.a(II)Lhf; @35 getstatic.
+se.b(I)V	se.o:Lna;	bj.j:Lid;	LocalisedText.englishSelect	unique ('literal', 'Select')
+se.b(I)V	se.v:Lna;	le.j:Lid;	LocalisedText.preparedSoundEngine	unique incoming localized constants ('Moteur son pr-Bpar-B', 'Musik)2Engine vorbereitet)3')
+se.b(I)V	se.b:Lna;	le.k:Lid;	LocalisedText.englishPreparedSoundEngine	unique ('literal', 'Prepared sound engine')
+se.b(I)V	se.k:Lna;	bj.n:Lid;	LocalisedText.select	unique incoming localized constants ('Ausw-=hlen', 'S-Blectionner')
+se.b(I)V	se.s:Lna;	uc.n:Lid;	LocalisedText.germanLoadedInputHandler	unique ('literal', 'Eingabeprozedur geladen)3')
+se.b(I)V	se.m:Lna;	t.bb:Lid;	Minimenu.groundArrow	unique ('literal', ' )2>')
+rc.a(I)V	rc.D:Lna;	tb.z:Lid;	LocalisedText.frenchLoggedOut	unique ('literal', ' s(West d-Bconnect-B)3')
+rc.a(I)V	rc.G:Lna;	ak.h:Lid;	Client.emptyString	Unique '' operand in paired consumer ob.a(IB)Z @122,172 and fd.a(II)Z @120,161.
+rc.a(I)V	rc.K:Lna;	va.N:Lid;	Client.rectDebugCommand	unique ('literal', '::rect_debug')
+rc.a(I)V	rc.I:Lna;	pk.j:Lid;	QuickChatPhraseType.placeholder	unique ('literal', ')3)3)3')
+rc.a(I)V	rc.v:Lna;	pj.B:Lid;	LocalisedText.englishIgnoreFirst	unique ('literal', ' from your ignore list first)3')
+rc.a(I)V	rc.s:Lna;	pj.J:Lid;	LocalisedText.ignoreFirst	unique incoming localized constants (' de votre liste noire)3', ' zuerst von Ihrer Ignorieren)2Liste(Q')
+tf.k()V	tf.I:Lna;		GlRenderer.radeon	HD cleanup and its native storage declaration
+tf.k()V	tf.b:Ljava/lang/String;		GlRenderer.renderer	HD cleanup and its native storage declaration
+tf.k()V	tf.a:Ljava/lang/String;		GlRenderer.vendor	HD cleanup and its native storage declaration
+tf.k()V	tf.t:Ljavax/media/opengl/GL;		GlRenderer.gl	HD cleanup and its native storage declaration
+tf.k()V	tf.E:Ljavax/media/opengl/GLDrawable;		GlRenderer.drawable	HD cleanup and its native storage declaration
+tf.k()V	tf.p:Ljavax/media/opengl/GLContext;		GlRenderer.context	HD cleanup and its native storage declaration
+tf.k()V	tf.x:[F		GlRenderer.projection	HD cleanup and its native storage declaration
+s.a(I)V	s.i:[I	t.ab:[I	ClientBuild.m_huetot	Original FinishBuild HD di.a([Lmj;ZI)V, SD al.a(I[Lke;Z)V and HD ni HSL decoder. Adds ni.i, the decoded hue divided by six times chroma weighting ni.u. TS src/client/ClientBuild.ts m_huetot.
+s.a(I)V	s.a:[I	ij.d:[I	BZip2Decompressor.block	two method windows oc.a(Lbb;)V, oc.d(Lbb;)V
+s.a(I)V	s.e:[I	ti.N:[I	ClientKeyboardListener.eventCodes	Sentinel keycode paired with typed character; uf.keyTyped(Ljava/awt/event/KeyEvent;)V @50 and vb.keyTyped(Ljava/awt/event/KeyEvent;)V @45 getstatic.
+s.a(I)V	s.g:Lna;	dk.V:Lid;	CookieStatics.cookiePrefix	unique ('literal', 'document)3cookie=(R')
+s.a(I)V	s.j:Lna;	kl.D:Lid;	LocalisedText.germanSelfFriend	unique ('literal', 'Sie k-Onnen sich selbst nicht auf Ihre Freunde)2Liste setzen(Q')
+vk.a(Z)V	vk.f:[[[B	ac.k:[[[B	RoofModeStatics.roofMarks	membermap HD ui.a / SD kk.a: ordered projection inputs, crosshair/arrow sprite selection, or viewport menu call sites.
+vk.a(Z)V	vk.a:[I	tf.B:[I	JagString.collationOrder	Lexical comparison orders distinct unsigned bytes by indexing the collation table. na.b(BLna;)I @277, 284, 297, 305; id.a(Lid;B)I @275, 283, 295, 300 getstatic.
+vk.a(Z)V	vk.l:Lna;	uh.X:Lid;	LocalisedText.germanLoadingWorldListData	unique ('literal', 'Lade Liste der Welten')
+vk.a(Z)V	vk.d:Lna;	qg.A:Lid;	NpcType.defaultName	Unique 'null' operand in paired consumer me.<init>()V @35 and ja.<init>()V @77.
+jd.a(I)V	jd.i:Lbe;	ec.e:Laj;	Minimenu.objDragComponent	Dragged inventory component invalidated; compared to hovered slot before rearrange; gg.a(Z)V @2701,2709,2862,2891,3135 and t.c(I)V @2644,2650,2743,2769,3021 getstatic.
+jd.a(I)V	jd.d:[[[B	ke.E:[[[B	ClientBuild.m_shadow	reviewed operand Both allocate byte[levels][105][105] for tile shadows; their terrain clear helpers set its selected cells to 127. HD pl.a(ZI)V @87 putstatic; SD aj.a(ZI)V @71 putstatic; TS src/client/ClientBuild.ts m_shadow.
+jd.a(I)V	jd.c:Ln;	gb.r:Lve;	ObjType.spriteCache	membermap Inventory sprite lookup uses key multipliers 3849834839 and 3147483667; the reset calls clear on its sprite cache.
+nc.a(B)V	nc.e:Lna;	db.u:Lid;	WorldMap.underlay	unique ('literal', 'underlay')
+nc.a(B)V	nc.d:Lna;	og.b:Lid;	LocalisedText.germanRating	unique ('literal', 'Kampfstufe: ')
+wa.j(I)V	wa.tb:Lna;	wf.F:Lid;	LocalisedText.frenchChateffect4	unique ('literal', 'd-Broulement:')
+wa.j(I)V	wa.z:[I	ff.s:[I	SpriteLoader.yOffsets	reviewed operand Sprite constructor argument 4 is this entry's Y offset. HD cj.a(I)[Lqf; @125 getstatic; SD oc.a(B)[Lvc; @113 getstatic; TS src/graphics/SpriteLoader.ts yOffsets.
+wa.j(I)V	wa.eb:Lna;	mj.j:Lid;	LocalisedText.loadedInterfaces	unique incoming localized constants ('Benutzeroberfl-=che geladen)3', 'Interfaces charg-Bes')
+wa.j(I)V	wa.ub:Lbn;	rk.h:Lgh;	WorldMap.current	current map read to load named groups; pa.d(I)V @14,37,55,94,109,124,148,169,180,195,220,234,418,437,635,704,757,809,859,912,947 and lg.b(Z)V @13,36,51,90,109,128,139,164,191,204,267,321,407,430,623,680,731,780,830,883,917 getstatic.
+wa.j(I)V	wa.H:Lna;	n.f:Lid;	LocalisedText.frenchLoadedFonts	unique ('literal', 'Polices charg-Bes')
+wa.j(I)V	wa.X:[Lna;	sb.i:[Lid;	ObjType.groundOps	Default five-slot ground menu places Take in slot two. HD th.a(ZBLve;Ldd;Lve;)V @119 putstatic. SD bj.a(Lal;IZLfg;Lal;)V @124 putstatic.
+wa.j(I)V	wa.D:Lna;	mj.h:Lid;	LocalisedText.englishLoadedInterfaces	unique ('literal', 'Loaded interfaces')
+wa.j(I)V	wa.Eb:[Lbg;	lj.h:[Lmc;	Client.js5Providers	only shutdown field of paired type [Lmc;
+wa.j(I)V	wa.pb:Lna;	le.i:Lid;	LocalisedText.TAG_BREAK	Unique '<br>' operand in paired consumer client.f(I)V @550 and client.d(I)V @421.
+ma.b(I)V	ma.x:Lih;	ik.s:Lgk;	AreaSoundManager.npcs	Removal of an NPC's area sound walks the NPC list. HD hc.a(Lkm;Z)V @17 getstatic, 77 getstatic. SD sg.a(ILbk;)V @24 getstatic, 77 getstatic.
+ma.b(I)V	ma.q:Lfd;	ig.y:Leg;	WorldMap.font12	Map font allocated with constructor size 12; pa.d(I)V @1048 and lg.b(Z)V @1021 putstatic.
+jb.a(B)V	jb.k:[Lqf;	gg.H:[Lvc;	SpriteLoader.hitbarDefault	Default hitbar icons indexed 0 and 1 for background and foreground; lc.a(IIIIIII)V @1038,1045 and vj.a(IIIIIII)V @998,1005 getstatic.
+jb.a(B)V	jb.c:Lna;	ra.W:Lid;	Client.niceNumberSuffix	unique ('literal', '(Y<)4col>')
+k.b(I)V	k.u:Lna;	ca.r:Lid;	LocalisedText.frenchLoadingSprites	unique ('literal', 'Chargement des sprites )2 ')
+k.b(I)V	k.n:Lna;	bh.k:Lid;	LocalisedText.frenchChatcol9	unique ('literal', 'brillant1:')
+k.b(I)V	k.l:[I	hf.D:[I	world.roofMinX	reviewed operand Both assign the second array parameter to the inclusive roof X minima. HD mf.a(IIIII[[[B[I[I[I[I[IIBII)V @593 putstatic; SD qc.a(IIIII[[[B[I[I[I[I[IIBII)V @579 putstatic; TS src/dash3d/world.ts roofMinX.
+al.a(I)V	al.q:Lve;	gf.ab:Lal;	InvType.m_pConfigClient	Container definition archive in GetType; u.a(II)Lmd; @41 and me.b(BI)Lpj; @38 getstatic.
+al.a(I)V	al.r:Lna;	og.g:Lid;	BrowserControl.showVideoAd	unique ('literal', 'showVideoAd')
+bg.b(Z)V	bg.N:Lna;	sc.U:Lid;	Client.mapfunctionName	unique ('literal', 'mapfunction')
+bg.b(Z)V	bg.z:Lna;	mf.o:Lid;	Client.kilobytes	Unique 'k' operand in paired consumer gn.a(III[Lbe;IIIIBI)V @1746,1834 and lf.a(I[Laj;IIIIIIZI)V @1539.
+bg.b(Z)V	bg.A:[I	id.w:[I	ClientKeyboardListener.changes	Java key release complement queued; uf.keyReleased(Ljava/awt/event/KeyEvent;)V @74 and vb.keyReleased(Ljava/awt/event/KeyEvent;)V @65 getstatic.
+bg.b(Z)V	bg.g:Li;	wd.e:Lbe;	Client.loginout	membermap HD ri.a(B)V and SD le.a(I)V: ordered login request fields or stage-8 response assignments.
+bg.b(Z)V	bg.O:Lna;	ml.v:Lid;	LocalisedText.englishLoadingInterfaces	unique ('literal', 'Loading interfaces )2 ')
+bg.b(Z)V	bg.P:Lna;	ml.k:Lid;	LocalisedText.loadingInterfaces	unique incoming localized constants ('Chargement des interfaces )2 ', 'Lade Benutzeroberfl-=che )2 ')
+bg.b(Z)V	bg.n:Lna;	na.I:Lid;	LocalisedText.frenchFriendsFull	unique ('literal', 'Votre liste d(Wamis est pleine (X100 noms maximum pour la version gratuite et 200 pour les abonn-Bs(Y)3')
+ve.a(I)V	ve.l:Lve;	nf.j:Lal;	Client.fontMetricsArchive	MainLoad JS5 archive 13
+en.a(Z)V	en.x:Lna;	ke.c:Lid;	Client.urlProtocol	Unique 'http:)4)4' operand in paired consumer be.a(Z)Lna; @84 and ce.c(I)Lid; @73.
+en.a(Z)V	en.t:[I	ge.R:[I	NpcType.layerNextFrames	Original HD me.a([Lub;IBIIIILtk;ILtk;)Lak; and SD ja.a([Lci;ILek;IIIBIILek;)Lnd;. Next layer frame id masked to 65535, otherwise stored as -1. TS src/config/NpcType.ts layerNextFrames.
+en.a(Z)V	en.h:Lna;	th.b:Lid;	Protocol.chalReqTag	unique ('literal', ':chalreq:')
+en.a(Z)V	en.e:Lna;	wj.c:Lid;	Client.fpsOffCommand	unique ('literal', '::fpsoff')
+ge.a(Z)V	ge.k:[I	qa.N:[I	RoofModeStatics.roofMaxY	membermap HD ui.a / SD kk.a: ordered projection inputs, crosshair/arrow sprite selection, or viewport menu call sites.
+ge.a(Z)V	ge.i:Ln;	r.X:Lve;	CursorType.types	Cursor definition lookup and insertion around config fetch. HD qg.d(II)Lia; @8 getstatic, 79 getstatic. SD il.a(ZI)Ldl; @0 getstatic, 83 getstatic.
+n.b(I)V	n.h:[[[B	ib.jb:[[[B	ClientBuild.m_floors	reviewed operand The tile opcode 2..49 branch assigns (opcode - 2) / 4, truncated as a signed byte, to this overlay shape. HD wj.a(IIZLwa;IIBII)V @338 getstatic; SD fi.a(ZLgd;IIIIIZI)V @329 getstatic; TS src/client/ClientBuild.ts m_floors.
+n.b(I)V	n.e:Lna;	li.p:Lid;	ScriptRunner.dateSeparator	CS2 4104 day/month and month/year separator, cj.a(JB)Lna; / gk.a(IJ)Lid; or the CS2 4104 body
+km.e(I)V	km.Bc:[I	e.a:[I	Client.updatedVarcs	Delayed integer varc change ring after the integer write. gg.a(Z)V @1556; t.c(I)V @2540 getstatic.
+km.e(I)V	km.zc:Lna;	p.w:Lid;	CookieStatics.mar	UTC cookie date month Mar stored in calendar order by both class initializers
+km.e(I)V	km.yc:Lna;	p.y:Lid;	CookieStatics.nov	UTC cookie date month Nov stored in calendar order by both class initializers
+km.e(I)V	km.Gc:Lna;	p.z:Lid;	CookieStatics.jan	UTC cookie date month Jan stored in calendar order by both class initializers
+km.e(I)V	km.Oc:Lve;	gj.Z:Lal;	Client.instrumentsArchive	MainLoad JS5 archive 15
+km.e(I)V	km.Rc:[I	la.nb:[I	world.preTab	identical primitive array initializer 38 instructions
+km.e(I)V	km.dd:Lna;	p.P:Lid;	CookieStatics.oct	UTC cookie date month Oct stored in calendar order by both class initializers
+km.e(I)V	km.Ic:Lna;	ff.x:Lid;	LocalisedText.frenchChateffect1	unique ('literal', 'ondulation:')
+km.e(I)V	km.Sc:Lna;	mh.j:Lid;	Protocol.tradeTag	unique ('literal', ':trade:')
+km.e(I)V	km.Tc:Lna;	p.q:Lid;	CookieStatics.apr	UTC cookie date month Apr stored in calendar order by both class initializers
+km.e(I)V	km.sc:[Lqf;	ph.m:[Lvc;	Client.imageHeadiconsPrayer	Prayer headicon indexed by player and NPC fields; explicit NPC bounds against array length; lc.a(IIIIIII)V @286,508,591 and vj.a(IIIIIII)V @203,283,603 getstatic.
+km.e(I)V	km.tc:Lna;	p.R:Lid;	CookieStatics.dec	UTC cookie date month Dec stored in calendar order by both class initializers
+km.e(I)V	km.Mc:Lna;	vf.U:Lid;	Client.loginScreenName	unique ('literal', 'loginscreen')
+km.e(I)V	km.Hc:Lna;	p.H:Lid;	CookieStatics.feb	UTC cookie date month Feb stored in calendar order by both class initializers
+km.e(I)V	km.Qc:Lna;	p.j:Lid;	CookieStatics.aug	UTC cookie date month Aug stored in calendar order by both class initializers
+km.e(I)V	km.wc:Lna;	li.z:Lid;	LocalisedText.defaultChatcol8	only remaining initializer alias of km.Cc:Lna; / li.v:Lid;
+km.e(I)V	km.Nc:Lve;	bh.c:Lal;	Client.enumsArchive	MainLoad JS5 archive 17
+km.e(I)V	km.Cc:Lna;	li.v:Lid;	LocalisedText.englishChatcol8	unique ('literal', 'flash3:')
+km.e(I)V	km.Ac:[Lna;	p.c:[Lid;	CookieStatics.monthNames	cookie months array, cj.a(JB)Lna; / gk.a(IJ)Lid; or the CS2 4104 body
+km.e(I)V	km.xc:Lna;	p.D:Lid;	CookieStatics.may	UTC cookie date month May stored in calendar order by both class initializers
+km.e(I)V	km.Dc:Lna;	li.w:Lid;	LocalisedText.chatcol8	unique incoming localized constants ('blinken3:', 'clignotant3:')
+km.e(I)V	km.vc:Lna;	p.K:Lid;	CookieStatics.jul	UTC cookie date month Jul stored in calendar order by both class initializers
+km.e(I)V	km.cd:Lna;	p.X:Lid;	CookieStatics.sep	UTC cookie date month Sep stored in calendar order by both class initializers
+km.e(I)V	km.Wc:Lna;	p.a:Lid;	CookieStatics.jun	UTC cookie date month Jun stored in calendar order by both class initializers
+i.q(I)V	i.ic:Lna;	ah.h:Lid;	Client.mapFilePrefix	unique ('literal', 'm')
+i.q(I)V	i.ec:[I	qj.K:[I	TitleFlames.blurBuffer	blur intermediate of both directional passes; vl.a(II)V @614,696,732 and nl.c(II)V @617,699,732 getstatic.
+i.q(I)V	i.ac:[I	kg.x:[I	ProceduralTexture.gammaTable	membermap Texture graph decode, size or gamma setup and source binding in HD lc.a and SD jd.a.
+i.q(I)V	i.Ub:[Lna;	jb.N:[Lid;	ClientPlayer.titlePrefixes	Player displayed name builder inserts title before player name; e.e(I)Lna; @46,58 and pb.c(I)Lid; @22,34 getstatic.
+mj.a(B)V	mj.C:[S	wg.b:[S	PlayerModel.recolourSources2	Original HD hh.a([Lub;ILtk;Ltk;IIIIZII)Lak; and SD cl.a(IILek;IZ[Lci;IIZLek;I)Lnd;. Secondary colours are applied in the second recolour pass; the RS base is -10304,9104,-1 in pk.V/lh.e. TS src/dash3d/PlayerModel.ts recolourSources2.
+mj.a(B)V	mj.d:[Lna;	bk.ic:[Lid;	Minimenu.playerOption	Player menu builder per-option player option string; rj.a(IIILe;I)V @538,570,732 and dg.a(IIIILpb;)V @557,583,731 getstatic.
+mj.a(B)V	mj.g:Lna;	wa.s:Lid;	Client.percent3	unique ('literal', '(U3')
+mj.a(B)V	mj.n:Lfd;	hj.j:Leg;	WorldMap.font30	Map font allocated with constructor size 30; pa.d(I)V @1289 and lg.b(Z)V @1267 putstatic.
+be.b(I)V	be.Zc:Lna;	db.t:Lid;	LocalisedText.germanTake	unique ('literal', 'Nehmen')
+be.b(I)V	be.ib:Lna;	lj.d:Lid;	ScriptRunner.eventOpbase	unique ('literal', 'event_opbase')
+be.b(I)V	be.ac:Lna;	dk.P:Lid;	FriendChatChannel.channelName	CS2 3611 pushes friend chat display name. h.a(BILjl;)V @8554, 8568, 8613, 8672; gh.a(Lwf;II)V @22497, 22528, 22553, 22612 getstatic.
+od.a(B)V	od.f:Ljd;	ej.p:Lag;	Client.mouseTracking	only shutdown field of paired type Lag;
+od.a(B)V	od.h:Lna;	ud.h:Lid;	LocalisedText.connectedToUpdateServer	unique incoming localized constants ('Connect-B au serveur de mise -9 jour', 'Verbindung zum Update)2Server hergestellt)3')
+od.a(B)V	od.b:Lna;	ud.c:Lid;	LocalisedText.englishConnectedToUpdateServer	unique ('literal', 'Connected to update server')
+e.d(B)V	e.Tc:Lna;	uf.f:Lid;	Client.wtqaHost	unique ('literal', 'www)2wtqa')
+e.d(B)V	e.vc:Lna;	vg.S:Lid;	LocalisedText.frenchLoadedInputHandler	unique ('literal', 'Gestionnaire de saisie charg-B')
+e.d(B)V	e.pc:[I	ed.g:[I	Minimenu.tooltipBounds	Tooltip paragraph bound scratch passed into font draw; dm.a(Lbe;III)V @172,179,184,191,196 and ii.a(ILaj;IB)V @102,109,114,119,125 getstatic.
+e.d(B)V	e.Ac:Lna;	re.g:Lid;	Client.tweenEnabled	unique ('literal', 'Forced tweening ENABLED(Q')
+e.d(B)V	e.xc:[I	ce.G:[I	RoofModeStatics.roofMaxZ	membermap HD ui.a / SD kk.a: ordered projection inputs, crosshair/arrow sprite selection, or viewport menu call sites.
+e.d(B)V	e.sc:[I	r.U:[I	InterfaceList.rootY	Root bounds assignment to current root index, Y origin plus widget.y; gn.a(III[Lbe;IIIIBI)V @134 and lf.a(I[Laj;IIIIIIZI)V @98 getstatic.
+e.d(B)V	e.Dc:Lna;	bi.l:Lid;	WorldMapLabels.suffix	Unique '_labels' operand in paired consumer gd.c(I)V @408,445,492 and gj.e(I)V @252,293,328.
+ih.c(I)V	ih.l:Ln;	te.a:Lve;	HintArrow.modelCache	HD rm.a(ZIIIILak;I)Lak; / SD ai.a(IIIILnd;II)Lnd;. The source hint-arrow model cache key is its model id before spot copy, yaw and ground contour. TS src/client/HintArrow.ts modelCache.
+qf.f(B)V	qf.X:Lbe;	nk.V:Laj;	Minimenu.tooltipComponent	Menu tooltip component supplied for tooltip drawing; ha.a(I)V @292,326 and gf.e(B)V @244,278 getstatic.
+qf.f(B)V	qf.Q:Lna;	ab.N:Lid;	Minimenu.npcArrow	unique ('literal', ' )2> <col=ffff00>')
+qf.f(B)V	qf.U:Lna;	li.x:Lid;	LocalisedText.germanChooseOption	unique ('literal', 'W-=hlen Sie eine Option')
+qf.f(B)V	qf.R:Lna;	fk.N:Lid;	Minimenu.targetArrow	unique ('literal', ' )2> ')
+qf.f(B)V	qf.N:Lna;		Client.cardMemoryCommand	HD storage declaration
+sc.b(I)V	sc.f:Lna;	df.A:Lid;	CookieStatics.cookieSuffix	unique ('literal', '(R')
+sc.b(I)V	sc.r:Lna;	v.N:Lid;	LocalisedText.loadedSprites	unique incoming localized constants ('Sprites charg-Bs', 'Sprites geladen)3')
+sc.b(I)V	sc.z:[Z	n.i:[Z	InterfaceList.rectRedrawnLastFrame	Per-root previous-redraw flag transferred during DrawGame; ha.a(I)V @164,429 and gf.e(B)V @163,388 getstatic.
+sc.b(I)V	sc.k:Lna;	ib.hb:Lid;	LocalisedText.germanFaceHere	unique ('literal', 'Hierhin drehen')
+sc.b(I)V	sc.m:[Z	rg.b:[Z	IfType.m_open	Interface group loaded flag; tm.b(II)Z @13,58,202 and qg.a(IZ)Z @8,49,193 getstatic.
+sc.b(I)V	sc.g:Lna;	vb.m:Lid;	Minimenu.objArrow	unique ('literal', ' )2> <col=ff9040>')
+sc.b(I)V	sc.D:Lna;	lj.g:Lid;	Minimenu.orangeRed	unique ('literal', '<col=ff7000>')
+sc.b(I)V	sc.w:Lna;	v.M:Lid;	LocalisedText.englishLoadedSprites	unique ('literal', 'Loaded sprites')
+uc.b(I)V	uc.d:[[[I	tb.w:[[[I	WorldMap.underlayColors	underlay ARGB grid; cj.a(BLwa;)V @639 and og.b(Lgd;I)V @638 getstatic.
+uc.b(I)V	uc.c:Lve;	rg.m:Lal;	Client.m_pJagFx	MainLoad JS5 archive 4
+kl.c(I)V	kl.u:Lna;	ud.n:Lid;	ObjType.objCountThousandsColTag	Unique '<col=ffffff>' operand in paired consumer eb.b(II)Lna; @75 and ii.a(II)Lid; @69.
+kl.c(I)V	kl.r:Lve;	f.f:Lal;	Client.vorbisArchive	MainLoad JS5 archive 14
+sg.a(I)V	sg.e:Lna;	sk.Q:Lid;	Client.settingsParam	unique ('literal', 'settings')
+sg.a(I)V	sg.b:[I	ll.m:[I	Client.statXP	Widget CS1 operand 3 reads skill XP. we.a(BILbe;)I @193; mj.a(Laj;IB)I @170 getstatic.
+sg.a(I)V	sg.q:[I	sc.T:[I	ClientKeyboardListener.codes	Key event code consumed by component listener; client.a([Lbe;IIIIIII)V @3361 and client.a([Laj;IIIIIII)V @3317 getstatic.
+sg.a(I)V	sg.k:Lve;	aa.d:Lal;	Client.worldMapArchive	MainLoad JS5 archive 23
+sg.a(I)V	sg.i:Lbe;	al.B:Laj;	ScriptRunner.activeComponent	reviewed operand Primary active widget selected when that operand is zero. Confirmed at widget creation and deletion.
+va.e(B)V	va.G:[Z	gl.w:[Z	WorldMap.disabled	map icon disabled flag; sm.a(IIIIIIIIIII)V @376 and e.a(IIIIIIIIIII)V @362 getstatic.
+va.e(B)V	va.v:Lna;	fd.bb:Lid;	LocalisedText.germanCreatedGameworld	unique ('literal', 'Spielwelt erstellt)3')
+vh.c(I)V	vh.c:Lna;	mc.M:Lid;	CookieStatics.timeSeparator	cookie time separator, cj.a(JB)Lna; / gk.a(IJ)Lid; or the CS2 4104 body
+vh.c(I)V	vh.i:Lna;	vj.r:Lid;	LocalisedText.germanConnectingToUpdateServer	unique ('literal', 'Verbindung mit Update)2Server)3)3)3')
+vh.c(I)V	vh.p:[I	mj.c:[I	QuickChatPhraseType.paramCounts	Phrase config decode uses the command number to size its parameter array. HD cb.a(Lwa;II)V @113 getstatic, 125 getstatic. SD pe.a(Lgd;II)V @144 getstatic, 181 getstatic.
+vh.c(I)V	vh.b:[I	nh.Y:[I	InterfaceList.rootX	Root bounds assignment to current root index, X origin plus widget.x; gn.a(III[Lbe;IIIIBI)V @120 and lf.a(I[Laj;IIIIIIZI)V @83 getstatic.
+vh.c(I)V	vh.u:[I	ak.f:[I	ClientKeyboardListener.eventChars	Typed character paired with no keycode; uf.keyTyped(Ljava/awt/event/KeyEvent;)V @58 and vb.keyTyped(Ljava/awt/event/KeyEvent;)V @53 getstatic.
+vj.a(B)V	vj.l:Lna;	qh.g:Lid;	LocalisedText.frenchLoadingConfig	unique ('literal', 'Chargement des fichiers config )2 ')
+vj.a(B)V	vj.b:Lna;	hk.d:Lid;	LocalisedText.connectingToUpdateServer	unique incoming localized constants ('Connexion au serveur de mise -9 jour en cours', 'Verbindung mit Update)2Server)3)3)3')
+vj.a(B)V	vj.j:Ldd;	rg.h:Lfg;	Client.p11Software	Software p11 font separately loaded during startup; client.i(I)V @1588 and client.f(B)V @1578 getstatic.
+vj.a(B)V	vj.m:Lna;	ah.g:Lid;	WorldMap.labelSuffix	Unique '_labels' operand in paired consumer pa.d(I)V @868,921,956 and lg.b(Z)V @839,892,926.
+vj.a(B)V	vj.h:Lna;	hk.a:Lid;	LocalisedText.englishConnectingToUpdateServer	unique ('literal', 'Connecting to update server')
+hh.c(I)V	hh.b:Lna;	qc.L:Lid;	WorldMap.teleportCommand	unique ('literal', '::tele ')
+hh.c(I)V	hh.a:Lna;	nc.r:Lid;	Client.percent4	unique ('literal', '(U4')
+hh.c(I)V	hh.p:[I	ek.i:[I	world.hideAreaMaxX	reviewed operand Both assign the third array parameter to the inclusive roof X maxima. HD mf.a(IIIII[[[B[I[I[I[I[IIBII)V @598 putstatic; SD qc.a(IIIII[[[B[I[I[I[I[IIBII)V @584 putstatic; TS src/dash3d/world.ts hideAreaMaxX.
+hh.c(I)V	hh.k:Lna;		Client.wm0Command	HD storage declaration
+hh.c(I)V	hh.r:[I	t.H:[I	TitleFlames.flameGradient	flame palette indexed by intensity; s.b(III)V @190 and vb.b(III)V @198 getstatic.
+tk.a(B)V	tk.D:[Lec;	pa.xb:[Lec;	world.dynamicSprites	HD cd.a(IIIIZ)V / SD mc.a(IIIIZ)V world.init. The temporary dynamic entity list is allocated with 5000 sprite slots. TS src/dash3d/world.ts dynamicSprites.
+tk.a(B)V	tk.o:Lok;	ad.i:Lsi;	TitleScreen.m_logo	only shutdown field of paired type Lsi;
+tk.a(B)V	tk.s:Lve;	ag.i:Lal;	SeqType.m_pConfigClient	Sequence definition archive in GetType; client.a(IB)Ltk; @47 and tb.b(II)Lek; @27 getstatic.
+tk.a(B)V	tk.j:Lve;	hj.e:Lal;	CursorType.spriteArchive	Cursor sprite getter; ia.a(B)Lmm; @43 and dl.a(I)Lrh; @40 getstatic.
+tk.a(B)V	tk.x:Lna;	jg.p:Lid;	LocalisedText.germanAlreadyFriend	unique ('literal', ' steht bereits auf Ihrer Freunde)2Liste(Q')
+tk.a(B)V	tk.K:[I	sf.j:[I	RoofModeStatics.hideMinZ	membermap HD ui.a / SD kk.a: ordered projection inputs, crosshair/arrow sprite selection, or viewport menu call sites.
+fe.b(B)V	fe.nc:[Lhj;	kc.p:[Lqf;	ScriptRunner.frames	only shutdown field of paired type [Lqf;
+fe.b(B)V	fe.I:Lna;	wh.Y:Lid;	ScriptRunner.space	Unique ' ' operand in paired consumer h.a(BILjl;)V @16371,16470 and gh.a(Lwf;II)V @12222,12321.
+fe.b(B)V	fe.jb:Ln;	hh.S:Lve;	IdkType.m_recentUse	Identity-kit definition cache around config fetch. HD gg.d(II)Ldm; @8 getstatic, 70 getstatic. SD hk.a(II)Lfi; @8 getstatic, 73 getstatic.
+fe.b(B)V	fe.lc:[Lqf;	gh.N:[Lvc;	SpriteLoader.mapfunctionsRecoloured	Minimap map-function icons indexed by loc/NPC icon IDs; ed.a(IBIILbe;)V @816,1115 and fd.a(ILaj;III)V @666,966 getstatic.
+fe.b(B)V	fe.lb:[I	ik.Q:[I	InterfaceList.rootHeight	Root bounds assignment to current root index, widget height; gn.a(III[Lbe;IIIIBI)V @161 and lf.a(I[Laj;IIIIIIZI)V @124 getstatic.
+bj.c(I)V	bj.v:Lsc;	mf.d:Lnc;	ClientInvCache.m_invList	Unique lookup of ClientInvCache.m_invList in paired consumer; ba.a(IB)I @20 and wd.a(II)I @22 getstatic.
+bj.c(I)V	bj.t:[S	gj.U:[S	PlayerModel.recolourSources2Alt	identical primitive array initializer 22 instructions
+bj.c(I)V	bj.U:Lna;	b.U:Lid;	LocalisedText.germanChateffect2	unique ('literal', 'welle2:')
+bj.c(I)V	bj.p:Lna;	qi.L:Lid;	LocalisedText.germanLoadedConfig	unique ('literal', 'Konfig geladen)3')
+bj.c(I)V	bj.z:Lna;	ve.i:Lid;	LocalisedText.englishPleaseWait	unique ('literal', 'Please wait)3)3)3')
+bj.c(I)V	bj.q:Lna;	ve.l:Lid;	LocalisedText.PLEASEWAIT	unique incoming localized constants ('Bitte warten Sie)3)3)3', 'Veuillez patienter)3)3)3')
+pb.b(I)V	pb.J:Lna;	u.i:Lid;	LocalisedText.frenchChooseOption	unique ('literal', 'Choisir une option')
+pb.b(I)V	pb.cb:Lna;	fd.cb:Lid;	LocalisedText.frenchLoadingPleaseWait2	unique ('literal', 'Chargement en cours)3 Veuillez patienter)3')
+pb.b(I)V	pb.x:[[[I	ag.d:[[[I	Client.dynamicChunks	HD ha.a(ZB)V / SD wj.a(ZI)V. Dynamic ground load reads the packed source chunk descriptor with level, chunk X, chunk Z, before extracting rotation and the source region. TS src/client/Client.ts dynamicChunks.
+pb.b(I)V	pb.q:[Z	ob.q:[Z	ClientKeyboardListener.pressed	reviewed operand Both keyboard pumps mark released keys false at the complemented negative queue entry and mark pressed keys true at nonnegative entries. HD fc.b(I)V @56 getstatic; SD ng.b(Z)V @50 getstatic; TS src/client/ClientKeyboardListener.ts pressed.
+pb.b(I)V	pb.K:Lna;	sj.G:Lid;	LocalisedText.frenchLoadingTextures	unique ('literal', 'Chargement des textures )2 ')
+cd.c(I)V	cd.y:Lna;	hh.ab:Lid;	LocalisedText.germanCheckingForUpdates	unique ('literal', 'Suche nach Updates )2 ')
+cd.c(I)V	cd.D:Lna;	hh.jb:Lid;	LocalisedText.germanLoadingWordpack	unique ('literal', 'Lade Wordpack )2 ')
+cd.c(I)V	cd.v:Lna;	wf.H:Lid;	LocalisedText.frenchWalkHere	unique ('literal', 'Atteindre')
+cd.c(I)V	cd.B:Lve;	wf.u:Lal;	Client.quickChatGlobalArchive	MainLoad JS5 archive 25
+me.c(B)V	me.P:[I	od.U:[I	DelayedStateChange.varcs	Delayed state change type 1 writes its integer into the integer varc array. gg.a(Z)V @1546; t.c(I)V @2530 getstatic.
+me.c(B)V	me.kb:Lna;	lk.y:Lid;	LocalisedText.frenchIgnoresFull	unique ('literal', 'Votre liste noire est pleine (X100 noms maximum(Y)3')
+me.c(B)V	me.T:Lna;	bh.d:Lid;	LocalisedText.frenchChatcol4	unique ('literal', 'violet:')
+wk.c(I)V	wk.t:Ln;	r.V:Lve;	SpotType.m_recentUse	Spot animation definition getter caches the decoded definition. HD ck.a(BI)Leg; @8 getstatic, 96 getstatic. SD bf.b(II)Lli; @20 getstatic, 89 getstatic.
+wk.c(I)V	wk.v:[I	vk.O:[I	ClientBuild.m_ligtot	Original FinishBuild HD di.a([Lmj;ZI)V, SD al.a(I[Lke;Z)V and HD ni HSL decoder. Adds ni.r, decoded as lightness times 256 with bounds 0 through 255. TS src/client/ClientBuild.ts m_ligtot.
+wk.c(I)V	wk.u:Lna;	ek.u:Lid;	Client.clientJs5DropCommand	unique ('literal', '::clientjs5drop')
+wk.c(I)V	wk.x:Lna;	vi.db:Lid;	WorldList.langParam	unique ('literal', ')4l=')
+bf.d(B)V	bf.I:[I	ie.I:[I	Client.chatColours	identical primitive array initializer 26 instructions
+bf.d(B)V	bf.s:Lve;	il.B:Lal;	Client.m_pClientScripts	MainLoad JS5 archive 12
+bf.d(B)V	bf.C:[I	we.s:[I	QuickChatPhraseType.receiveWidths	identical primitive array initializer 66 instructions
+bf.d(B)V	bf.y:Lna;	af.P:Lid;	LocalisedText.englishChatcol5	unique ('literal', 'white:')
+bf.d(B)V	bf.D:Lna;	af.K:Lid;	LocalisedText.chatcol5	unique incoming localized constants ('blanc:', 'weiss:')
+bf.d(B)V	bf.A:Lna;	ba.i:Lid;	LocalisedText.frenchChatcol10	unique ('literal', 'brillant2:')
+bf.d(B)V	bf.N:Lna;	af.E:Lid;	LocalisedText.defaultChatcol5	only remaining initializer alias of bf.y:Lna; / af.P:Lid;
+ab.a(B)V	ab.m:Lna;	vg.eb:Lid;	LocalisedText.frenchMembersObject	unique ('literal', 'Objet d(Wabonn-Bs')
+ab.a(B)V	ab.j:[Lna;	g.p:[Lid;	ScriptRunner.stringStack	reviewed operand The 1000-entry CS2 string operand stack. The same literal push reads it at HD 583 and SD 553.
+ab.a(B)V	ab.n:Lih;	nc.j:Lgk;	AreaSoundManager.locs	Area sound removal searches the location list by definition and tile. HD ra.a(ILpb;BII)V @13 getstatic, 164 getstatic. SD fa.a(IIIILjb;)V @19 getstatic, 147 getstatic.
+ab.a(B)V	ab.c:[Z	m.L:[Z	Client.friendSameGame	two method windows ac.a(B)Z, fb.a(JB)V
+ce.a(B)V	ce.d:Lve;	gj.W:Lal;	QuickChatCatTypeList.global	Quick-chat category IDs masked with 32767, group 0; tb.b(IB)Lbc; @53 and ib.a(BI)Lpg; @65 getstatic.
+ce.a(B)V	ce.m:Lna;	q.d:Lid;	LocalisedText.germanLoadingTextures	unique ('literal', 'Lade Texturen )2 ')
+ij.c(I)V	ij.n:Lna;	d.e:Lid;	LocalisedText.frenchIgnoreFirst	unique ('literal', ' de votre liste noire)3')
+ij.c(I)V	ij.a:Lna;	ah.o:Lid;	Protocol.duelFriendTag	unique ('literal', ':duelfriend:')
+nb.a(I)V	nb.c:Lna;	q.a:Lid;	LocalisedText.selfIgnore	unique incoming localized constants ('Sie k-Onnen sich selbst nicht selbst auf Ihre Ignorieren)2Liste setzen(Q', 'Vous ne pouvez pas ajouter votre nom -9 votre liste noire)3')
+nb.a(I)V	nb.i:Lqf;	sc.N:Lvc;	Minimenu.bottomEdgeSprite	reviewed operand Both repeat this sprite across the bottom edge, dividing menu width by sprite width and subtracting sprite height from the bottom Y. HD ij.a(B)V @585 getstatic; SD wh.e(B)V @370 getstatic; TS src/ui/Minimenu.ts bottomEdgeSprite.
+nb.a(I)V	nb.n:Lna;	ck.G:Lid;	WorldMap.detailsGroup	Unique 'details' operand in paired consumer client.i(I)V @2457,2491 and client.f(B)V @2390,2414.
+nb.a(I)V	nb.a:Lna;	id.K:Lid;	Client.umMapPrefix	unique ('literal', 'um')
+nb.a(I)V	nb.m:Lna;	ea.d:Lid;	TitleScreen.logoName	unique ('literal', 'logo')
+nb.a(I)V	nb.b:Lna;	q.k:Lid;	LocalisedText.englishSelfIgnore	unique ('literal', 'You can(Wt add yourself to your own ignore list)3')
+nb.a(I)V	nb.e:Lna;	rj.a:Lid;	Client.breakconCommand	unique ('literal', '::breakcon')
+cl.d(I)V	cl.R:Lna;	wa.q:Lid;	LocalisedText.frenchOpenedTitleScreen	unique ('literal', ',Mcran)2titre ouvert')
+cl.d(I)V	cl.ab:[I	ed.m:[I	TitleFlames.flameLineOffset	flame offset indexed by scanline; s.b(III)V @68 and vb.b(III)V @75 getstatic.
+cl.d(I)V	cl.N:Lna;	c.x:Lid;	LocalisedText.englishThousandsSuffix2	initializer supplies verified alias cl.Q:Lna; / c.D:Lid;
+cl.d(I)V	cl.T:Lna;	c.z:Lid;	LocalisedText.thousandsSuffix	Unique 'K' operand in paired consumer fi.a(BI)Lna; @199 and gf.c(II)Lid; @206.
+cl.d(I)V	cl.J:Lve;	ik.V:Lal;	FloType.m_pConfigClient	membermap Stage 70 config stores, group 1/4 definition lookup or overlay opcode in the two floor decoders.
+cl.d(I)V	cl.V:[I	p.J:[I	Client.sceneMapUnderwaterLocFile	Region update g.a(IZ)V and its SD counterpart request the same underwater names. Region group lookup uses the ul prefix for underwater locations. HD gd.c(I)V fetches these IDs into bi.Y. TS src/client/Client.ts sceneMapUnderwaterLocFile.
+cl.d(I)V	cl.P:Lna;	ui.r:Lid;	LocalisedText.frenchChatcol11	unique ('literal', 'brillant3:')
+cl.d(I)V	cl.Q:Lna;	c.D:Lid;	LocalisedText.thousandsSuffix2	Unique 'K' operand in paired consumer eb.b(II)Lna; @94 and ii.a(II)Lid; @87.
+cl.d(I)V	cl.K:Ljava/util/Calendar;	hc.b:Ljava/util/Calendar;	CookieStatics.gmtCalendar	cookie GregorianCalendar, cj.a(JB)Lna; / gk.a(IJ)Lid; or the CS2 4104 body
+ub.a(B)V	ub.e:Lna;	hc.h:Lid;	LocalisedText.loadingTextures	unique incoming localized constants ('Chargement des textures )2 ', 'Lade Texturen )2 ')
+ub.a(B)V	ub.a:Lna;	tk.b:Lid;	LocalisedText.germanChatcol7	unique ('literal', 'blinken2:')
+ub.a(B)V	ub.h:[Lpe;	uf.v:[Ljg;	world.activeOccluders	HD cd.a(IIIIZ)V / SD mc.a(IIIIZ)V world.init. Original visibility selection jj.a/ke.a appends only passing occluders with the active count. TS src/dash3d/world.ts activeOccluders.
+ub.a(B)V	ub.n:Lna;	hc.i:Lid;	LocalisedText.englishLoadingTextures	unique ('literal', 'Loading textures )2 ')
+gl.a(I)V	gl.c:Lna;	wd.k:Lid;	LocalisedText.frenchCreatedGameworld	unique ('literal', 'Monde de jeu cr-B-B')
+gl.a(I)V	gl.a:Lve;		LightType.m_pConfigClient	HD storage declaration
+sf.a(B)V	sf.h:[Lna;	me.a:[Lid;	DelayedStateChange.varcStrings	Delayed state change type 2 writes its text into the string varc array. gg.a(Z)V @1586; t.c(I)V @1528 getstatic.
+sf.a(B)V	sf.g:Lna;	pj.G:Lid;	Minimenu.yellow	Unique '<col=ffff00>' operand in paired consumer jj.a(IBI)Lna; @123 and r.a(III)Lid; @107.
+sf.a(B)V	sf.b:Lve;	ll.g:Lal;	Client.js5Archive27	MainLoad JS5 archive 27
+cg.a(B)V	cg.d:Lna;	fl.f:Lid;	LocalisedText.germanDiscard	unique ('literal', 'Ablegen')
+cg.a(B)V	cg.e:Lna;	ki.eb:Lid;	Client.paramTrue	unique ('literal', '1')
+cg.a(B)V	cg.h:Lna;	mk.H:Lid;	JagString.period2	Unique ')3' operand in paired consumer oj.a(IZIJI)Lna; @54,67,103 and ui.a(JIIBZ)Lid; @39,65,106.
+qh.a(I)V	qh.d:Lfd;	qa.T:Leg;	WorldMap.font19	Map font allocated with constructor size 19; pa.d(I)V @1174 and lg.b(Z)V @1149 putstatic.
+qh.a(I)V	qh.a:Lse;	jg.t:Lkc;	WorldMap.labels	map labels accessor; je.j(I)I @20,33,44 and dd.b(I)I @8,16,47 getstatic.
+qh.a(I)V	qh.e:[Lee;	oc.d:[Loa;	WorldList.countries	only shutdown field of paired type [Loa;
+qh.a(I)V	qh.i:Lna;	u.f:Lid;	WorldMap.memLabel	Unique 'Mem:' operand in paired consumer wa.a(IIIII)V @841 and ah.a(IIIII)V @528.
+qh.a(I)V	qh.g:Lve;	kk.R:Lal;	IfType.m_pModels	Widget model archive read for raw model; be.a(ILtk;IIIZLhh;)Lak; @129 and aj.a(Lcl;IIZIZLek;)Lnd; @101 getstatic.
+qh.a(I)V	qh.c:Lna;	ii.n:Lid;	Client.beforeCleanup	unique ('literal', 'Memory before cleanup=')
+ri.a(I)V	ri.c:Lve;	ra.Z:Lal;	IdkType.m_pConfigClient	Identity-kit definition archive in GetType; gg.d(II)Ldm; @31 and hk.a(II)Lfi; @36 getstatic.
+ri.a(I)V	ri.b:[I	ob.Hb:[I	PlayerModel.slotNextFrames	Original HD hh.a([Lub;ILtk;Ltk;IIIIZII)Lak; and SD cl.a(IILek;IZ[Lci;IIZLek;I)Lnd;. The next slot id is the low 16 bits and is reset to -1 without a tween. TS src/dash3d/PlayerModel.ts slotNextFrames.
+ri.a(I)V	ri.d:[I	ea.k:[I	TitleFlames.flameBuffer	per-pixel fire intensity from flame grid; s.b(III)V @123 and vb.b(III)V @126 getstatic.
+cm.a(I)V	cm.a:Lm;	gj.P:Lpc;	TextureOp.textureProvider	membermap Texture graph decode, size or gamma setup and source binding in HD lc.a and SD jd.a.
+cm.a(I)V	cm.h:Lna;	pd.u:Lid;	LocalisedText.germanConlost	unique ('literal', 'Verbindung abgebrochen)3')
+cm.a(I)V	cm.i:Lna;	si.i:Lid;	LocalisedText.frenchSkill	unique ('literal', 'comp-Btence ')
+cm.a(I)V	cm.e:Lna;	ud.k:Lid;	LocalisedText.frenchSelfFriend	unique ('literal', 'Vous ne pouvez pas ajouter votre nom -9 votre liste d(Wamis)3')
+cm.a(I)V	cm.f:Lim;	te.f:Ldj;	Client.js5SocketRequest	Unique lookup of Client.js5SocketRequest in paired consumer; client.h(I)V @363,384,416 and client.b(Z)V @340,363,392 getstatic.
+cm.a(I)V	cm.b:Ljava/lang/Thread;		GameShell.gameThread	HD storage declaration
+rm.a(B)V	rm.j:Lna;	uh.P:Lid;	LocalisedText.chateffect3	unique incoming localized constants ('sch-Utteln:', 'tremblement:')
+rm.a(B)V	rm.h:Lna;	uh.V:Lid;	LocalisedText.englishChateffect3	unique ('literal', 'shake:')
+rm.a(B)V	rm.k:Lna;	uh.db:Lid;	LocalisedText.defaultChateffect3	only remaining initializer alias of rm.h:Lna; / uh.V:Lid;
+rm.a(B)V	rm.i:Lna;	ta.R:Lid;	Client.infText	unique ('literal', '(Z')
+rm.a(B)V	rm.d:Ln;	ak.d:Lve;	LightType.cache	membermap Capacity 64 and the same three cache sweeps; HD la.a looks up and inserts ic.
+ld.a(Z)V	ld.a:[I	vg.N:[I	QuickChatPhraseType.sendWidths	Uses the quick-chat command to select the outgoing value byte width. HD cb.a(Lwa;[IZ)V @54 getstatic. SD pe.a(ILgd;[I)V @37 getstatic.
+ld.a(Z)V	ld.d:Lna;	bf.E:Lid;	Minimenu.hiddenUse	unique ('literal', 'Hidden)2use')
+ld.a(Z)V	ld.b:[Lnc;	ve.t:[Lkf;	Client.hintArrows	only shutdown field of paired type [Lkf;
+ld.a(Z)V	ld.g:[Lna;	mj.i:[Lid;	ObjType.inventoryOps	Default five-slot inventory menu places Drop in slot four. HD th.a(ZBLve;Ldd;Lve;)V @90 putstatic. SD bj.a(Lal;IZLfg;Lal;)V @81 putstatic.
+ld.a(Z)V	ld.k:Ljava/lang/String;	pg.S:Ljava/lang/String;	Client.worldListHost	World-list connection hostname passed to Signlink socket request; ql.b(I)I @56 and jb.c(I)I @48 getstatic.
+dg.a(I)V	dg.h:Lbe;	gh.C:Laj;	Client.tooltipComponent	Tooltip component saved to a local and cleared for the new UI traverse; gg.a(Z)V @3205,4162,4198,4206,4212,4271 and t.c(I)V @3141,4095,4126,4132,4140,4195 getstatic.
+dg.a(I)V	dg.d:Lna;	gd.bb:Lid;	Client.debugCacheLabel	unique ('literal', 'Cache:')
+dg.a(I)V	dg.b:Lna;	ek.z:Lid;	Client.shiftClickEnabled	unique ('literal', 'Shift)2click ENABLED(Q')
+dg.a(I)V	dg.c:[[S	ie.J:[[S	PlayerModel.recolourDestinations2Rs	Client startup assigns the two recolour palette sets to the actual actor-builder statics in both JARs. Both startup selectors set secondary destinations to this RS palette alongside sources beginning -10304. TS src/dash3d/PlayerModel.ts recolourDestinations2Rs.
+wj.a(B)V	wj.e:Lna;	tk.h:Lid;	GameShell.progressTitle	Optional loading title centered by its width above the progress bar. bc.a(Ljava/awt/Color;ZZLna;I)V @447, 472, 488; t.a(IZLid;BLjava/awt/Color;)V @430, 452, 462 getstatic.
+wj.a(B)V	wj.k:Lna;	cl.g:Lid;	LocalisedText.frenchContinue	unique ('literal', 'Continuer')
+wj.a(B)V	wj.b:Lna;	aa.b:Lid;	Client.countColourYellow	unique ('literal', ' <col=ffff00>')
+wj.a(B)V	wj.f:Lna;	ei.w:Lid;	Client.underwaterLocPrefix	unique ('literal', 'ul')
+c.g(B)V	c.bb:[Lec;	dg.v:[Lec;	world.spriteBuffer	HD cd.a(IIIIZ)V / SD mc.a(IIIIZ)V world.init. The sorting workspace has 100 sprite slots. TS src/dash3d/world.ts spriteBuffer.
+c.g(B)V	c.Y:Lna;	fa.a:Lid;	Client.memLabel	Unique 'Mem:' operand in paired consumer gn.a(III[Lbe;IIIIBI)V @1730 and lf.a(I[Laj;IIIIIIZI)V @1524.
+c.g(B)V	c.Z:Lna;	pj.Q:Lid;	LocalisedText.loggedIn	unique incoming localized constants (' loggt sich ein)3', ' s(West connect-B)3')
+c.g(B)V	c.W:Lna;	pj.N:Lid;	LocalisedText.englishLoggedIn	unique ('literal', ' has logged in)3')
+pm.g(B)V	pm.gb:Lna;	uk.a:Lid;	LocalisedText.englishFriendFirst	unique ('literal', ' from your friend list first)3')
+pm.g(B)V	pm.cb:[[[Lbj;	na.G:[[[Lra;	world.mainLevelTiles	HD cd.a(IIIIZ)V / SD mc.a(IIIIZ)V world.init. Allocates the main scene tile array as levelCount by X by Z; the underwater tile array has a single level. TS src/dash3d/world.ts mainLevelTiles.
+pm.g(B)V	pm.Y:Lna;	cg.n:Lid;	WorldMapLabels.lineBreakTag	Unique '<br>' operand in paired consumer hc.a(Lna;Z)I @71 and wh.a(Lid;B)I @52.
+pm.g(B)V	pm.fb:Lna;	uk.j:Lid;	LocalisedText.friendFirst	unique incoming localized constants (' de votre liste d(Wamis)3', ' zuerst von Ihrer Freunde)2Liste(Q')
+nf.a(I)V	nf.c:[S	qa.R:[S	Client.searchResults	Object search sorted result IDs; bn.a(BZLna;)V @266 and vk.a(BLid;Z)V @271 getstatic.
+nf.a(I)V	nf.h:Lbe;	hg.f:Laj;	Client.hoveredSlotCom	Inventory hover component compared against the drag source before rearrange; gg.a(Z)V @2865 and t.c(I)V @2746 getstatic.
+nf.a(I)V	nf.f:Ln;	lj.c:Lve;	LocType.m_mc1	Raw location-model cache used before definition transforms. HD pb.a(III)Lgb; @122 getstatic, 177 getstatic, 318 getstatic, 381 getstatic. SD jb.a(III)Lcb; @127 getstatic, 178 getstatic, 245 getstatic, 296 getstatic.
+nf.a(I)V	nf.d:Lfd;	ia.k:Leg;	WorldMap.font14	Map font allocated with constructor size 14; pa.d(I)V @1090 and lg.b(Z)V @1063 putstatic.
+lf.a(B)V	lf.a:[[I	pe.O:[[I	RouteFinding.m_dirMap	HD aa.a(IIIIIZIIIIII)Z and SD ld.a(ZIIIIIIIIIII)Z route search. Writes 99 to the start tile and directional codes to visited neighbors; distance in the other grid starts at zero. TS src/movement/RouteFinding.ts m_dirMap.
+lf.a(B)V	lf.b:[I	pa.wb:[I	WorldMap.overlayColors	per-overlay RGB palette; fi.a(III)V @297 and lj.a(III)V @301 getstatic.
+lf.a(B)V	lf.c:Lih;	rf.v:Lgk;	WorldMap.icons	map icon list traversal for overview; a.a(IIIII)V @475,592 and oc.a(IBIII)V @286,369 getstatic.
+lf.a(B)V	lf.d:[I	ba.h:[I	Client.activeMapFunctionX	HD ed.a(IBIILbe;)V / SD fd.a(ILaj;III)V. Minimap builder HD kl.b stores the randomized collision grid's first subscript minus X origin here. Draw uses four times the stored tile relative to player X. TS src/client/Client.ts activeMapFunctionX.
+mk.c()V	mk.a:[F		GlLighting.sunDirection	HD cleanup and its native storage declaration
+mk.c()V	mk.j:[F		GlLighting.backDirection	HD cleanup and its native storage declaration
+mk.c()V	mk.h:[F		GlLighting.fogColour	HD cleanup and its native storage declaration
+gd.a(Z)V	gd.m:Lve;	ab.U:Lal;	MidiManager.m_pJagFX	First SoundBank constructor archive (JagFX); km.c(Z)Z @75 and a.a(Z)Z @63 getstatic.
+gd.a(Z)V	gd.i:Lna;	al.s:Lid;	Minimenu.targetName	Targeted component name after action verb and separator; bc.f(B)Lna; @144 and re.a(I)Lid; @97 getstatic.
+gd.a(Z)V	gd.b:Lna;	ha.f:Lid;	ObjType.defaultName	Unique 'null' operand in paired consumer h.<init>()V @40 and kl.<init>()V @35.
+gd.a(Z)V	gd.h:[I	nf.n:[I	ClientBuild.WSHAPE1	identical primitive array initializer 18 instructions
+gd.a(Z)V	gd.c:Lna;	qe.T:Lid;	Minimenu.plus	unique ('literal', ')0')
+gd.a(Z)V	gd.n:Lqf;	ai.k:Lvc;	TitleScreen.m_titleBack	Title background image loaded on opening title screen; oi.a(Lve;B)V @62 and ef.a(Lal;B)V @51 getstatic.
+gb.d()V	gb.L:[I	cb.G:[I	ModelUnlit.shareMap	shared subsystem cleanup cb.l()V
+gb.d()V	gb.Z:[I	cb.Y:[I	ModelUnlit.shareMap2	shared subsystem cleanup cb.l()V
+gb.d()V	gb.V:[I	cb.cb:[I	ModelUnlit.sin	shared subsystem cleanup cb.l()V
+gb.d()V	gb.N:[I	cb.D:[I	ModelUnlit.cos	shared subsystem cleanup cb.l()V
+sm.a(B)V	sm.l:[S	la.Z:[S	NpcType.clientPalette	Original HD me.a([Lub;IBIIIILtk;ILtk;)Lak; and SD ja.a([Lci;ILek;IIIBIILek;)Lnd;. Recolour selection uses an unsigned byte palette index on this short array. TS src/config/NpcType.ts clientPalette.
+sm.a(B)V	sm.c:Ln;	vf.S:Lve;	VarpType.m_recentUse	membermap Group 16 VarpType initialization, id lookup and configuration decode, or a sweep of its capacity-64 cache.
+sm.a(B)V	sm.k:Lim;	dd.e:Ldj;	Client.dnsRequest	Unique lookup of Client.dnsRequest in paired consumer; k.a(Lbe;Lna;I)Lna; @414,420,433,445 and client.a(Lid;Laj;B)Lid; @400,406,418,427 getstatic.
+sm.a(B)V	sm.d:Lna;	b.F:Lid;	LocalisedText.conlost	unique incoming localized constants ('Connexion perdue)3', 'Verbindung abgebrochen)3')
+sm.a(B)V	sm.e:[[[B	vb.c:[[[B	world.tileCameraClearance	reviewed operand Both allocate one byte per (level,x,z) at scene initialization. Both obstructed-camera routines scale this byte by eight before combining with the local heightmap. HD cd.a(IIIIZ)V @281 putstatic; SD mc.a(IIIIZ)V @239 putstatic; TS src/dash3d/world.ts tileCameraClearance.
+sm.a(B)V	sm.f:Lna;	b.D:Lid;	LocalisedText.englishConlost	unique ('literal', 'Connection lost)3')
+td.r()V	td.G:[J		GlModel.vertexKeys	HD cleanup and its native storage declaration
+td.r()V	td.D:Lwa;		GlModel.packet	HD cleanup and its native storage declaration
+td.r()V	td.T:Ljava/nio/ByteBuffer;		GlModel.uploadBuffer	HD cleanup and its native storage declaration
+td.r()V	td.bb:Ltd;		GlModel.tempActorStorage	HD cleanup and its native storage declaration
+td.r()V	td.jb:Ltd;		GlModel.tempActorModel	HD cleanup and its native storage declaration
+td.r()V	td.mb:Ltd;		GlModel.tempSpotStorage	HD cleanup and its native storage declaration
+td.r()V	td.nb:Ltd;		GlModel.tempSpotModel	HD cleanup and its native storage declaration
+td.r()V	td.ob:Ltd;		GlModel.tempLocStorage	HD cleanup and its native storage declaration
+td.r()V	td.pb:Ltd;		GlModel.tempLocModel	HD cleanup and its native storage declaration
+td.r()V	td.ub:[I		GlModel.shadowZ	HD cleanup and its native storage declaration
+td.r()V	td.qb:[I		GlModel.shadowX	HD cleanup and its native storage declaration
+h.b(I)V	h.yb:Lna;	vi.Z:Lid;	LocalisedText.germanIgnoreFirst	unique ('literal', ' zuerst von Ihrer Ignorieren)2Liste(Q')
+h.b(I)V	h.S:[I	vc.G:[I	Client.levelExperience	Widget CS1 operand 6 indexes XP thresholds by base level minus one. we.a(BILbe;)I @376; mj.a(Laj;IB)I @343 getstatic.
+h.b(I)V	h.zb:Lna;	gj.ab:Lid;	LocalisedText.chatcol2	unique incoming localized constants ('gr-Un:', 'vert:')
+h.b(I)V	h.wb:Lna;	gj.bb:Lid;	LocalisedText.defaultChatcol2	only remaining initializer alias of h.Bb:Lna; / gj.N:Lid;
+h.b(I)V	h.Bb:Lna;	gj.N:Lid;	LocalisedText.englishChatcol2	unique ('literal', 'green:')
+w.q()V	w.ab:Lw;	fc.k:Lfc;	ModelLitImpl.tempActorModel	shared subsystem cleanup fc.m()V
+w.q()V	w.fb:[B	fc.T:[B	ModelLitImpl.tempActorFaceAlpha	shared subsystem cleanup fc.m()V
+w.q()V	w.ib:[S	fc.P:[S	ModelLitImpl.tempActorFaceColour	shared subsystem cleanup fc.m()V
+w.q()V	w.db:[I	fc.O:[I	ModelLitImpl.tempActorFaceColourA	shared subsystem cleanup fc.m()V
+w.q()V	w.hb:[I	fc.X:[I	ModelLitImpl.tempActorFaceColourB	shared subsystem cleanup fc.m()V
+w.q()V	w.cb:[I	fc.W:[I	ModelLitImpl.tempActorFaceColourC	shared subsystem cleanup fc.m()V
+w.q()V	w.eb:Lw;	fc.V:Lfc;	ModelLitImpl.tempSpotModel	shared subsystem cleanup fc.m()V
+w.q()V	w.mb:[B	fc.db:[B	ModelLitImpl.tempSpotFaceAlpha	shared subsystem cleanup fc.m()V
+w.q()V	w.kb:[S	fc.eb:[S	ModelLitImpl.tempSpotFaceColour	shared subsystem cleanup fc.m()V
+w.q()V	w.lb:[I	fc.bb:[I	ModelLitImpl.tempSpotFaceColourA	shared subsystem cleanup fc.m()V
+w.q()V	w.ob:[I	fc.ab:[I	ModelLitImpl.tempSpotFaceColourB	shared subsystem cleanup fc.m()V
+w.q()V	w.jb:[I	fc.fb:[I	ModelLitImpl.tempSpotFaceColourC	shared subsystem cleanup fc.m()V
+w.q()V	w.nb:Lw;	fc.cb:Lfc;	ModelLitImpl.tempLocModel	shared subsystem cleanup fc.m()V
+w.q()V	w.Fb:[B	fc.hb:[B	ModelLitImpl.tempLocFaceAlpha	shared subsystem cleanup fc.m()V
+w.q()V	w.Vb:[S	fc.Lb:[S	ModelLitImpl.tempLocFaceColour	shared subsystem cleanup fc.m()V
+w.q()V	w.Lb:[I	fc.Nb:[I	ModelLitImpl.tempLocFaceColourA	shared subsystem cleanup fc.m()V
+w.q()V	w.Tb:[I	fc.jb:[I	ModelLitImpl.tempLocFaceColourB	shared subsystem cleanup fc.m()V
+w.q()V	w.wb:[I	fc.zb:[I	ModelLitImpl.tempLocFaceColourC	shared subsystem cleanup fc.m()V
+w.q()V	w.Jb:[Z	fc.pb:[Z	ModelLitImpl.faceClippedX	shared subsystem cleanup fc.m()V
+w.q()V	w.pb:[Z	fc.yb:[Z	ModelLitImpl.faceNearClipped	shared subsystem cleanup fc.m()V
+w.q()V	w.Pb:[I	fc.Jb:[I	ModelLitImpl.vertexScreenX	shared subsystem cleanup fc.m()V
+w.q()V	w.Eb:[I	fc.Cb:[I	ModelLitImpl.vertexScreenY	shared subsystem cleanup fc.m()V
+w.q()V	w.sb:[I	fc.Bb:[I	ModelLitImpl.vertexScreenZ	shared subsystem cleanup fc.m()V
+w.q()V	w.Wb:[I	fc.Ab:[I	ModelLitImpl.deferredParticleIndices	shared subsystem cleanup fc.m()V
+w.q()V	w.Ub:[I	fc.Fb:[I	ModelLitImpl.vertexViewSpaceX	shared subsystem cleanup fc.m()V
+w.q()V	w.Ab:[I	fc.rb:[I	ModelLitImpl.vertexViewSpaceY	shared subsystem cleanup fc.m()V
+w.q()V	w.tb:[I	fc.Mb:[I	ModelLitImpl.vertexViewSpaceZ	shared subsystem cleanup fc.m()V
+w.q()V	w.Sb:[I	fc.ib:[I	ModelLitImpl.tmpDepthFaceCount	shared subsystem cleanup fc.m()V
+w.q()V	w.yb:[[I	fc.lb:[[I	ModelLitImpl.tmpDepthFaces	shared subsystem cleanup fc.m()V
+w.q()V	w.Hb:[I	fc.kb:[I	ModelLitImpl.tmpExtendedDepthFaceCount	shared subsystem cleanup fc.m()V
+w.q()V	w.vb:[[I	fc.ub:[[I	ModelLitImpl.tmpExtendedDepthFaces	shared subsystem cleanup fc.m()V
+w.q()V	w.Db:[I	fc.gb:[I	ModelLitImpl.sortFaceDepths	shared subsystem cleanup fc.m()V
+w.q()V	w.Bb:[I	fc.sb:[I	ModelLitImpl.sortFaceIndices	shared subsystem cleanup fc.m()V
+w.q()V	w.qb:[I	fc.nb:[I	ModelLitImpl.tmpPriorityFaceCount	shared subsystem cleanup fc.m()V
+w.q()V	w.Kb:[[I	fc.vb:[[I	ModelLitImpl.tmpPriorityFaces	shared subsystem cleanup fc.m()V
+w.q()V	w.ub:[I	fc.tb:[I	ModelLitImpl.tmpPriority10FaceDepth	shared subsystem cleanup fc.m()V
+w.q()V	w.Nb:[I	fc.wb:[I	ModelLitImpl.tmpPriority11FaceDepth	shared subsystem cleanup fc.m()V
+w.q()V	w.Qb:[I	fc.Hb:[I	ModelLitImpl.tmpPriorityDepthSum	shared subsystem cleanup fc.m()V
+w.q()V	w.rb:[I	fc.Db:[I	ModelLitImpl.clippedX	shared subsystem cleanup fc.m()V
+w.q()V	w.xb:[I	fc.Eb:[I	ModelLitImpl.clippedY	shared subsystem cleanup fc.m()V
+w.q()V	w.Ib:[I	fc.qb:[I	ModelLitImpl.clippedColour	shared subsystem cleanup fc.m()V
+uf.a(I)V	uf.j:Ln;	vk.S:Lve;	PlayerModel.modelCache2	Original HD hh.a([Lub;ILtk;Ltk;IIIIZII)Lak; and SD cl.a(IILek;IZ[Lci;IIZLek;I)Lnd;. Looks up the cached animated body by appearance key, with last-successful-key fallback on unavailable parts. TS src/dash3d/PlayerModel.ts modelCache2.
+uf.a(I)V	uf.r:Lve;	mj.d:Lal;	MSITypeList.spritesArchive	Map scene icon sprite getter; aa.a(IB)Lek; @41,71 and da.a(IB)Lch; @47,63 getstatic.
+uf.a(I)V	uf.q:Lna;	nl.X:Lid;	Minimenu.nullTargetVerb	unique ('literal', 'Null')
+uf.a(I)V	uf.o:Lna;	bf.H:Lid;	Client.scrollbarSpriteName	unique ('literal', 'scrollbar')
+uf.a(I)V	uf.s:Lna;	rb.j:Lid;	Client.niceNumberGreen	unique ('literal', ' <col=00ff80>')
+uf.a(I)V	uf.d:Lna;	me.s:Lid;	LocalisedText.frenchMoreOptions	unique ('literal', ' autres options')
+ug.a(Z)V	ug.f:Lna;	rg.e:Lid;	LocalisedText.germanChatcol5	unique ('literal', 'weiss:')
+ug.a(Z)V	ug.d:[I	li.B:[I	ClientBuild.m_comtot	Original FinishBuild HD di.a([Lmj;ZI)V, SD al.a(I[Lke;Z)V and HD ni HSL decoder. Adds ni.u, computed as 512 times saturation times the lesser of lightness and one minus lightness, with minimum one. TS src/client/ClientBuild.ts m_comtot.
+ug.a(Z)V	ug.b:[F		MaterialManager.fogColour	HD storage declaration
+dl.a(I)V	dl.h:[[Z	tj.j:[[Z	world.visibilityMap	reviewed operand Both store the OR of the four corner grid positions into the tile grid. HD mf.a(IIIII[[[B[I[I[I[I[IIBII)V @504 getstatic; SD qc.a(IIIII[[[B[I[I[I[I[IIBII)V @468 getstatic; TS src/dash3d/world.ts visibilityMap.
+dl.a(I)V	dl.j:Lna;	qi.V:Lid;	LocalisedText.englishOpenedTitleScreen	unique ('literal', 'Opened title screen')
+dl.a(I)V	dl.k:Lna;	qi.X:Lid;	LocalisedText.openedTitleScreen	unique incoming localized constants (',Mcran)2titre ouvert', 'Titelbild ge-Offnet)3')
+le.b(I)V	le.c:Lrf;	qf.m:Lee;	MidiManager.track	only shutdown field of paired type Lee;
+fa.a()V	fa.b:Lih;		GlCleaner.bufferQueue	HD cleanup and its native storage declaration
+fa.a()V	fa.g:Lih;		GlCleaner.texture2dQueue	HD cleanup and its native storage declaration
+fa.a()V	fa.h:Lih;		GlCleaner.textureQueue	HD cleanup and its native storage declaration
+fa.a()V	fa.i:Lih;		GlCleaner.listQueue	HD cleanup and its native storage declaration
+fa.a()V	fa.j:[I		GlCleaner.names	HD cleanup and its native storage declaration
+cj.b(I)V	cj.e:[[S	m.C:[[S	PlayerModel.recolourDestinations	Original HD hh.a([Lub;ILtk;Ltk;IIIIZII)Lak; and SD cl.a(IILek;IZ[Lci;IIZLek;I)Lnd;. The first recolour maps primary sources to these destinations indexed by the player's selected colour. TS src/dash3d/PlayerModel.ts recolourDestinations.
+cj.b(I)V	cj.b:Lna;	r.Y:Lid;	LocalisedText.frenchChatcol5	unique ('literal', 'blanc:')
+cj.b(I)V	cj.n:Lim;	b.L:Ldj;	Client.openUrlRequest	Unique lookup of Client.openUrlRequest in paired consumer; gg.a(Z)V @4419,4425,4439 and t.c(I)V @4342,4348,4358 getstatic.
+cj.b(I)V	cj.i:[I	fi.n:[I	Client.npcIds	HD ed.a(IBIILbe;)V / SD fd.a(ILaj;III)V. Iterates active NPC ids and indexes the NPC entity registry at each id. TS src/client/Client.ts npcIds.
+oe.a(I)V	oe.j:Ln;	he.w:Lve;	LocType.m_recentUse	membermap LocType initialization and lookup in both JARs; location ids split into group id >>> 8 and file id & 255.
+oe.a(I)V	oe.m:Lna;	n.m:Lid;	LocalisedText.frenchLoadingPleaseWait	unique ('literal', 'Chargement de RuneScape en cours )2 veuillez patienter)3)3)3')
+oe.a(I)V	oe.k:Lna;	gl.B:Lid;	LocalisedText.germanChatcol11	unique ('literal', 'leuchten3:')
+oe.a(I)V	oe.i:[[I	ie.H:[[I	ScriptRunner.arrays	CS2 44/45/46 backing int[][] after bounds check; h.a(BILjl;)V @1717,1803,1876 and gh.a(Lwf;II)V @1662,1754,1827 getstatic.
+oe.a(I)V	oe.o:Lna;		Client.npcMapPrefix	HD storage declaration
+wc.a(I)V	wc.h:[[I	rg.q:[[I	world.minimapRotate	HD ma.a([IIIIII)V / SD vg.a([IIIIII)V. The second 16-entry table is looked up by tile rotation and indexes the shape pixel mask. TS src/dash3d/world.ts minimapRotate.
+wc.a(I)V	wc.i:[B	le.h:[B	DataFile.sectorBuffer	Sector write reuses the byte buffer for the index record, sector header and payload. HD ge.a(BII[BZ)Z @73 getstatic, 84 getstatic, 95 getstatic, 104 getstatic, 190 getstatic, 200 getstatic, 214 getstatic, 222 getstatic, 229 getstatic, 265 getstatic, 293 getstatic, 348 getstatic, 367 getstatic, 381 getstatic, 391 getstatic, 408 getstatic, 414 getstatic, 432 getstatic, 441 getstatic, 450 getstatic, 604 getstatic, 615 getstatic, 641 getstatic, 670 getstatic, 677 getstatic, 686 getstatic, 697 getstatic, 708 getstatic, 745 getstatic. SD cg.a(IIBZ[B)Z @123 getstatic, 132 getstatic, 146 getstatic, 157 getstatic, 206 getstatic, 217 getstatic, 227 getstatic, 235 getstatic, 242 getstatic, 255 getstatic, 290 getstatic, 333 getstatic, 351 getstatic, 363 getstatic, 379 getstatic, 394 getstatic, 400 getstatic, 415 getstatic, 424 getstatic, 438 getstatic, 585 getstatic, 593 getstatic, 617 getstatic, 628 getstatic, 639 getstatic, 646 getstatic, 667 getstatic, 689 getstatic, 727 getstatic.
+ok.a(I)V	ok.g:Lna;	nk.fb:Lid;	LocalisedText.germanLoadingTitleScreen	unique ('literal', 'Lade Titelbild )2 ')
+rk.a()V	rk.L:Lna;	mb.V:Lid;	PixfontGeneric.entityLt	shared subsystem cleanup mb.a()V
+rk.a()V	rk.K:Lna;	mb.N:Lid;	PixfontGeneric.entityGt	shared subsystem cleanup mb.a()V
+rk.a()V	rk.fb:Lna;	mb.W:Lid;	PixfontGeneric.entityNbsp	shared subsystem cleanup mb.a()V
+rk.a()V	rk.N:Lna;	mb.T:Lid;	PixfontGeneric.entityShy	shared subsystem cleanup mb.a()V
+rk.a()V	rk.cb:Lna;	mb.O:Lid;	PixfontGeneric.entityTimes	shared subsystem cleanup mb.a()V
+rk.a()V	rk.R:Lna;	mb.U:Lid;	PixfontGeneric.entityEuro	shared subsystem cleanup mb.a()V
+rk.a()V	rk.ob:Lna;	mb.kb:Lid;	PixfontGeneric.entityCopy	shared subsystem cleanup mb.a()V
+rk.a()V	rk.qb:Lna;	mb.A:Lid;	PixfontGeneric.entityReg	shared subsystem cleanup mb.a()V
+rk.a()V	rk.mb:Lna;	mb.Z:Lid;	PixfontGeneric.tagImage	shared subsystem cleanup mb.a()V
+rk.a()V	rk.kb:Lna;	mb.D:Lid;	PixfontGeneric.tagBreak	shared subsystem cleanup mb.a()V
+rk.a()V	rk.hb:Lna;	mb.eb:Lid;	PixfontGeneric.escapedLt	shared subsystem cleanup mb.a()V
+rk.a()V	rk.Z:Lna;	mb.gb:Lid;	PixfontGeneric.escapedGt	shared subsystem cleanup mb.a()V
+rk.a()V	rk.Y:Lna;	mb.Q:Lid;	PixfontGeneric.tagColour	shared subsystem cleanup mb.a()V
+rk.a()V	rk.T:Lna;	mb.E:Lid;	PixfontGeneric.tagColourEnd	shared subsystem cleanup mb.a()V
+rk.a()V	rk.O:Lna;	mb.ab:Lid;	PixfontGeneric.tagTrans	shared subsystem cleanup mb.a()V
+rk.a()V	rk.eb:Lna;	mb.fb:Lid;	PixfontGeneric.tagTransEnd	shared subsystem cleanup mb.a()V
+rk.a()V	rk.P:Lna;	mb.S:Lid;	PixfontGeneric.tagUnderline	shared subsystem cleanup mb.a()V
+rk.a()V	rk.bb:Lna;	mb.I:Lid;	PixfontGeneric.tagUnderlineDefault	shared subsystem cleanup mb.a()V
+rk.a()V	rk.ib:Lna;	mb.B:Lid;	PixfontGeneric.tagUnderlineEnd	shared subsystem cleanup mb.a()V
+rk.a()V	rk.M:Lna;	mb.G:Lid;	PixfontGeneric.tagShadow	shared subsystem cleanup mb.a()V
+rk.a()V	rk.lb:Lna;	mb.X:Lid;	PixfontGeneric.tagShadowDefault	shared subsystem cleanup mb.a()V
+rk.a()V	rk.X:Lna;	mb.jb:Lid;	PixfontGeneric.tagShadowEnd	shared subsystem cleanup mb.a()V
+rk.a()V	rk.Q:Lna;	mb.J:Lid;	PixfontGeneric.tagStrike	shared subsystem cleanup mb.a()V
+rk.a()V	rk.rb:Lna;	mb.db:Lid;	PixfontGeneric.tagStrikeDefault	shared subsystem cleanup mb.a()V
+rk.a()V	rk.pb:Lna;	mb.F:Lid;	PixfontGeneric.tagStrikeEnd	shared subsystem cleanup mb.a()V
+rk.a()V	rk.sb:Lna;	mb.L:Lid;	PixfontGeneric.splitBuffer	shared subsystem cleanup mb.a()V
+rk.a()V	rk.Ab:[Lna;	mb.vb:[Lid;	PixfontGeneric.splitLines	shared subsystem cleanup mb.a()V
+lg.b(I)V	lg.g:Lve;	gd.U:Lal;	LocType.m_pConfigClient	membermap LocType initialization and lookup in both JARs; location ids split into group id >>> 8 and file id & 255.
+lg.b(I)V	lg.j:Lna;	te.b:Lid;	LocalisedText.germanChatcol2	unique ('literal', 'gr-Un:')
+lg.b(I)V	lg.c:[Ltk;	sb.b:[Lek;	NpcType.slotSeqs	Original HD me.a([Lub;IBIIIILtk;ILtk;)Lak; and SD ja.a([Lci;ILek;IIIBIILek;)Lnd;. Each NPC layer stores the sequence later used for its special transform flag. TS src/config/NpcType.ts slotSeqs.
+mf.c(I)V	mf.T:Lna;	wf.A:Lid;	LocalisedText.englishRating	unique ('literal', 'rating: ')
+mf.c(I)V	mf.O:[[B	lk.x:[[B	Client.sceneMapLocData	reviewed operand The normal loc archive group is fetched with the per-region XTEA keys into this staging array. The HD code uses separate bi.Y for the unencrypted underwater locs. HD gd.c(I)V @109 getstatic; SD gj.e(I)V @96 getstatic; TS src/client/Client.ts sceneMapLocData.
+mf.c(I)V	mf.S:Lna;	wh.O:Lid;	LocalisedText.germanStarting3dLibrary	unique ('literal', 'Starte 3D)2Softwarebibliothek)3')
+mf.c(I)V	mf.W:Lve;	jl.f:Lal;	Client.varBitArchive	MainLoad JS5 archive 22
+mf.c(I)V	mf.U:Lna;	wf.w:Lid;	LocalisedText.rating	unique incoming localized constants ('Kampfstufe: ', 'classement ')
+mf.c(I)V	mf.q:Lna;	ff.M:Lid;	LocalisedText.germanOk	unique ('literal', 'Okay')
+mf.c(I)V	mf.x:Lha;	wk.s:Lbi;	Js5.gzipDecompressor	only shutdown field of paired type Lbi;
+mf.c(I)V	mf.K:Lna;	hg.d:Lid;	LocalisedText.frenchDrop	unique ('literal', 'Poser')
+ki.a()V	ki.e:[B	el.a:[B	MidiParser.m_msgLen	shared subsystem cleanup el.c()V
+te.d(I)V	te.y:Lve;	s.Y:Lal;	QuickChatPhraseTypeList.local	Quick-chat phrase local IDs, group 1; sj.b(II)Lcb; @41 and bb.b(II)Lpe; @57 getstatic.
+te.d(I)V	te.B:[I	cf.o:[I	ClientBuild.DECORZOF	HD p.a(IZIZLmj;IIIBII)V / SD nc.a(ZIIIIIIIZLke;I)V. The corresponding shape-5 Z displacement is width times this distinct rotation-indexed entry; HD subtracts eight times it from the shadow Z. TS src/client/ClientBuild.ts DECORZOF.
+te.d(I)V	te.H:[I	rb.i:[I	Client.mapBuildIndex	reviewed operand Both enumerate regional archive entries and split each ID into high-byte X and low-byte Z. HD gd.c(I)V @573 getstatic; SD gj.e(I)V @414 getstatic; TS src/client/Client.ts mapBuildIndex.
+jk.a(Z)V	jk.F:Lna;	wj.h:Lid;	Client.tweenCommand	unique ('literal', '::tween')
+jk.a(Z)V	jk.z:Ln;	gf.S:Lve;	IfType.m_modelCache	component model LRU get/put; be.a(ILtk;IIIZLhh;)Lak; @98,172 and aj.a(Lcl;IIZIZLek;)Lnd; @75,141 getstatic.
+jk.a(Z)V	jk.B:Lma;	ek.s:Lse;	Client.stream	membermap HD ri.a(B)V and SD le.a(I)V: ordered login request fields or stage-8 response assignments.
+em.a(Z)V	em.t:[[[I	ti.db:[[[I	ClientBuild.m_mapo	reviewed operand Both OR occlusion mask 4 into this (plane,x,z) array on the same placement branch; FinishBuild later consumes its bits. HD p.a(IZIZLmj;IIIBII)V @1395 getstatic; SD nc.a(ZIIIIIIIZLke;I)V @1171 getstatic; TS src/client/ClientBuild.ts m_mapo.
+em.a(Z)V	em.v:Ljava/lang/String;	sd.T:Ljava/lang/String;	Client.gameHost	JS5 connection hostname passed to Signlink socket request; client.h(I)V @335 and client.b(Z)V @316 getstatic.
+em.a(Z)V	em.A:Lna;	se.w:Lid;	LocalisedText.germanChatcol8	unique ('literal', 'blinken3:')
+em.a(Z)V	em.u:Lna;	de.z:Lid;	WorldList.objectTagArg	unique ('literal', ')1o')
+em.a(Z)V	em.x:Lcj;	ei.x:Lld;	PlayerTask.active	only shutdown field of paired type Lld;
+fd.b()V	fd.d:Ljava/lang/String;	eg.a:Ljava/lang/String;	WorldMapFont.charset	shared subsystem cleanup eg.c()V
+fd.b()V	fd.f:[I	eg.f:[I	WorldMapFont.glyphOffsets	shared subsystem cleanup eg.c()V
+jf.d()V	jf.a:[Lgi;		PointLightManager.lights	HD cleanup and its native storage declaration
+jf.d()V	jf.g:[[[I		PointLightManager.tileLights	HD cleanup and its native storage declaration
+jf.d()V	jf.h:[I		PointLightManager.slotLights	HD cleanup and its native storage declaration
+jf.d()V	jf.f:[Z		PointLightManager.enabled	HD cleanup and its native storage declaration
+jf.d()V	jf.b:[F		PointLightManager.position	HD cleanup and its native storage declaration
+jf.d()V	jf.c:[I		PointLightManager.pendingLights	HD cleanup and its native storage declaration
+jf.d()V	jf.m:[Z		PointLightManager.retainedSlots	HD cleanup and its native storage declaration
+gi.a(B)V	gi.f:Lna;	kl.F:Lid;	LocalisedText.englishUnableToFind	unique ('literal', 'Unable to find ')
+gi.a(B)V	gi.o:Lna;	sb.k:Lid;	LocalisedText.frenchLoadingWorldListData	unique ('literal', 'Chargement de la liste des serveurs')
+gi.a(B)V	gi.k:Lna;	cf.b:Lid;	LocalisedText.frenchChatcol8	unique ('literal', 'clignotant3:')
+gi.a(B)V	gi.b:Lna;	kl.T:Lid;	LocalisedText.unableToFind	unique incoming localized constants ('Impossible de trouver ', 'Spieler kann nicht gefunden werden: ')
+gi.a(B)V	gi.l:Lna;	gh.P:Lid;	LocalisedText.germanChatcol3	unique ('literal', 'blaugr-Un:')
+v.a(I)V	v.f:Lal;	mi.v:Lwi;	Client.js5MasterIndex	only shutdown field of paired type Lwi;
+v.a(I)V	v.a:Lna;	qa.V:Lid;	Client.urlAffidPart	Unique ')4a=' operand in paired consumer be.a(Z)Lna; @111 and ce.c(I)Lid; @99.
+v.a(I)V	v.c:[F		MaterialManager.underwaterColour	HD storage declaration
+v.a(I)V	v.d:Lna;	hg.e:Lid;	Client.clientDropCommand	unique ('literal', '::clientdrop')
+v.a(I)V	v.b:Lbe;	m.G:Laj;	Minimenu.highlightComponent	Timed selection highlight invalidated and cleared prior to active drag component; gg.a(Z)V @2667,2691 and t.c(I)V @2608,2632 getstatic.
+ii.a(I)V	ii.j:Lna;	ca.b:Lid;	LocalisedText.frenchLoadedInterfaces	unique ('literal', 'Interfaces charg-Bes')
+ii.a(I)V	ii.e:Lna;	cd.a:Lid;	GameWorld.noActivity	Unique ')2' operand in paired consumer wb.a(Lba;IILba;Z)I @106,121,149 and ek.a(BLqk;ZILqk;)I @105,121,147.
+ii.a(I)V	ii.g:Lna;	te.h:Lid;	LocalisedText.englishSelfFriend	unique ('literal', 'You can(Wt add yourself to your own friend list)3')
+ii.a(I)V	ii.q:Lna;	te.i:Lid;	LocalisedText.selfFriend	unique incoming localized constants ('Sie k-Onnen sich selbst nicht auf Ihre Freunde)2Liste setzen(Q', 'Vous ne pouvez pas ajouter votre nom -9 votre liste d(Wamis)3')
+il.f(B)V	il.J:Lna;	ri.U:Lid;	LocalisedText.englishCreatedGameworld	unique ('literal', 'Created gameworld')
+il.f(B)V	il.R:Lna;	fl.d:Lid;	LocalisedText.frenchLoadedWorldList	unique ('literal', 'Liste des serveurs charg-Be')
+il.f(B)V	il.Q:Lna;	og.l:Lid;	LocalisedText.frenchLoadedTextures	unique ('literal', 'Textures charg-Bes')
+il.f(B)V	il.M:Lna;	ri.P:Lid;	LocalisedText.createdGameworld	unique incoming localized constants ('Monde de jeu cr-B-B', 'Spielwelt erstellt)3')
+tl.a(I)V	tl.g:Lna;	j.d:Lid;	LocalisedText.frenchChateffect3	unique ('literal', 'tremblement:')
+tl.a(I)V	tl.c:Ln;	ra.M:Lve;	ObjType.modelCache	HD h.a(IIILtk;II)Lak; / SD kl.a(Lek;IIIII)Lnd;. The animated inventory model builder probes by obj type id and caches the newly lit result at that same key before animating/scaling. TS src/config/ObjType.ts modelCache.
+tl.a(I)V	tl.i:Lna;	bj.g:Lid;	JagString.comma	Unique ')1' operand in paired consumer oj.a(IZIJI)Lna; @49,72,85,108 and ui.a(JIIBZ)Lid; @44,70,91,111.
+tl.a(I)V	tl.f:Lna;	ib.Y:Lid;	Protocol.assistRequestSuffix	unique ('literal', ':assist:')
+tl.a(I)V	tl.e:Lna;	ra.V:Lid;	LocalisedText.englishLoadedFonts	unique ('literal', 'Loaded fonts')
+tl.a(I)V	tl.h:Lna;	ra.Y:Lid;	LocalisedText.loadedFonts	unique incoming localized constants ('Polices charg-Bes', 'Schrifts-=tze geladen)3')
+kb.d()V	kb.i:[I	td.g:[I	Pix2D.pixels	shared subsystem cleanup td.a()V
+kb.d()V	kb.f:[I	td.f:[I	Pix2D.maskOffsets	shared subsystem cleanup td.a()V
+kb.d()V	kb.g:[I	td.a:[I	Pix2D.maskLengths	shared subsystem cleanup td.a()V
+ac.a(I)V	ac.l:Lck;	tb.o:Lmg;	BASTypeList.defaultType	only shutdown field of paired type Lmg;
+ac.a(I)V	ac.e:[[[B	lg.A:[[[B	ClientBuild.m_floorr	reviewed operand The tile opcode 2..49 branch assigns (rotation + opcode - 2) & 3 to the overlay quarter turn. HD wj.a(IIZLwa;IIBII)V @358 getstatic; SD fi.a(ZLgd;IIIIIZI)V @347 getstatic; TS src/client/ClientBuild.ts m_floorr.
+ac.a(I)V	ac.m:Lna;	tb.B:Lid;	WorldMap.overlay	unique ('literal', 'overlay')
+ac.a(I)V	ac.i:Lih;	db.s:Lgk;	Client.timerEvents	Timer hooks append with no mouse-relative coordinates; client.a([Lbe;IIIIIII)V @2087 and client.a([Laj;IIIIIII)V @2048 getstatic.
+ac.a(I)V	ac.p:Lbe;	vf.Y:Laj;	ComponentDrag.parent	Drag parent width, height and scroll offsets clamp the dragged component; ac.b(I)V @92,129,164,187,234,244 and fl.b(B)V @113,138,166,192,217,244 getstatic.
+ha.b(I)V	ha.i:Lqf;	ek.w:Lvc;	MinimapBuilder.minimapImage	Current minimap image inspected before generating the 512x512 sprite; kl.b(II)Z @34,61 and ph.a(IZ)Z @32,38 getstatic.
+ha.b(I)V	ha.p:Lgn;	ed.c:Lvj;	InvType.m_recentUse	Container definition cache around config fetch. HD u.a(II)Lmd; @19 getstatic, 80 getstatic. SD me.b(BI)Lpj; @18 getstatic, 75 getstatic.
+ha.b(I)V	ha.k:[[Z	client.hb:[[Z	world.cornerVisibility	reviewed operand Both fill corner tests first; four adjacent corner cells supply each tile visibility bit. HD mf.a(IIIII[[[B[I[I[I[I[IIBII)V @423 getstatic; SD qc.a(IIIII[[[B[I[I[I[I[IIBII)V @387 getstatic; TS src/dash3d/world.ts cornerVisibility.
+hn.e(I)V	hn.K:Ljava/util/Calendar;	ok.s:Ljava/util/Calendar;	ScriptRunner.calendar	reviewed operand Class initializers call Calendar.getInstance. Date opcode 4104 reads this calendar.
+hn.e(I)V	hn.W:Lna;	t.W:Lid;	Minimenu.targetVerb	Targeted component verb preceding component name; bc.f(B)Lna; @132 and re.a(I)Lid; @85 getstatic.
+rg.c(I)V	rg.z:Lve;	gd.E:Lal;	Client.jingleArchive	MainLoad JS5 archive 11
+rg.c(I)V	rg.r:[Lna;	pa.qb:[Lid;	Client.friendWorldName	two method windows ac.a(B)Z, fb.a(JB)V
+rg.c(I)V	rg.u:Lna;	jf.d:Lid;	LocalisedText.englishStarted3dLibrary	unique ('literal', 'Started 3d Library')
+rg.c(I)V	rg.A:[I	pg.P:[I	NpcType.slotFrameCycles	Original HD me.a([Lub;IBIIIILtk;ILtk;)Lak; and SD ja.a([Lci;ILek;IIIBIILek;)Lnd;. Current layer cycle from ub.l/ci.d, passed minus one to masked animation. TS src/config/NpcType.ts slotFrameCycles.
+rg.c(I)V	rg.E:Lna;	jf.l:Lid;	LocalisedText.started3dLibrary	unique incoming localized constants ('3D)2Softwarebibliothek gestartet)3', 'Librairie 3D d-Bmarr-Be')
+gn.a(B)V	gn.t:Lve;	nh.N:Lal;	QuickChatCatTypeList.local	Quick-chat category local IDs, group 0; tb.b(IB)Lbc; @36 and ib.a(BI)Lpg; @47 getstatic.
+gn.a(B)V	gn.v:Lna;	wf.t:Lid;	EnumType.nullText	Unique 'null' operand in paired consumer ml.<init>()V @5 and lg.<init>()V @5.
+gn.a(B)V	gn.i:Ln;	cf.f:Lve;	IfType.m_fontCache	component font LRU get/put; be.a([Lok;I)Lrk; @24,86 and aj.a([Lsi;B)Lmb; @22,88 getstatic.
+wl.a(I)V	wl.q:Lrk;	uf.b:Lmb;	Client.fontBold12	reviewed operand This font receives the shared icon sprites; the title renderer passes this exact font to paint the loading screen. HD cg.a(ILve;)V @191 getstatic; SD uf.a(Lal;I)V @201 getstatic; TS src/client/Client.ts fontBold12.
+wl.a(I)V	wl.d:Lna;	ed.n:Lid;	SpriteLoader.compassName	unique ('literal', 'compass')
+wl.a(I)V	wl.s:Lve;	fk.db:Lal;	Client.locConfigArchive	MainLoad JS5 archive 16
+wl.a(I)V	wl.h:Lbe;	bh.l:Laj;	InterfaceList.viewportComponent	CS2 6203 viewport component width/height fed to viewport calculation; h.a(BILjl;)V @23575,23584 and gh.a(Lwf;II)V @16798,16805 getstatic.
+tg.a(I)V	tg.i:Lna;	gk.a:Lid;	Client.playerCacheCommand	unique ('literal', '::pcachesize')
+tg.a(I)V	tg.g:[[[B	ka.m:[[[B	ClientBuild.m_floort2	reviewed operand The tile opcode 2..49 branch assigns the signed byte read from the packet to this overlay type id. HD wj.a(IIZLwa;IIBII)V @321 getstatic; SD fi.a(ZLgd;IIIIIZI)V @313 getstatic; TS src/client/ClientBuild.ts m_floort2.
+tg.a(I)V	tg.a:Ljava/awt/FontMetrics;	wg.a:Ljava/awt/FontMetrics;	GameShell.progressFontMetrics	only shutdown field of paired type Ljava/awt/FontMetrics;
+tg.a(I)V	tg.e:Lna;	hd.p:Lid;	Minimenu.locColour	unique ('literal', '<col=00ffff>')
+tg.a(I)V	tg.d:[Lqf;	di.m:[Lvc;	SpriteLoader.cross	membermap HD ui.a / SD kk.a: ordered projection inputs, crosshair/arrow sprite selection, or viewport menu call sites.
+ni.a(B)V	ni.p:Lna;	kg.e:Lid;	LocalisedText.englishLoadedInputHandler	unique ('literal', 'Loaded input handler')
+ni.a(B)V	ni.j:Lna;	kg.f:Lid;	LocalisedText.loadedInputHandler	unique incoming localized constants ('Eingabeprozedur geladen)3', 'Gestionnaire de saisie charg-B')
+ni.a(B)V	ni.k:Lve;	ok.t:Lal;	Client.objConfigArchive	MainLoad JS5 archive 19
+ni.a(B)V	ni.n:Lsm;	g.j:Lwj;	LocType.modelResult	reviewed operand Shared temporary loc model-and-shadow result. Both animated and unanimated loc getters return this same container. HD pb.a(IILek;ILtk;I[[IZII[[IIII)Lsm; @245 getstatic; SD jb.a(IIIIII[[IIZIBLch;[[ILek;)Lwj; @276 getstatic; TS src/config/LocType.ts modelResult.
+dm.b(I)V	dm.n:Lna;	me.x:Lid;	Client.percentSign	reviewed operand Both append this string after the numeric archive progress in the loading message; the class initializers encode the percent sign. HD client.i(I)V @756 getstatic; SD client.f(B)V @777 getstatic; TS src/client/Client.ts percentSign.
+dm.b(I)V	dm.v:Lna;	hc.e:Lid;	LocalisedText.englishLoadingTitleScreen	unique ('literal', 'Loading title screen )2 ')
+dm.b(I)V	dm.B:Lna;	wd.a:Lid;	LocalisedText.englishLoading	unique ('literal', 'Loading)3)3)3')
+dm.b(I)V	dm.j:Lna;	pk.f:Lid;	CookieStatics.space	cookie date/time spacer, cj.a(JB)Lna; / gk.a(IJ)Lid; or the CS2 4104 body
+dm.b(I)V	dm.e:Lna;	wd.f:Lid;	LocalisedText.LOADINGDOTDOTDOT	unique incoming localized constants ('Chargement en cours)3)3)3', 'Lade)3)3)3')
+dm.b(I)V	dm.h:Lna;	jb.db:Lid;	LocalisedText.germanRemoveFriend	unique ('literal', 'Bitte entfernen Sie ')
+dm.b(I)V	dm.d:Lna;	hc.g:Lid;	LocalisedText.loadingTitleScreen	unique incoming localized constants ('Chargement de l(W-Bcran)2titre )2 ', 'Lade Titelbild )2 ')
+lk.d(I)V	lk.J:Lna;	ef.H:Lid;	Client.urlSettingsParam	Unique ')4p=' operand in paired consumer be.a(Z)Lna; @61 and ce.c(I)Lid; @47.
+lk.d(I)V	lk.P:Lna;	dg.k:Lid;	LocalisedText.englishLoadingFonts	unique ('literal', 'Loading fonts )2 ')
+lk.d(I)V	lk.S:Lna;	jd.k:Lid;	LocalisedText.englishAlreadyFriend	unique ('literal', ' is already on your friend list)3')
+lk.d(I)V	lk.X:Lna;	dg.i:Lid;	LocalisedText.loadingFonts	unique incoming localized constants ('Chargement des polices )2 ', 'Lade Schrifts-=tze )2 ')
+lk.d(I)V	lk.ab:Lna;	jd.j:Lid;	LocalisedText.alreadyFriend	unique incoming localized constants (' est d-Bj-9 dans votre liste d(Wamis)3', ' steht bereits auf Ihrer Freunde)2Liste(Q')
+pl.a(Z)V	pl.b:Lna;	ib.U:Lid;	LocalisedText.englishLoadedWordpack	unique ('literal', 'Loaded wordpack')
+pl.a(Z)V	pl.c:[I	cf.m:[I	ClientKeyboardListener.m_keycodeMap	identical primitive array initializer 2086 instructions
+pl.a(Z)V	pl.d:Lna;	ui.A:Lid;	LocalisedText.frenchRating	unique ('literal', 'classement ')
+pl.a(Z)V	pl.f:Lna;	va.S:Lid;	Protocol.tradeReqSuffix	unique ('literal', ':tradereq:')
+pl.a(Z)V	pl.a:[Lba;	oc.i:[Lqk;	WorldList.worlds	World lookup subtracts the lowest world ID and returns that indexed entry. HD ed.b(II)Lba; @48 getstatic. SD ii.b(II)Lqk; @45 getstatic.
+pl.a(Z)V	pl.e:[I	mh.h:[I	Minimenu.paramB	AddEntry appends first tile/slot argument at menu size; hj.a(IJBLna;ISLna;I)V @112 and tb.a(BLid;SLid;IIJI)V @91 getstatic.
+pl.a(Z)V	pl.g:Lna;	ib.W:Lid;	LocalisedText.loadedWordpack	unique incoming localized constants ('Module texte charg-B', 'Wordpack geladen)3')
+ph.a(I)V	ph.b:[[Lli;		Environment.grid	HD tm.a writes the environment at [baseX>>3][baseZ>>3] after reading the terrain trailer, verified in dynamic-chunk-lights.test.ts. TS src/dash3d/Environment.ts grid.
+ph.a(I)V	ph.d:Lna;	vi.eb:Lid;	LocalisedText.ok	unique incoming localized constants ('OK', 'Okay')
+ph.a(I)V	ph.c:Lna;	vi.cb:Lid;	LocalisedText.englishOk	unique ('literal', 'Ok')
+ck.a(Z)V	ck.O:Lna;	u.e:Lid;	ScriptRunner.monthDec	CS2 4104 date month Dec stored in calendar order by both class initializers
+ck.a(Z)V	ck.y:Lna;	th.c:Lid;	LocalisedText.loadedWorldList	unique incoming localized constants ('Liste der Welten geladen', 'Liste des serveurs charg-Be')
+ck.a(Z)V	ck.T:Lna;	u.a:Lid;	ScriptRunner.monthJan	CS2 4104 date month Jan stored in calendar order by both class initializers
+ck.a(Z)V	ck.L:Lna;	u.n:Lid;	ScriptRunner.monthJun	CS2 4104 date month Jun stored in calendar order by both class initializers
+ck.a(Z)V	ck.c:Lna;	qf.e:Lid;	LocalisedText.germanLoadingConfig	unique ('literal', 'Lade Konfiguration )2 ')
+ck.a(Z)V	ck.B:Lna;	u.p:Lid;	ScriptRunner.monthJul	CS2 4104 date month Jul stored in calendar order by both class initializers
+ck.a(Z)V	ck.Y:Lna;	u.d:Lid;	ScriptRunner.monthNov	CS2 4104 date month Nov stored in calendar order by both class initializers
+ck.a(Z)V	ck.d:[I	tj.d:[I	ClientBuild.DECORXOF	HD p.a(IZIZLmj;IIIBII)V / SD nc.a(ZIIIIIIIZLke;I)V. For wall shape 5, decorator X displacement passed to the scene is width times this rotation-indexed entry, and HD subtracts eight times it for the shadow. TS src/client/ClientBuild.ts DECORXOF.
+ck.a(Z)V	ck.o:Lna;	th.f:Lid;	LocalisedText.englishLoadedWorldList	unique ('literal', 'Loaded world list data')
+ck.a(Z)V	ck.f:[Lna;	u.g:[Lid;	ScriptRunner.months	CS2 4104 months array, cj.a(JB)Lna; / gk.a(IJ)Lid; or the CS2 4104 body
+ck.a(Z)V	ck.D:Lna;	ge.Z:Lid;	Minimenu.objName	Selected inventory object name concatenated between Use and arrow; bc.f(B)Lna; @42 and re.a(I)Lid; @46 getstatic.
+ck.a(Z)V	ck.b:Lna;	nc.k:Lid;	LocalisedText.englishDiscard	unique ('literal', 'Discard')
+ck.a(Z)V	ck.n:Lna;	u.u:Lid;	ScriptRunner.monthMay	CS2 4104 date month May stored in calendar order by both class initializers
+ck.a(Z)V	ck.V:Lna;	u.m:Lid;	ScriptRunner.monthSep	CS2 4104 date month Sep stored in calendar order by both class initializers
+ck.a(Z)V	ck.i:Lna;	nc.h:Lid;	LocalisedText.discard	unique incoming localized constants ('Ablegen', 'Jeter')
+ck.a(Z)V	ck.S:Lna;	u.v:Lid;	ScriptRunner.monthOct	CS2 4104 date month Oct stored in calendar order by both class initializers
+ck.a(Z)V	ck.db:Lna;	u.j:Lid;	ScriptRunner.monthApr	CS2 4104 date month Apr stored in calendar order by both class initializers
+ck.a(Z)V	ck.hb:Lna;	u.w:Lid;	ScriptRunner.monthFeb	CS2 4104 date month Feb stored in calendar order by both class initializers
+ck.a(Z)V	ck.l:Lna;	u.t:Lid;	ScriptRunner.monthAug	CS2 4104 date month Aug stored in calendar order by both class initializers
+ck.a(Z)V	ck.J:[[[B	af.J:[[[B	WorldMap.overlayIds	ground overlay ID; dk.a(Lwa;Z)V @277,292,306 and gl.a(Lgd;I)V @298,310,324 getstatic.
+ck.a(Z)V	ck.gb:Lna;	u.s:Lid;	ScriptRunner.monthMar	CS2 4104 date month Mar stored in calendar order by both class initializers
+eg.a(I)V	eg.B:Lna;	vj.w:Lid;	LocalisedText.englishChateffect5	unique ('literal', 'slide:')
+eg.a(I)V	eg.e:Li;	hd.b:Lbe;	Protocol.inPacket	membermap HD ri.a(B)V and SD le.a(I)V: ordered login request fields or stage-8 response assignments.
+eg.a(I)V	eg.y:Lna;	dl.l:Lid;	LocalisedText.frenchDiscard	unique ('literal', 'Jeter')
+eg.a(I)V	eg.u:Lna;	vj.v:Lid;	LocalisedText.defaultChateffect5	only remaining initializer alias of eg.B:Lna; / vj.w:Lid;
+eg.a(I)V	eg.z:Lna;	vj.p:Lid;	LocalisedText.chateffect5	unique incoming localized constants ('gleiten:', 'glissement:')
+eg.a(I)V	eg.A:Lna;	rk.n:Lid;	LocalisedText.germanLoadedSprites	unique ('literal', 'Sprites geladen)3')
+kk.a(Z)V	kk.a:Lna;	qe.kb:Lid;	LocalisedText.frenchAllocatingMemory	unique ('literal', 'M-Bmoire en cours d(Wattribution')
+kk.a(Z)V	kk.m:Lna;	bh.e:Lid;	ScriptRunner.scriptErrorMessage	unique ('literal', 'Clientscript error )2 check log for details')
+eh.a(B)V	eh.h:Lna;	d.i:Lid;	LocalisedText.germanTradeRequest	unique ('literal', 'm-Ochte mit Ihnen handeln)3')
+eh.a(B)V	eh.i:Lna;	e.g:Lid;	LocalisedText.germanFriendFirst	unique ('literal', ' zuerst von Ihrer Freunde)2Liste(Q')
+eh.a(B)V	eh.f:Lve;	mf.k:Lal;	NpcType.m_pConfigClient	NPC definition archive in GetType; rg.b(II)Lme; @32 and uk.a(II)Lja; @27 getstatic.
+eh.a(B)V	eh.g:[[[I	ai.a:[[[I	WorldMap.mapScenes	packed mapscene attributes; nc.a(BLwa;)V @464,476,490 and sj.b(ILgd;)V @358,370,384 getstatic.
+md.d(I)V	md.J:Lna;	li.C:Lid;	LocalisedText.frenchStarting3dLibrary	unique ('literal', 'D-Bmarrage de la librairie 3D')
+md.d(I)V	md.X:Lna;	dd.q:Lid;	LocalisedText.frenchUnableToFind	unique ('literal', 'Impossible de trouver ')
+md.d(I)V	md.L:Ljava/awt/Canvas;	pe.S:Ljava/awt/Canvas;	GameShell.canvas	only shutdown field of paired type Ljava/awt/Canvas;
+md.d(I)V	md.O:Lna;	sg.a:Lid;	LocalisedText.frenchLoadedConfig	unique ('literal', 'Fichiers config charg-Bs')
+md.d(I)V	md.T:Lna;	jf.f:Lid;	Client.shiftClickDisabled	unique ('literal', 'Shift)2click disabled)3')
+md.d(I)V	md.V:[[S	pk.c:[[S	PlayerModel.recolourDestinationsRs	Client startup assigns the two recolour palette sets to the actual actor-builder statics in both JARs. Both startup selectors set the primary destinations to this RS palette alongside sources beginning 6798. TS src/dash3d/PlayerModel.ts recolourDestinationsRs.
+md.d(I)V	md.Q:Lna;	sj.N:Lid;	Client.memoryCommand	unique ('literal', '::mm')
+md.d(I)V	md.P:Lna;	ab.V:Lid;	LocalisedText.frenchClose	unique ('literal', 'Fermer')
+ml.f(I)V	ml.S:Lna;	c.r:Lid;	LocalisedText.germanThousandsSuffix2	unique ('literal', 'T')
+cb.d(I)V	cb.gb:Lna;	vc.H:Lid;	LocalisedText.englishLoadedTitleScreen	unique ('literal', 'Loaded title screen')
+cb.d(I)V	cb.Y:Ln;	fa.b:Lve;	ObjType.types	Object definition cache around config fetch. HD fk.a(IB)Lh; @0 getstatic, 214 getstatic. SD rg.a(II)Lkl; @17 getstatic, 216 getstatic.
+cb.d(I)V	cb.db:Lna;	vc.N:Lid;	LocalisedText.loadedTitleScreen	unique incoming localized constants (',Mcran)2titre charg-B', 'Titelbild geladen)3')
+cb.d(I)V	cb.cb:Lna;	ad.e:Lid;	TitleScreen.titleBgName	unique ('literal', 'titlebg')
+cb.d(I)V	cb.fb:Lna;	oi.c:Lid;	Minimenu.opIndexSeparator	Unique ': ' operand in paired consumer wk.a(I[Lna;)[Lna; @57 and fl.a([Lid;I)[Lid; @33.
+cb.d(I)V	cb.eb:Lna;	sj.J:Lid;	Client.nameIconsName	unique ('literal', 'name_icons')
+cb.d(I)V	cb.ab:Lna;	d.m:Lid;	Minimenu.locArrow	unique ('literal', ' )2> <col=00ffff>')
+cb.d(I)V	cb.hb:Lle;	al.z:Lll;	MidiManager.cache	only shutdown field of paired type Lll;
+cb.d(I)V	cb.I:[I	pa.zb:[I	Client.changedInvs	Changed container ring takes ID masked with 32767. ac.a(B)Z @7646, 10376, 11967; rg.a(B)Z @2033, 10661, 11145 getstatic.
+af.a(B)V	af.l:[S		Minimenu.playerAction	HD storage declaration
+af.a(B)V	af.a:Lve;	ef.K:Lal;	AnimFrameSet.framesArchive	Frame files passed third to frameset factory, immediately after flag; fl.b(II)Lcl; @54 and gb.a(II)Lhf; @39 getstatic.
+af.a(B)V	af.g:Lna;	be.Ib:Lid;	Client.hintMapedgeSpriteName	unique ('literal', 'hint_mapedge')
+af.a(B)V	af.m:Lna;	bc.f:Lid;	WorldMap.lineBreak	Unique '<br>' operand in paired consumer h.a(BILjl;)V @16375,16474 and gh.a(Lwf;II)V @12218,12317.
+af.a(B)V	af.f:Lna;	rj.b:Lid;	LocalisedText.germanMembersObject	unique ('literal', 'Gegenstand f-Ur Mitglieder')
+bc.e(I)V	bc.N:Llb;	lh.c:Lc;	ColourImageCache.residentSentinel	only shutdown field of paired type Lc;
+ic.a(B)V	ic.d:Lna;	uj.c:Lid;	LocalisedText.frenchLoadedUpdateList	unique ('literal', 'Liste des mises -9 jour charg-Be')
+ic.a(B)V	ic.e:[I	oc.c:[I	ClientVarCache.m_varServ	Server-side varp is compared and copied into the current value in the synchronization packet. ac.a(B)Z @6462, 6486; rg.a(B)Z @5507, 5519 getstatic.
+ic.a(B)V	ic.i:Lna;	oh.f:Lid;	LocalisedText.germanIgnoresFull	unique ('literal', 'Ihre Ignorieren)2Liste ist voll)1 Sie k-Onnen nur 100 Spieler darauf eintragen)3')
+ic.a(B)V	ic.l:[I	sf.e:[I	Client.friendRank	two method windows ac.a(B)Z, fb.a(JB)V
+ic.a(B)V	ic.m:Lna;	se.v:Lid;	LocalisedText.frenchLoadedSprites	unique ('literal', 'Sprites charg-Bs')
+ic.a(B)V	ic.a:Lqf;	ff.u:Lvc;	Client.imageCompass	reviewed operand Both draw this same compass sprite using half its width and height as the rotation origin. HD mj.a(IILbe;IB)V @112 getstatic; SD ke.a(ILaj;III)V @15 getstatic; TS src/client/Client.ts imageCompass.
+ia.b(B)V	ia.d:[I	jf.b:[I	Client.friendWorld	HD ed.a(IBIILbe;)V / SD fd.a(ILaj;III)V. The matching friend must also have a nonzero world at the same slot. TS src/client/Client.ts friendWorld.
+aa.a(I)V	aa.d:Lna;	mg.N:Lid;	LocalisedText.defaultChatcol9	only remaining initializer alias of aa.r:Lna; / mg.K:Lid;
+aa.a(I)V	aa.h:[S	uh.Y:[S	PlayerModel.recolourSourcesAlt	identical primitive array initializer 22 instructions
+aa.a(I)V	aa.r:Lna;	mg.K:Lid;	LocalisedText.englishChatcol9	unique ('literal', 'glow1:')
+aa.a(I)V	aa.t:[Lpc;		MaterialManager.materials	HD storage declaration
+aa.a(I)V	aa.g:Lna;	mg.I:Lid;	LocalisedText.chatcol9	unique incoming localized constants ('brillant1:', 'leuchten1:')
+nk.a(I)V	nk.O:Le;	te.g:Lpb;	Client.localPlayer	reviewed operand Local player. Both ground-item menu oracles set the path origin on this instance. Absolute relocation in the HD gamepack compares the actor with this exact static.
+nk.a(I)V	nk.d:[I	vg.U:[I	TextureOp.normalisedX	membermap Texture graph decode, size or gamma setup and source binding in HD lc.a and SD jd.a.
+nk.a(I)V	nk.o:Lna;	d.a:Lid;	LocalisedText.germanOpenedTitleScreen	unique ('literal', 'Titelbild ge-Offnet)3')
+nk.a(I)V	nk.L:[Lmm;	vb.d:[Lrh;	Client.imageMapfunction	Software mapfunction sprites loaded for recolouring; cg.a(ILve;)V @448,455,493,504,517,539 and uf.a(Lal;I)V @329,358,383 getstatic.
+nk.a(I)V	nk.n:[Lsl;	pi.o:[Lvd;	Client.soundEffects	only shutdown field of paired type [Lvd;
+uh.d(I)V	uh.O:Lna;	ma.a:Lid;	LocalisedText.germanLoadedInterfaces	unique ('literal', 'Benutzeroberfl-=che geladen)3')
+uh.d(I)V	uh.Y:Lna;	mc.v:Lid;	Client.huffmanGroup	unique ('literal', 'huffman')
+uh.d(I)V	uh.fb:Lna;	ka.o:Lid;	LocalisedText.germanLoadingPleaseWait	unique ('literal', 'RuneScape wird geladen )2 bitte warten)3)3)3')
+uh.d(I)V	uh.P:Lve;	g.o:Lal;	MidiManager.m_pVorbis	Second SoundBank constructor archive (Vorbis); km.c(Z)Z @78 and a.a(Z)Z @66 getstatic.
+uh.d(I)V	uh.ab:Lq;	sa.p:Llh;	LRUHashCache.referenceFactory	only shutdown field of paired type Llh;
+sd.d(I)V	sd.O:Lna;	si.m:Lid;	LocalisedText.faceHere	unique incoming localized constants ('Hierhin drehen', 'Regarder dans cette direction')
+sd.d(I)V	sd.J:Lna;	mg.M:Lid;	LocalisedText.frenchAttemptToReestablish	unique ('literal', 'Veuillez patienter )2 tentative de r-Btablissement)3')
+sd.d(I)V	sd.V:[I	gk.i:[I	InterfaceList.rootWidth	Root bounds assignment to current root index, widget width; gn.a(III[Lbe;IIIIBI)V @149 and lf.a(I[Laj;IIIIIIZI)V @112 getstatic.
+sd.d(I)V	sd.P:Lna;	ig.z:Lid;	LocalisedText.germanLoadedWorldList	unique ('literal', 'Liste der Welten geladen')
+sd.d(I)V	sd.M:Lna;	si.g:Lid;	LocalisedText.englishFaceHere	unique ('literal', 'Face here')
+hf.e()V	hf.c:[I	dc.d:[I	Pix3D.scanline	shared subsystem cleanup dc.b()V
+hf.e()V	hf.a:[I	dc.o:[I	Pix3D.colourTable	shared subsystem cleanup dc.b()V
+hf.e()V	hf.e:Lm;	dc.r:Lpc;	Pix3D.textureProvider	shared subsystem cleanup dc.b()V
+hf.e()V	hf.f:[I	dc.c:[I	Pix3D.divTable	shared subsystem cleanup dc.b()V
+hf.e()V	hf.h:[I	dc.k:[I	Pix3D.divTable2	shared subsystem cleanup dc.b()V
+hf.e()V	hf.g:[I	dc.l:[I	Pix3D.sinTable	shared subsystem cleanup dc.b()V
+hf.e()V	hf.r:[I	dc.g:[I	Pix3D.cosTable	shared subsystem cleanup dc.b()V
+fi.b(B)V	fi.m:[[[B	hh.ob:[[[B	WorldMap.wallTypes	wall shape and rotation; nc.a(BLwa;)V @392,407,421 and sj.b(ILgd;)V @289,301,315 getstatic.
+fi.b(B)V	fi.c:[I	a.f:[I	Crc32.CRCTable32	The CRC accumulator indexes this table with the low eight bits. HD nf.a(II[BB)I @37 getstatic. SD ik.a(I[BII)I @32 getstatic.
+fi.b(B)V	fi.j:Lqf;	gh.M:Lvc;	WorldMap.overview	World map overview sprite draw/cache; a.a(IIIII)V @83,90,99,196 and oc.a(IBIII)V @46,56,68,133 getstatic.
+a.a(B)V	a.f:[Z	oe.A:[Z	Minimenu.playerSecondary	Player menu builder per-option secondary priority; rj.a(IIILe;I)V @665 and dg.a(IIIILpb;)V @671 getstatic.
+a.a(B)V	a.e:Lna;	ja.h:Lid;	Client.titleSongName	unique ('literal', 'scape main')
+a.a(B)V	a.j:Lna;	n.k:Lid;	Minimenu.tooltipMoreSeparator	unique ('literal', '<col=ffffff> )4 ')
+a.a(B)V	a.b:[I	kj.W:[I	TextureOpPerlinNoise.fadeTable	membermap 4096-entry <clinit> loop using the fixed-point quintic.
+nj.a(B)V	nj.l:Lve;	ve.e:Lal;	Client.npcConfigArchive	MainLoad JS5 archive 18
+nj.a(B)V	nj.h:Lih;	ad.a:Lgk;	WorldMap.deferredIcons	deferred map function icons; sm.a(IIIIIIIIIII)V @443,503,626,643 and e.a(IIIIIIIIIII)V @424,490,611,628 getstatic.
+nj.a(B)V	nj.m:[[S	ij.j:[[S	PlayerModel.recolourDestinations2	Original HD hh.a([Lub;ILtk;Ltk;IIIIZII)Lak; and SD cl.a(IILek;IZ[Lci;IIZLek;I)Lnd;. The second recolour maps secondary sources to this group's destinations. TS src/dash3d/PlayerModel.ts recolourDestinations2.
+nj.a(B)V	nj.j:[I	hh.qb:[I	Client.mapBuildLocationFile	Original regional rebuild HD gd.c(I)V and SD gj.e(I)V. Fetches ordinary loc bytes into mf.O/lk.x using four per-region XTEA keys. TS src/client/Client.ts mapBuildLocationFile.
+nj.a(B)V	nj.e:Lva;	ve.f:Lng;	MidiManager.stream	The music loader passes the instrument and sample bank into the MIDI player. HD km.c(Z)Z @87 getstatic, 113 getstatic, 121 getstatic, 133 getstatic, 174 getstatic. SD a.a(Z)Z @75 getstatic, 98 getstatic, 106 getstatic, 117 getstatic, 154 getstatic.
+nj.a(B)V	nj.f:Len;	ik.O:Lsa;	Client.cacheData	Unique lookup of Client.cacheData in paired consumer; al.a(ZZZIZ)Lve; @23,37 and ra.a(ZZIZI)Lal; @21,32 getstatic.
+nj.a(B)V	nj.g:Lve;	nk.S:Lal;	MidiManager.trackArchive	Track archive argument to music-track loader; km.c(Z)Z @38 and a.a(Z)Z @30 getstatic.
+nj.a(B)V	nj.c:Lve;	ma.g:Lal;	VarBitType.m_pConfigClient	Varbit definition archive in GetType; jl.a(IB)Lkk; @42 and we.a(II)Log; @36 getstatic.
+hi.a(Z)V	hi.h:Lna;	rg.d:Lid;	LocalisedText.frenchLoadingTitleScreen	unique ('literal', 'Chargement de l(W-Bcran)2titre )2 ')
+ba.f(I)V	ba.s:Lna;	vk.qb:Lid;	LocalisedText.englishLoadedUpdateList	unique ('literal', 'Loaded update list')
+ba.f(I)V	ba.z:Lna;	vk.X:Lid;	LocalisedText.loadedUpdateList	unique incoming localized constants ('Liste des mises -9 jour charg-Be', 'Update)2Liste geladen)3')
+ba.f(I)V	ba.D:Lvh;	m.S:Ldg;	AudioEngine.musicPlayer	Startup creates audio device zero at 22050 Hz and attaches the music stream. HD client.i(I)V @878 putstatic, 881 getstatic. SD client.f(B)V @896 putstatic, 899 getstatic.
+ba.f(I)V	ba.E:Lna;	jl.l:Lid;	LocalisedText.germanLevel	unique ('literal', 'Stufe: ')
+ee.a(I)V	ee.j:[I	hf.G:[I	ScriptRunner.lengths	CS2 44/45/46 allocated lengths checked before accessing backing arrays; h.a(BILjl;)V @1680,1776,1857 and gh.a(Lwf;II)V @1634,1723,1804 getstatic.
+ee.a(I)V	ee.a:Lna;	kk.X:Lid;	CookieStatics.gmtSuffix	cookie GMT suffix, cj.a(JB)Lna; / gk.a(IJ)Lid; or the CS2 4104 body
+ee.a(I)V	ee.e:Lna;	oe.t:Lid;	Client.p12FullName	unique ('literal', 'p12_full')
+lm.d()V	lm.b:[I		NoiseTextures.ridgedSlices	HD cleanup and its native storage declaration
+lm.d()V	lm.a:[I		NoiseTextures.fractalSlices	HD cleanup and its native storage declaration
+lm.d()V	lm.d:Ljava/nio/ByteBuffer;		NoiseTextures.ridgedVolume	HD cleanup and its native storage declaration
+lm.d()V	lm.c:Ljava/nio/ByteBuffer;		NoiseTextures.fractalVolume	HD cleanup and its native storage declaration
+tc.a(Z)V	tc.b:Lna;	qg.J:Lid;	LocalisedText.frenchTake	unique ('literal', 'Prendre')
+tc.a(Z)V	tc.c:Lna;	m.V:Lid;	LocalisedText.frenchFriendFirst	unique ('literal', ' de votre liste d(Wamis)3')
+hj.a(B)V	hj.i:Lna;	ai.l:Lid;	LocalisedText.germanUse	unique ('literal', 'Benutzen')
+hj.a(B)V	hj.d:Lna;	rc.e:Lid;	Client.hintHeadiconsName	unique ('literal', 'hint_headicons')
+hj.a(B)V	hj.m:Lve;	n.g:Lal;	MSITypeList.archive	Map scene icon definition archive; da.c(II)Laa; @28 and dl.a(II)Lda; @27 getstatic.
+bd.a(I)V	bd.b:Lna;	tg.s:Lid;	LocalisedText.loadingPercentEnd	unique ('literal', '(U(Y')
+bd.a(I)V	bd.d:Lna;	sg.e:Lid;	LocalisedText.germanSelect	unique ('literal', 'Ausw-=hlen')
+bd.a(I)V	bd.g:Lve;	qh.b:Lal;	IdkType.m_pModels	Identity-kit model readiness check; dm.a(I)Z @53 and fi.a(Z)Z @31 getstatic.
+jl.a(Z)V	jl.x:Ln;	uk.k:Lve;	NpcType.m_modelCache	Original HD me.a([Lub;IBIIIILtk;ILtk;)Lak; and SD ja.a([Lci;ILek;IIIBIILek;)Lnd;. Body model cache probed by NPC type id, and populated before animation. TS src/config/NpcType.ts m_modelCache.
+jl.a(Z)V	jl.I:[[[B	fl.g:[[[B	WorldMap.upperOverlayShapes	upper overlay shape/angle; sk.a(ILwa;)V @332,344,358 and oc.a(BLgd;)V @370,382,396 getstatic.
+jl.a(Z)V	jl.G:Ln;	cd.d:Lve;	VarBitType.m_recentUse	Varbit definition cache around config fetch. HD jl.a(IB)Lkk; @8 getstatic, 92 getstatic. SD we.a(II)Log; @8 getstatic, 84 getstatic.
+th.a(I)V	th.f:[Lok;	me.L:[Lsi;	SpriteLoader.scrollbars	Scroll bar draws first and last edge sprites; fn.a(BIIIII)V @8,19 and ta.a(IIIIIB)V @0,11 getstatic.
+th.a(I)V	th.m:[Lbe;	jg.q:[Laj;	ComponentDrag.dragLayerComponents	only shutdown field of paired type [Laj;
+th.a(I)V	th.j:[[Lbe;	fk.ab:[[Laj;	IfType.m_list	only shutdown field of paired type [[Laj;
+th.a(I)V	th.p:[Lmm;	oe.y:[Lrh;	WorldMap.mapFunctions	World-map mapfunction sprites in tile rendering; sm.a(IIIIIIIIIII)V @457,598 and e.a(IIIIIIIIIII)V @438,583 getstatic.
+th.a(I)V	th.l:[I	jg.z:[I	ChatHistory.phrases	Chat history shift and head write for phrase ID; md.a(IILna;Lna;BLna;)V @95,100,144 and jd.a(ILid;Lid;IILid;)V @85,90,131 getstatic.
+th.a(I)V	th.h:Lna;	re.c:Lid;	Client.setParticlesCommand	unique ('literal', '::setparticles')
+th.a(I)V	th.i:[I	ec.x:[I	PlayerModel.layerFrameIds	Original HD hh.a([Lub;ILtk;Ltk;IIIIZII)Lak; and SD cl.a(IILek;IZ[Lci;IIZLek;I)Lnd;. The current slot id is the low 16 bits and the second operand to the masked animator. TS src/dash3d/PlayerModel.ts layerFrameIds.
+th.a(I)V	th.o:[I	vg.Y:[I	TextureShapeRaster.circleWidths	HD aj.a(IIIZIII)V / SD tb.a(IIIIIZI)V. The clipped circle raster stores and later reads the horizontal midpoint width for each vertical coordinate. TS src/dash3d/TextureShapeRaster.ts circleWidths.
+li.a(B)V	li.v:Lva;	qj.F:Lng;	AudioEngine.music	Startup creates the MIDI stream, sets its channels, then attaches it to audio player zero. HD client.i(I)V @847 putstatic, 850 getstatic, 886 getstatic, 895 getstatic. SD client.f(B)V @864 putstatic, 867 getstatic, 904 getstatic, 910 getstatic.
+li.a(B)V	li.p:Lna;	ag.c:Lid;	Client.rebuildCommand	unique ('literal', '::rebuild')
+li.a(B)V	li.h:[Lmj;	hc.c:[Lke;	CollisionMap.levelMaps	reviewed operand The routefinder selects the current plane's collision map from this array and tests movement flags on its backing int grid. HD aa.a(IIIIIZIIIIII)Z @125 getstatic; SD ld.a(ZIIIIIIIIIII)Z @123 getstatic; TS src/dash3d/CollisionMap.ts levelMaps.
+li.a(B)V	li.u:Lna;	kc.d:Lid;	LocalisedText.englishExamine	unique ('literal', 'Examine')
+li.a(B)V	li.i:Lna;	gd.x:Lid;	LocalisedText.loadingWordpack	unique incoming localized constants ('Chargement du module texte )2 ', 'Lade Wordpack )2 ')
+li.a(B)V	li.e:Lna;	ii.o:Lid;	LocalisedText.frenchPleaseWait	unique ('literal', 'Veuillez patienter)3)3)3')
+li.a(B)V	li.b:Lna;	gd.ob:Lid;	LocalisedText.englishLoadingWordpack	unique ('literal', 'Loading wordpack )2 ')
+li.a(B)V	li.l:Lge;	va.O:Lcg;	Client.masterIndexStore	only shutdown field of paired type Lcg;
+li.a(B)V	li.w:Lsc;	gi.t:Lnc;	JagString.internTable	Unique lookup of JagString.internTable in paired consumer; na.c(B)Lna; @42,48,96,161 and id.d(I)Lid; @41,47,91,145 getstatic.
+li.a(B)V	li.f:Lna;	kc.k:Lid;	LocalisedText.examine	unique incoming localized constants ('Examiner', 'Untersuchen')
+hg.c()V	hg.U:Lwa;		TerrainBatch.indices	HD cleanup and its native storage declaration
+hg.c()V	hg.K:Lwa;		TerrainBatch.blendIndices	HD cleanup and its native storage declaration
+hg.c()V	hg.Q:Ljava/nio/ByteBuffer;		TerrainBatch.indexBuffer	HD cleanup and its native storage declaration
+hg.c()V	hg.J:Ljava/nio/ByteBuffer;		TerrainBatch.blendIndexBuffer	HD cleanup and its native storage declaration
+ec.a(I)V	ec.d:Lgn;	vb.e:Lvj;	TextureOp.permutationCache	HD ha.a(II)[B / SD wf.a(IB)[B. Caches the texture noise permutation byte arrays in secondary link nodes by integer seed. TS src/dash3d/TextureOp.ts permutationCache.
+ec.a(I)V	ec.B:[[I		TerrainBuilder.underlayShapes	HD-only terrain builders a.a([[F[[F[[II[[F[[B[[II[[B[[B[[B[[[B)[Lhg; and pi.a([[[B[[B[[B[[I[[F[[I[[B[[B[[FI[[F[[I[[I[[II)[Lhg;. pi.a reads the shape-indexed coordinate pairs when a tile has an overlay cutout; row zero is the empty list. TS src/dash3d/TerrainBuilder.ts underlayShapes.
+ec.a(I)V	ec.r:Lna;	me.g:Lid;	LocalisedText.englishLoadingPleaseWait	unique ('literal', 'RuneScape is loading )2 please wait)3)3)3')
+ec.a(I)V	ec.k:Lna;	me.v:Lid;	LocalisedText.loadingPleaseWait	unique incoming localized constants ('Chargement de RuneScape en cours )2 veuillez patienter)3)3)3', 'RuneScape wird geladen )2 bitte warten)3)3)3')
+pe.a(I)V	pe.q:Lna;	ej.k:Lid;	LocalisedText.germanMenuSeparator	German menu separator assigned to its active slot in native set-German; the literal in both JARs is colon followed by space. lk.a(Z)V @102; d.a(B)V @266 getstatic.
+pe.a(I)V	pe.d:Lna;	wg.h:Lid;	LocalisedText.germanChateffect1	unique ('literal', 'welle:')
+pe.a(I)V	pe.n:Lna;	vg.cb:Lid;	Client.hintMapmarkersName	unique ('literal', 'hint_mapmarkers')
+pe.a(I)V	pe.z:Lna;	di.c:Lid;	SpriteLoader.mapdotsName	unique ('literal', 'mapdots')
+jh.a(B)V	jh.p:Lve;	ta.M:Lal;	Client.spotTypeArchive	MainLoad JS5 archive 21
+jh.a(B)V	jh.g:Lna;	ck.w:Lid;	Client.dnsTag	unique ('literal', '(Udns')
+jh.a(B)V	jh.b:[Lna;	ck.p:[Lid;	Client.friendUsername	two method windows ac.a(B)Z, fb.a(JB)V
+jh.a(B)V	jh.n:Lbd;	bh.h:Ld;	ScriptRunner.activeQuickChatMessage	reviewed operand Both initialize the active QuickChatPhrase and use its phrase type and parameters in the quick chat script opcodes. HD h.a(BILjl;)V @14372 putstatic; SD gh.a(Lwf;II)V @10382 putstatic; TS src/script/ScriptRunner.ts activeQuickChatMessage.
+df.a(B)V	df.c:Lna;	kl.Gb:Lid;	WorldMap.loc	unique ('literal', 'loc')
+df.a(B)V	df.l:Lna;	nk.O:Lid;	Minimenu.green	unique ('literal', '<col=00ff00>')
+bm.a(B)V	bm.d:Lna;	fe.U:Lid;	LocalisedText.englishCheckingForUpdates	unique ('literal', 'Checking for updates )2 ')
+bm.a(B)V	bm.l:Lna;	fe.ab:Lid;	LocalisedText.checkingForUpdates	unique incoming localized constants ('Suche nach Updates )2 ', 'V-Brification des mises -9 jour )2 ')
+bm.a(B)V	bm.p:Lna;	li.E:Lid;	Client.percent1	unique ('literal', '(U1')
+bm.a(B)V	bm.e:Lve;	bb.f:Lal;	StructType.m_pConfigClient	Struct definition archive in GetType; jj.a(BI)Llk; @42 and hl.a(II)Laf; @28 getstatic.
+bm.a(B)V	bm.f:Lve;	h.f:Lal;	IfType.m_pSprites	IfType font loader sprite archive; confirm also sole archive in component sprite getter; be.a([Lok;I)Lrk; @55 and aj.a([Lsi;B)Lmb; @44 getstatic.
+bm.a(B)V	bm.h:Lna;	ed.l:Lid;	LocalisedText.frenchLoadedTitleScreen	unique ('literal', ',Mcran)2titre charg-B')
+jj.a(I)V	jj.m:Lna;	rk.l:Lid;	ObjType.colourEndTag	Unique '<)4col>' operand in paired consumer eb.b(II)Lna; @35,100,140 and ii.a(II)Lid; @36,93,132.
+jj.a(I)V	jj.g:Lna;	ia.i:Lid;	Minimenu.openParen	unique ('literal', ' (X')
+jj.a(I)V	jj.d:Lna;	fk.U:Lid;	Client.headiconsPkName	unique ('literal', 'headicons_pk')
+rh.a(B)V	rh.e:Lce;	n.d:Ltb;	DelayedStateChange.immediate	Unique lookup of DelayedStateChange.immediate in paired consumer; da.g(B)V @31 and ce.b(Z)V @39 getstatic.
+rh.a(B)V	rh.j:Lclient;	dg.B:Lclient;	Client.activeClient	only shutdown field of paired type Lclient;
+rh.a(B)V	rh.q:Lna;	hh.P:Lid;	LocalisedText.frenchOk	unique ('literal', 'OK')
+rh.a(B)V	rh.a:[I	mk.J:[I	ScriptRunner.intLocals	reviewed operand Current script's integer locals. Script entry allocates them; call and return replace and restore this array.
+rh.a(B)V	rh.h:Lrk;	wj.g:Lmb;	Client.p12	reviewed operand The plain twelve-point map label font receives the shared icon sprites and is selected by the minimap label size branch. HD cg.a(ILve;)V @181 getstatic; SD uf.a(Lal;I)V @191 getstatic; TS src/client/Client.ts p12.
+fg.a()V	fg.m:[I	kb.v:[I	Ground.drawVertexX	shared subsystem cleanup kb.a()V
+fg.a()V	fg.l:[I	kb.f:[I	Ground.drawVertexY	shared subsystem cleanup kb.a()V
+fg.a()V	fg.d:[I	kb.u:[I	Ground.drawTextureVertexX	shared subsystem cleanup kb.a()V
+fg.a()V	fg.t:[I	kb.q:[I	Ground.drawTextureVertexY	shared subsystem cleanup kb.a()V
+fg.a()V	fg.r:[I	kb.r:[I	Ground.drawTextureVertexZ	shared subsystem cleanup kb.a()V
+fg.a()V	fg.i:[[I	kb.t:[[I	Ground.shapePoints	shared subsystem cleanup kb.a()V
+fg.a()V	fg.j:[[I	kb.i:[[I	Ground.shapeFaces	shared subsystem cleanup kb.a()V
+jm.c(I)V	jm.z:Lna;	ie.A:Lid;	TitleScreen.m_loadString	reviewed operand Holds the stage text in both loaders; both title painters centre this text below the loading bar. HD client.i(I)V @173 putstatic; SD client.f(B)V @155 putstatic; TS src/title/TitleScreen.ts m_loadString.
+jm.c(I)V	jm.t:Lna;	cd.b:Lid;	LocalisedText.frenchLoadedWordpack	unique ('literal', 'Module texte charg-B')
+jm.c(I)V	jm.A:Lna;	ie.u:Lid;	TitleScreen.loadingTextDefault	initializer supplies verified alias jm.z:Lna; / ie.A:Lid;
+jm.c(I)V	jm.w:Lna;	rg.f:Lid;	LocalisedText.germanStarted3dLibrary	unique ('literal', '3D)2Softwarebibliothek gestartet)3')
+ib.a(I)V	ib.j:Lna;	ff.P:Lid;	LocalisedText.walkHere	unique incoming localized constants ('Atteindre', 'Hierhin gehen')
+ib.a(I)V	ib.k:Lna;	ti.Q:Lid;	Minimenu.playerArrow	unique ('literal', ' )2> <col=ffffff>')
+ib.a(I)V	ib.e:Lbe;	pe.T:Laj;	ComponentDrag.component	reviewed operand Both track the dragged source component separately from the drag parent and compare its identity during the layer walk. HD client.a([Lbe;IIIIIII)V @256 getstatic; SD client.a([Laj;IIIIIII)V @240 getstatic; TS src/ui/ComponentDrag.ts component.
+ib.a(I)V	ib.f:[I	ad.h:[I	ReceivePlayerPositions.m_lastID	HD ed.a(IBIILbe;)V / SD fd.a(ILaj;III)V. Iterates active player ids and indexes the player registry at each id. TS src/client/ReceivePlayerPositions.ts m_lastID.
+ib.a(I)V	ib.m:Lna;	ff.I:Lid;	LocalisedText.englishWalkHere	unique ('literal', 'Walk here')
+ib.a(I)V	ib.g:Lna;	qj.H:Lid;	ObjType.iconCountYellow	Unique '<col=ffff00>' operand in paired consumer eb.b(II)Lna; @20 and ii.a(II)Lid; @22.
+ib.a(I)V	ib.d:Lgn;	sf.g:Lvj;	ClientScript.m_cache	Unique lookup of ClientScript.m_cache in paired consumer; hc.a(IB)Lqc; @13,489 and j.a(II)Lm; @13,481 getstatic.
+ib.a(I)V	ib.i:[Lod;		DisplayMode.available	HD storage declaration
+ib.a(I)V	ib.c:Lqi;	ri.R:Llc;	MonochromeImageCache.dummy	only shutdown field of paired type Llc;
+id.a(I)V	id.j:Lof;	lc.y:Ltc;	QuickChatPhraseTypeList.decoder	only shutdown field of paired type Ltc;
+id.a(I)V	id.d:[[[I	kg.l:[[[I	CinematicCamera.paths	reviewed operand The cubic camera interpolation uses a control point one entry beyond the path slot and multiplies the selected coordinate by three. HD da.d(I)V @149 getstatic; SD kf.a(I)V @135 getstatic; TS src/client/CinematicCamera.ts paths.
+id.a(I)V	id.i:[[[I	lf.g:[[[I	world.mainGroundh	reviewed operand The other heightmap supplies the top-bound fallback on plane zero and always supplies plane three for the bottom bound, subtracting 1000. HD mf.a(IIIII[[[B[I[I[I[I[IIBII)V @381 getstatic; SD qc.a(IIIII[[[B[I[I[I[I[IIBII)V @345 getstatic; TS src/dash3d/world.ts mainGroundh.
+id.a(I)V	id.l:Ljb;	wk.d:Lej;	Client.js5NetQueue	reviewed operand The JS5 handshake error path increments the error counter on this queue. The normal network pump calls Service on this instance. HD client.a(ZI)V @0 getstatic; SD client.a(II)V @0 getstatic; TS src/client/Client.ts js5NetQueue.
+id.a(I)V	id.e:[I	jl.j:[I	NpcType.layerFrameIds	Original HD me.a([Lub;IBIIIILtk;ILtk;)Lak; and SD ja.a([Lci;ILek;IIIBIILek;)Lnd;. Current layer frame id masked to 65535, the second masked-animation argument. TS src/config/NpcType.ts layerFrameIds.
+id.a(I)V	id.c:Lna;	ic.N:Lid;	Client.fpsOnCommand	unique ('literal', '::fpson')
+ne.a()V	ne.p:[S	of.c:[S	AnimFrame.tempTi	shared subsystem cleanup of.a()V
+ne.a()V	ne.m:[S	of.d:[S	AnimFrame.tempTx	shared subsystem cleanup of.a()V
+ne.a()V	ne.j:[S	of.o:[S	AnimFrame.tempTy	shared subsystem cleanup of.a()V
+ne.a()V	ne.i:[S	of.a:[S	AnimFrame.tempTz	shared subsystem cleanup of.a()V
+ne.a()V	ne.k:[S	of.g:[S	AnimFrame.tempPrevOrigin	shared subsystem cleanup of.a()V
+ne.a()V	ne.h:[B	of.k:[B	AnimFrame.tempFlags	shared subsystem cleanup of.a()V
+r.a(Z)V	r.c:Lna;	ie.v:Lid;	LocalisedText.englishLoadingWorldListData	unique ('literal', 'Loading world list data')
+r.a(Z)V	r.b:[Ltk;	cf.j:[Lek;	PlayerModel.layerSeqs	Original HD hh.a([Lub;ILtk;Ltk;IIIIZII)Lak; and SD cl.a(IILek;IZ[Lci;IIZLek;I)Lnd;. Each per-slot sequence is stored and later read for the mask animation special flag. TS src/dash3d/PlayerModel.ts layerSeqs.
+r.a(Z)V	r.a:Lna;	ie.x:Lid;	LocalisedText.loadingWorldListData	unique incoming localized constants ('Chargement de la liste des serveurs', 'Lade Liste der Welten')
+ul.a()V	ul.I:Lgn;		Client.windowResourceCache	HD storage declaration
+ql.a(I)V	ql.k:Lna;	sj.F:Lid;	LocalisedText.germanChateffect5	unique ('literal', 'gleiten:')
+ql.a(I)V	ql.i:Lna;		Client.wm2Command	HD storage declaration
+ql.a(I)V	ql.h:Lna;	fd.S:Lid;	Minimenu.hidden	unique ('literal', 'Hidden)2')
+tj.b()V	tj.a:Lek;		GroundShadows.shadowMap	HD cleanup and its native storage declaration
+tj.b()V	tj.d:[Lek;		GroundShadows.shadowSprites	HD cleanup and its native storage declaration
+tj.b()V	tj.b:[[Lwm;		GroundShadows.blocks	HD cleanup and its native storage declaration
+wm.a()V	wm.g:[B		GroundShadowBlock.scratch	HD cleanup and its native storage declaration
+kh.a(I)V	kh.g:Lhh;	f.b:Lcl;	Client.designAppearanceInstance	only shutdown field of paired type Lcl;
+kh.a(I)V	kh.a:Lna;	ud.e:Lid;	LocalisedText.frenchAttack	unique ('literal', 'Attaquer')
+p.b(I)V	p.f:Lna;	di.d:Lid;	Client.serverJs5DropCommand	unique ('literal', '::serverjs5drop')
+p.b(I)V	p.c:Lih;	mi.q:Lgk;	Client.m_hookQueue	reviewed operand Both component walks append HookReq instances to this list; their title loop pops and dispatches the queued requests. HD client.a([Lbe;IIIIIII)V @376 getstatic; SD client.a([Laj;IIIIIII)V @357 getstatic; TS src/client/Client.ts m_hookQueue.
+eb.c(I)V	eb.p:[I	bd.O:[I	Client.entityRemovalIds	NPC movement decode HD dm.a(B)V / SD ob.e(B)V appends every dropped prior-list slot when the received count shrinks, plus removals identified by movement update type three. TS src/client/Client.ts entityRemovalIds.
+da.f(I)V	da.O:Lna;	pf.O:Lid;	ScriptRunner.viaScript	unique ('literal', '(U0a )2 via: ')
+qe.c(I)V	qe.v:Ls;	gh.X:Le;	GameShell.timer	only shutdown field of paired type Le;
+qe.c(I)V	qe.r:[S	sa.u:[S	PlayerModel.recolourSources	Original HD hh.a([Lub;ILtk;Ltk;IIIIZII)Lak; and SD cl.a(IILek;IZ[Lci;IIZLek;I)Lnd;. Primary source colours feed the first recolour pass; base 530 RS sources start 6798,8741,25238 in vd.B/ik.Z. TS src/dash3d/PlayerModel.ts recolourSources.
+qe.c(I)V	qe.t:[I	ff.J:[I	Client.soundEffectIds	HD ca.a(IIII)V and ma.a(ILtk;IIZI)V / SD uj.a(ZIII)V and sf.a(Lek;IIIZI)V. Both enqueue paths store the decoded unsigned sound id, shifted from sequence sound settings in the animation path. TS src/client/Client.ts soundEffectIds.
+fl.d(I)V	fl.H:Lna;	q.f:Lid;	ScriptRunner.crownTag0	Unique '<img=0>' operand in paired consumer h.a(BILjl;)V @8407,9194,9599 and gh.a(Lwf;II)V @22342,23116,23504.
+fl.d(I)V	fl.V:Lna;	tb.A:Lid;	Minimenu.closeParen	unique ('literal', '(Y')
+fl.d(I)V	fl.Q:Lna;	uj.i:Lid;	ScriptRunner.emptyString	reviewed operand Both class initializers construct the empty script string. Each interpreter reads it 31 times.
+fl.d(I)V	fl.C:Lim;	f.k:Ldj;	Client.socketRequest	two method windows ch.b(B)V, ri.a(B)V
+fl.d(I)V	fl.D:[[I	jg.w:[[I	Client.mapBuildKeys	Original regional rebuild HD gd.c(I)V and SD gj.e(I)V. Supplies the per-region key array for normal loc and NPC groups. TS src/client/Client.ts mapBuildKeys.
+g.a(I)V	g.b:Lna;	pe.R:Lid;	LocalisedText.germanFriendsFull	unique ('literal', 'Ihre Freunde)2Liste ist voll(Q Maximale Eintr-=ge: Mitglieder 200)4freie Spieler 100')
+qc.d(I)V	qc.Z:Lna;	vc.S:Lid;	LocalisedText.englishMembersObject	unique ('literal', 'Members object')
+qc.d(I)V	qc.Y:Lna;	vc.K:Lid;	LocalisedText.membersObject	unique incoming localized constants ('Gegenstand f-Ur Mitglieder', 'Objet d(Wabonn-Bs')
+qc.d(I)V	qc.bb:[Lkl;	jl.b:[Lrf;	FriendChatChannel.members	reviewed operand The clan update checks this user array's length, looks up a user by its encoded name, and moves indexed entries. HD ac.a(B)Z @2301 putstatic; SD rg.a(B)Z @1411 putstatic; TS src/client/FriendChatChannel.ts members.
+qc.d(I)V	qc.K:Lsc;	db.p:Lnc;	ClientVarCache.changes	Unique lookup of ClientVarCache.changes in paired consumer; cn.a(ZI)I @34,48,151 and v.a(IZ)I @37,51,148 getstatic.
+qc.d(I)V	qc.ab:[I	ec.o:[I	MinimapBuilder.mapFunctionLocIds	Minimap map-function location IDs read during icon placement; ed.a(IBIILbe;)V @756 and fd.a(ILaj;III)V @617 getstatic.
+pj.a()V	pj.o:[I	fj.t:[I	Tone.samples	shared subsystem cleanup fj.a()V
+pj.a()V	pj.k:[I	fj.k:[I	Tone.noise	shared subsystem cleanup fj.a()V
+pj.a()V	pj.h:[I	fj.f:[I	Tone.sine	shared subsystem cleanup fj.a()V
+pj.a()V	pj.r:[I	fj.v:[I	Tone.phases	shared subsystem cleanup fj.a()V
+pj.a()V	pj.s:[I	fj.w:[I	Tone.offsets	shared subsystem cleanup fj.a()V
+pj.a()V	pj.t:[I	fj.y:[I	Tone.gains	shared subsystem cleanup fj.a()V
+pj.a()V	pj.p:[I	fj.u:[I	Tone.pitchSteps	shared subsystem cleanup fj.a()V
+pj.a()V	pj.q:[I	fj.x:[I	Tone.pitchStarts	shared subsystem cleanup fj.a()V
+wb.a(I)V	wb.h:Lna;	dd.b:Lid;	LocalisedText.cancel	unique incoming localized constants ('Abbrechen', 'Annuler')
+wb.a(I)V	wb.a:Lna;	g.l:Lid;	CookieStatics.dateDash	cookie hyphen between date fields, cj.a(JB)Lna; / gk.a(IJ)Lid; or the CS2 4104 body
+wb.a(I)V	wb.j:Lna;	hj.c:Lid;	Client.afterCleanup	unique ('literal', 'Memory after cleanup=')
+wb.a(I)V	wb.f:Lwa;	ll.l:Lgd;	ReceivePlayerPositions.m_tempP	HD gk.a(IIBLe;)V / SD il.a(ILpb;II)V. Player chat mask resets the staging packet cursor, copies the decoded message bytes into it and rewinds for decoding. TS src/client/ReceivePlayerPositions.ts m_tempP.
+wb.a(I)V	wb.b:[I	rc.f:[I	TitleFlames.flameBuffer0	sparse random noise values seeded before smoothing; fh.a(BLek;)V @21,29,67,140,150,159,168,198,313 and ca.a(ILch;)V @19,31,73,139,147,155,167,207,303 getstatic.
+wb.a(I)V	wb.l:Lfd;	ml.Q:Leg;	WorldMap.font26	Map font allocated with constructor size 26; pa.d(I)V @1257 and lg.b(Z)V @1233 putstatic.
+wb.a(I)V	wb.e:Lna;	hj.g:Lid;	Client.locMapPrefix	unique ('literal', 'l')
+wb.a(I)V	wb.m:Lna;	hg.g:Lid;	FriendChatChannel.ownerName	CS2 3625 pushes friend chat owner. h.a(BILjl;)V @9361, 9392; gh.a(Lwf;II)V @23280, 23311 getstatic.
+wb.a(I)V	wb.i:Lna;	dd.f:Lid;	LocalisedText.englishCancel	unique ('literal', 'Cancel')
+la.a(B)V	la.f:Lce;	bb.k:Ltb;	DelayedStateChange.delayed	Unique lookup of DelayedStateChange.delayed in paired consumer; da.a(Z)V @40 and ce.e(I)V @30 getstatic.
+la.a(B)V	la.i:[[[I	il.P:[[[I	world.levelTileOcclusionCycles	original unique complete 124-instruction body al.a(III)Z / bh.a(III)Z, instruction 0
+la.a(B)V	la.k:Lna;	qg.F:Lid;	LocalisedText.frenchLoadingWordpack	unique ('literal', 'Chargement du module texte )2 ')
+la.a(B)V	la.g:Lna;	sk.P:Lid;	LocalisedText.germanAlreadyIgnored	unique ('literal', ' steht bereits auf Ihrer Ignorieren)2Liste(Q')
+dj.b()V	dj.a:Lcf;		GlRaster.mask	HD cleanup and its native storage declaration
+gk.a(B)V	gk.l:Lqf;	fe.Y:Lvc;	Client.imageMapflag	Minimap destination flag drawn at clicked tile; ed.a(IBIILbe;)V @1944 and fd.a(ILaj;III)V @1771 getstatic.
+gk.a(B)V	gk.c:[I	u.b:[I	RouteFinding.m_listz	HD aa.a(IIIIIZIIIIII)Z and SD ld.a(ZIIIIIIIIIII)Z route search. The West neighbor leaves this second coordinate unchanged while the first decreases. Positive Z movements increment this coordinate. TS src/movement/RouteFinding.ts m_listz.
+gk.a(B)V	gk.a:Lna;	ja.ob:Lid;	LocalisedText.germanChatcol10	unique ('literal', 'leuchten2:')
+gk.a(B)V	gk.e:Lve;	ae.h:Lal;	EnumType.m_pConfigClient	Enum definition archive in GetType; ui.a(IZ)Lml; @29 and v.a(IB)Llg; @28 getstatic.
+ra.b(Z)V	ra.K:Lve;	h.i:Lal;	Client.m_pSprites	MainLoad JS5 archive 8
+bh.b(I)V	bh.v:Lna;	kf.c:Lid;	Client.floorshadowsSpriteName	unique ('literal', 'floorshadows')
+bh.b(I)V	bh.s:Lna;	gi.p:Lid;	Fonts.p11FullName	unique ('literal', 'p11_full')
+bh.b(I)V	bh.G:[I	je.bb:[I	SuperPacket.bitMasks	The bit reader masks both complete and partial byte fragments with this table. HD i.f(BI)I @60 getstatic, 125 getstatic, 153 getstatic. SD be.h(BI)I @63 getstatic, 125 getstatic, 147 getstatic.
+bh.b(I)V	bh.C:Lna;	vi.W:Lid;	Client.loadingDoneSuffix	unique ('literal', '<br>(X100(U(Y')
+og.a(Z)V	og.h:Lna;	oa.k:Lid;	LocalisedText.germanLoggedOut	unique ('literal', ' loggt sich aus)3')
+og.a(Z)V	og.g:[Lna;	lk.t:[Lid;	ScriptRunner.stringLocals	reviewed operand Current script's string locals. Entry, call, and return access them alongside the integer locals.
+og.a(Z)V	og.e:Lbe;	di.g:Laj;	InterfaceList.mouseOverComponent	two method windows client.a([Lbe;IIIIIII)V, gn.a(III[Lbe;IIIIBI)V
+uj.a(B)V	uj.t:[I	tg.B:[I	ScriptRunner.intStack	reviewed operand The 1000-entry CS2 integer operand stack. The script dispatchers fetch it for the same push at HD 476 and SD 455.
+uj.a(B)V	uj.x:[I	jh.l:[I	SpriteLoader.widths	reviewed operand Sprite constructor argument 5 is this entry's inner width; it participates in the pixel-array length. HD cj.a(I)[Lqf; @43 getstatic; SD oc.a(B)[Lvc; @40 getstatic; TS src/graphics/SpriteLoader.ts widths.
+uj.a(B)V	uj.A:[I	ld.b:[I	world.midDep32	HD ub.a(Lbj;Z)V / SD p.a(Lra;Z)V. Orientation 32 sets corner mask 6, then computes its complement 6 minus entry. TS src/dash3d/world.ts midDep32.
+uj.a(B)V	uj.C:[Lna;	ak.a:[Lid;	Minimenu.option	two method windows gn.a(III[Lbe;IIIIBI)V, wa.a(IZ)Lna;
+uj.a(B)V	uj.s:Lna;	pa.Ab:Lid;	ScriptRunner.nullString	Unique 'null' operand in paired consumer h.a(BILjl;)V @1925 and gh.a(Lwf;II)V @1872.
+uj.a(B)V	uj.J:Lve;	kh.B:Lal;	Client.quickChatArchive	MainLoad JS5 archive 24
+cn.d(B)V	cn.x:Lna;	wi.m:Lid;	LocalisedText.frenchSelfIgnore	unique ('literal', 'Vous ne pouvez pas ajouter votre nom -9 votre liste noire)3')
+cn.d(B)V	cn.C:Lna;	tg.M:Lid;	LocalisedText.germanChatcol1	unique ('literal', 'rot:')
+cn.d(B)V	cn.J:Lna;	ml.C:Lid;	LocalisedText.englishStarting3dLibrary	unique ('literal', 'Starting 3d Library')
+cn.d(B)V	cn.q:Lna;	ml.n:Lid;	LocalisedText.starting3dLibrary	unique incoming localized constants ('D-Bmarrage de la librairie 3D', 'Starte 3D)2Softwarebibliothek)3')
+cn.d(B)V	cn.s:Lna;	ej.r:Lid;	LocalisedText.germanChatcol4	unique ('literal', 'lila:')
+dc.b(I)V	dc.hb:Lna;	l.G:Lid;	LocalisedText.chateffect1	unique incoming localized constants ('ondulation:', 'welle:')
+dc.b(I)V	dc.Y:Lna;	vk.bb:Lid;	LocalisedText.drop	unique incoming localized constants ('Fallen lassen', 'Poser')
+dc.b(I)V	dc.v:Lna;	tb.i:Lid;	Minimenu.yellowGreen	unique ('literal', '<col=c0ff00>')
+dc.b(I)V	dc.z:Lve;	dd.l:Lal;	Client.interfacesArchive	MainLoad JS5 archive 3
+dc.b(I)V	dc.E:Lna;	l.v:Lid;	LocalisedText.englishChateffect1	unique ('literal', 'wave:')
+dc.b(I)V	dc.S:Lna;	l.t:Lid;	LocalisedText.defaultChateffect1	only remaining initializer alias of dc.E:Lna; / l.v:Lid;
+dc.b(I)V	dc.db:[[B	nb.b:[[B	ByteArrayPool.large	The 30000-byte branch decrements the count, takes the array and clears that slot. HD sh.a(II)[B @118 getstatic, 132 getstatic. SD oi.a(BI)[B @107 getstatic, 121 getstatic.
+dc.b(I)V	dc.M:Lna;	se.r:Lid;	Client.urlSlash	unique ('literal', ')4')
+dc.b(I)V	dc.R:Lna;	vk.U:Lid;	LocalisedText.englishDrop	unique ('literal', 'Drop')
+rb.a(Z)V	rb.b:Lsc;	fd.W:Lnc;	Client.serverActiveProperties	Unique lookup of Client.serverActiveProperties in paired consumer; client.b(Lbe;)Lbf; @0 and client.a(Laj;)Ll; @0 getstatic.
+rb.a(Z)V	rb.f:Lve;	rk.a:Lal;	MidiManager.m_pPatches	Instrument patches argument to MIDI player load at 22050; km.c(Z)Z @95 and a.a(Z)Z @86 getstatic.
+rb.a(Z)V	rb.e:Lna;	p.W:Lid;	LocalisedText.germanHidden	unique ('literal', 'Versteckt')
+l.b(B)V	l.l:[I	tf.E:[I	ClientBuild.m_sattot	Original FinishBuild HD di.a([Lmj;ZI)V, SD al.a(I[Lke;Z)V and HD ni HSL decoder. Adds ni.d, which the underlay HSL decoder sets to 256 times saturation with bounds 0 through 255. TS src/client/ClientBuild.ts m_sattot.
+l.b(B)V	l.b:Ln;	gl.u:Lve;	PlayerModel.modelCache	HD hh.a(IBLtk;II)Lak; and hh.a([IIZI[II)V / SD cl.a(IILek;II)Lnd; and cl.a(Z[II[III)V. Probes and inserts a lit player chathead with modelKey, including the three-kit head builder. The body uses the independently verified uf.j. TS src/dash3d/PlayerModel.ts modelCache.
+l.b(B)V	l.d:Lna;	oc.b:Lid;	WorldList.urlJsSegment	unique ('literal', ')4j')
+l.b(B)V	l.f:Ln;	fa.p:Lve;	SoftwareFont.cache	Unique lookup of SoftwareFont.cache in paired consumer; li.a(II)Ldd; @20,68 and ik.a(II)Lfg; @23,70 getstatic.
+l.b(B)V	l.j:[Lqf;	ll.r:[Lvc;	Client.imageMapdots	Minimap dots selected by literal indices 0 through 5; ed.a(IBIILbe;)V @930,1142,1421,1454,1477,1500 and fd.a(ILaj;III)V @772,944,1263,1285,1307,1329 getstatic.
+sj.d(I)V	sj.r:Lve;	nf.c:Lal;	ObjType.m_pModels	Object worn-model readiness; h.a(ZZ)Z @62,85 and kl.a(IZ)Z @59,80 getstatic.
+sj.d(I)V	sj.q:[Lna;	ui.q:[Lid;	ChatHistory.text	Chat history shift and head write for message text; md.a(IILna;Lna;BLna;)V @67,72,150 and jd.a(ILid;Lid;IILid;)V @57,62,143 getstatic.
+sj.d(I)V	sj.w:Lna;	ui.y:Lid;	Client.colEndTag	Unique '<)4col>' operand in paired consumer fi.a(BI)Lna; @241 and gf.c(II)Lid; @248.
+sj.d(I)V	sj.x:Lna;	hl.B:Lid;	LocalisedText.frenchConnectingToUpdateServer	unique ('literal', 'Connexion au serveur de mise -9 jour en cours')
+sh.a(I)V	sh.j:Lna;	rj.h:Lid;	Client.headiconsPrayerName	unique ('literal', 'headicons_prayer')
+sh.a(I)V	sh.a:Lih;	ba.d:Lgk;	MapArea.areas	Unique lookup of MapArea.areas in paired consumer; jk.a(ILna;)Lbn; @21,55 and ug.a(ILid;)Lgh; @13,44 getstatic.
+sh.a(I)V	sh.i:[[I		TerrainBuilder.overlayShapes	HD-only terrain builders a.a([[F[[F[[II[[F[[B[[II[[B[[B[[B[[[B)[Lhg; and pi.a([[[B[[B[[B[[I[[F[[I[[B[[B[[FI[[F[[I[[I[[II)[Lhg;. Selects shape vertices for overlay mesh. HD a.a counts vertices as table length divided by two. Underlay fallback in pi.a uses its quad row zero. TS src/dash3d/TerrainBuilder.ts overlayShapes.
+sh.a(I)V	sh.l:[J	tj.c:[J	GameShell.m_updateTime	Shell update timing records the 32 most recent logic ticks before the update callback. rc.b(Z)V @14, 23; p.d(B)V @26, 63 getstatic.
+sh.a(I)V	sh.e:Lna;	mc.O:Lid;	JagString.empty2	Unique '' operand in paired consumer na.k(I)Lna; @37 and id.h(I)Lid; @33.
+ka.c(I)V	ka.r:[I	lc.A:[I	ClientBuild.m_tot	Original FinishBuild HD di.a([Lmj;ZI)V, SD al.a(I[Lke;Z)V and HD ni HSL decoder. Counts every nonzero underlay, adding exactly one before the sliding average. TS src/client/ClientBuild.ts m_tot.
+ka.c(I)V	ka.q:Lih;	nl.Q:Lgk;	LocMergeQueue.pending	Loc/actor merge pending queue; nh.a(IIIIIIIIIIIII)V @105 and g.a(IIIIIIIIBIIII)V @105 getstatic.
+ka.c(I)V	ka.t:[I	lf.d:[I	world.midDep16	HD ub.a(Lbj;Z)V / SD p.a(Lra;Z)V. Orientation 16 sets corner mask 3 and takes this entry to calculate the complement 3 minus entry. TS src/dash3d/world.ts midDep16.
+lh.c(I)V	lh.s:Lvh;	ld.k:Ldg;	AudioEngine.effectsPlayer	Startup creates audio device one and attaches the effects mixer. HD client.i(I)V @926 putstatic, 939 getstatic. SD client.f(B)V @943 putstatic, 956 getstatic.
+lh.c(I)V	lh.z:Lna;	rf.u:Lid;	Client.percentOpenParen	unique ('literal', '(U (X')
+lh.c(I)V	lh.x:Lna;	tb.e:Lid;	LocalisedText.germanChateffect4	unique ('literal', 'scrollen:')
+tm.a(B)V	tm.d:Lna;	n.b:Lid;	CookieStatics.expiredCookieSuffix	unique ('literal', '; Expires=Thu)1 01)2Jan)21970 00:00:00 GMT; Max)2Age=0')
+tm.a(B)V	tm.o:Lna;	mg.Q:Lid;	LocalisedText.frenchCancel	unique ('literal', 'Annuler')
+tm.a(B)V	tm.n:Lna;	rg.c:Lid;	LocalisedText.englishChatcol7	unique ('literal', 'flash2:')
+tm.a(B)V	tm.p:Lna;	rg.k:Lid;	LocalisedText.chatcol7	unique incoming localized constants ('blinken2:', 'clignotant2:')
+tm.a(B)V	tm.k:Lna;	rg.j:Lid;	LocalisedText.defaultChatcol7	only remaining initializer alias of tm.n:Lna; / rg.c:Lid;
+oi.c(I)V	oi.h:Lqf;	c.E:Lvc;	Minimenu.skinTitleEndSprite2	reviewed operand Both draw this sprite at the upper left and mirror it at the upper right without tiling. HD ij.a(B)V @37 getstatic; SD wh.e(B)V @36 getstatic; TS src/ui/Minimenu.ts skinTitleEndSprite2.
+oi.c(I)V	oi.j:Lna;		Client.wm1Command	HD storage declaration
+oi.c(I)V	oi.b:Lna;	ph.f:Lid;	Client.qaOpTestCommand	unique ('literal', '::qa_op_test')
+oi.c(I)V	oi.k:Lna;	hi.k:Lid;	LocalisedText.frenchChatcol3	French active cyan chat colour prefix. bb.a(B)V @185; sk.e(I)V @372 getstatic.
+lj.c(I)V	lj.q:Lna;	oe.q:Lid;	LocalisedText.germanDrop	unique ('literal', 'Fallen lassen')
+lj.c(I)V	lj.z:[I	vc.M:[I	RoofModeStatics.roofMinX	membermap HD ui.a / SD kk.a: ordered projection inputs, crosshair/arrow sprite selection, or viewport menu call sites.
+lj.c(I)V	lj.y:Ljava/awt/Image;	ci.h:Ljava/awt/Image;	GameShell.progressImage	only shutdown field of paired type Ljava/awt/Image;
+lj.c(I)V	lj.t:[Lqf;	cf.e:[Lvc;	Client.hintMapMarkers	In-range map hint marker draw; hi.a(IIIIILbe;Z)V @78 and hd.a(Laj;IIIIII)V @55 getstatic.
+lj.c(I)V	lj.p:Lgn;	t.z:Lvj;	EnumType.m_recentUse	Enum lookup and insertion around config fetch. HD ui.a(IZ)Lml; @8 getstatic, 88 getstatic. SD v.a(IB)Llg; @0 getstatic, 82 getstatic.
+di.b(I)V	di.q:[Lna;	sa.A:[Lid;	WorldMap.labelLines	wrapped map label lines; cn.a(BIIIIIIII)V @432,483 and ik.a(IIIIIIIBI)V @396,441 getstatic.
+di.b(I)V	di.I:Ln;	ml.w:Lve;	ClientEntity.shadowModelCache	membermap Actor shadow mesh cache: same ring geometry, lighting arguments and cache key, or a sweep on that capacity-32 cache.
+di.b(I)V	di.F:Lbf;	kl.E:Ll;	ServerActiveProperties.DEFAULT	only shutdown field of paired type Ll;
+qj.a(I)V	qj.i:[I	hd.i:[I	ClientKeyboardListener.chars	two method windows client.a([Lbe;IIIIIII)V, gg.a(Z)V
+qj.a(I)V	qj.h:Lna;	ob.cb:Lid;	LocalisedText.germanLoadedTextures	unique ('literal', 'Texturen geladen)3')
+qj.a(I)V	qj.g:Lna;	pg.K:Lid;	LocalisedText.frenchChatcol1	unique ('literal', 'rouge:')
+qj.a(I)V	qj.a:[J	ja.g:[J	PlayerModel.crc64Table	Player appearance-key recalculation HD hh.a(I)V / SD cl.c(I)V starts from -1L, looks up each bas/equipment/colour/gender octet in this table with low-8-bit XOR, and unsigned shifts the preceding key by eight. TS src/dash3d/PlayerModel.ts crc64Table.
+hd.a(B)V	hd.p:Lna;	dd.j:Lid;	LocalisedText.defaultChatcol4	only remaining initializer alias of hd.h:Lna; / dd.p:Lid;
+hd.a(B)V	hd.c:Lna;	hi.d:Lid;	LocalisedText.loggedOut	unique incoming localized constants (' loggt sich aus)3', ' s(West d-Bconnect-B)3')
+hd.a(B)V	hd.h:Lna;	dd.p:Lid;	LocalisedText.englishChatcol4	unique ('literal', 'purple:')
+hd.a(B)V	hd.l:Lna;	j.g:Lid;	JagString.nullString	Unique 'null' operand in paired consumer ac.a(B)Z @2923 and rg.a(B)Z @3396.
+hd.a(B)V	hd.o:Lna;	hi.h:Lid;	LocalisedText.englishLoggedOut	unique ('literal', ' has logged out)3')
+hd.a(B)V	hd.f:Lna;	dd.h:Lid;	LocalisedText.chatcol4	unique incoming localized constants ('lila:', 'violet:')
+hd.a(B)V	hd.g:[J	jd.m:[J	Client.friendName37	HD ed.a(IBIILbe;)V / SD fd.a(ILaj;III)V. The friend marker loop compares the player's base-37 long name with this array's value at the friend slot. TS src/client/Client.ts friendName37.
+hd.a(B)V	hd.e:Lqf;	ra.Q:Lvc;	Minimenu.styleSideSprite	reviewed operand Both divide menu height minus 20 by the sprite height and mirror each vertical side tile at the right edge. HD ij.a(B)V @591 getstatic; SD wh.e(B)V @376 getstatic; TS src/ui/Minimenu.ts styleSideSprite.
+jg.a(B)V	jg.j:Lve;	ik.Y:Lal;	LocType.m_pModels	membermap LocType initialization and lookup in both JARs; location ids split into group id >>> 8 and file id & 255.
+jg.a(B)V	jg.c:Len;	ei.q:Lsa;	Client.uidFile	Unique lookup of Client.uidFile in paired consumer; la.a(Lwa;Z)V @34,40,49 and tj.a(Lgd;B)V @18,24,33 getstatic.
+jg.a(B)V	jg.k:Lna;	nh.R:Lid;	LocalisedText.germanLoadedTitleScreen	unique ('literal', 'Titelbild geladen)3')
+u.a(B)V	u.f:Lna;	wk.u:Lid;	LocalisedText.ignoresFull	unique incoming localized constants ('Ihre Ignorieren)2Liste ist voll)1 Sie k-Onnen nur 100 Spieler darauf eintragen)3', 'Votre liste noire est pleine (X100 noms maximum(Y)3')
+u.a(B)V	u.l:Lna;	wk.t:Lid;	LocalisedText.englishIgnoresFull	unique ('literal', 'Your ignore list is full)3 Max of 100 users)3')
+u.a(B)V	u.d:Lna;	se.g:Lid;	LocalisedText.frenchStarted3dLibrary	unique ('literal', 'Librairie 3D d-Bmarr-Be')
+u.a(B)V	u.g:Lna;	ac.o:Lid;	CookieStatics.paramCookieHost	unique ('literal', 'cookiehost')
+oc.a()V	oc.a:Lbb;	rd.a:Lme;	BZip2Decompressor.state	shared subsystem cleanup rd.a()V
+bb.b(I)V	bb.N:Lna;	de.s:Lid;	LocalisedText.germanChatcol0	unique ('literal', 'gelb:')
+bb.b(I)V	bb.t:[[B	wk.r:[[B	ByteArrayPool.medium	The 5000-byte branch decrements the count, takes the array and clears that slot. HD sh.a(II)[B @78 getstatic, 92 getstatic. SD oi.a(BI)[B @65 getstatic, 79 getstatic.
+bb.b(I)V	bb.m:Lna;	ek.J:Lid;	TitleFlames.runesName	unique ('literal', 'runes')
+bb.b(I)V	bb.A:Lna;	fi.b:Lid;	Client.commandPrefix	unique ('literal', '::')
+bb.b(I)V	bb.g:[[[B	tb.t:[[[B	ClientBuild.m_mapl	reviewed operand Four planes of 104 by 104 tile flags. The two terrain decoders store opcode minus 49 at the plane and tile coordinates.
+gf.d(I)V	gf.O:[[[I	nh.S:[[[I	world.underwaterHeightmap	reviewed operand Optional heightmap: when non-null the top bound takes plane zero of this array and adds 128 after subtracting eye height. HD mf.a(IIIII[[[B[I[I[I[I[IIBII)V @351 getstatic; SD qc.a(IIIII[[[B[I[I[I[I[IIBII)V @315 getstatic; TS src/dash3d/world.ts underwaterHeightmap.
+gf.d(I)V	gf.I:Lna;	ff.y:Lid;	Client.urlDomainSuffix	unique ('literal', ')3runescape)3com)4l=')
+gf.d(I)V	gf.S:[I		TerrainBuilder.blendVertexCounts	HD-only terrain builders a.a([[F[[F[[II[[F[[B[[II[[B[[B[[B[[[B)[Lhg; and pi.a([[[B[[B[[B[[I[[F[[I[[B[[B[[FI[[F[[I[[I[[II)[Lhg;. a.a reserves this many additional vertices for the shape only when blending with a nonzero underlay. TS src/dash3d/TerrainBuilder.ts blendVertexCounts.
+he.f(I)V	he.db:Lna;	ec.q:Lid;	WorldMap.empty	Unique '' operand in paired consumer rc.a(Lna;Z)Lna; @32 and t.a(Lid;I)Lid; @19.
+he.f(I)V	he.eb:[I	oh.m:[I	Client.activeMapFunctionZ	HD ed.a(IBIILbe;)V / SD fd.a(ILaj;III)V. Minimap builder HD kl.b stores the grid's second subscript minus Z origin here. Draw uses four times the stored tile relative to player Z. TS src/client/Client.ts activeMapFunctionZ.
+he.f(I)V	he.bb:Lug;	ai.g:Luk;	ClientMouseListener.instance	only shutdown field of paired type Luk;
+he.f(I)V	he.ab:Lsc;	jk.A:Lnc;	AreaSoundManager.players	Player sounds use a hash table keyed by the player. HD jh.a(IZLpb;ILkm;IILe;)V @469 getstatic. SD da.a(ILjb;IILpb;ILbk;I)V @314 getstatic.
+he.f(I)V	he.gb:Lna;	jl.d:Lid;	Client.urlHostWww	unique ('literal', 'www')
+he.f(I)V	he.V:Ln;	gf.Z:Lve;	NpcType.m_recentUse	NPC definition cache around config fetch. HD rg.b(II)Lme; @8 getstatic, 101 getstatic. SD uk.a(II)Lja; @8 getstatic, 98 getstatic.
+he.f(I)V	he.cb:Lve;	ec.j:Lal;	SpotType.m_pModels	Spot animation model lookup on cache miss; eg.a(IBII)Lak; @50 and li.a(IBII)Lnd; @43 getstatic.
+he.f(I)V	he.fb:Ln;	vf.T:Lve;	LocType.m_mc2	HD pb.a(II[[III[[IZLek;BZI)Lsm; / SD jb.a([[IIIIZB[[ILch;IIZ)Lwj;. The other loc model builder probes and populates its static source cache with its same type/shape/orientation key. TS src/config/LocType.ts m_mc2.
+q.a(I)V	q.b:Lna;	da.g:Lid;	LocalisedText.germanConnectedToUpdateServer	unique ('literal', 'Verbindung zum Update)2Server hergestellt)3')
+q.a(I)V	q.f:Lna;	ve.c:Lid;	LocalisedText.frenchHidden	unique ('literal', 'Cach-B')
+q.a(I)V	q.h:Lna;		Client.cardLabel	HD storage declaration
+q.a(I)V	q.d:[[S	gk.b:[[S	PlayerModel.recolourDestinationsAlt	Client startup assigns the two recolour palette sets to the actual actor-builder statics in both JARs. Both startup selectors choose this alternate primary destination palette alongside alternate sources beginning 960. TS src/dash3d/PlayerModel.ts recolourDestinationsAlt.
+q.a(I)V	q.a:Lna;	v.L:Lid;	Client.worldUrlAdvertFlag	unique ('literal', ')1a2)1m')
+q.a(I)V	q.g:Lna;	fd.db:Lid;	LocalisedText.frenchLoadingFonts	unique ('literal', 'Chargement des polices )2 ')
+ea.c(I)V	ea.s:[I	kk.Q:[I	VarBitType.m_maskLookUp	Varbit getter uses the end-minus-start bit width to index the mask array then masks the shifted variable. HD me.a(II)I @45 getstatic. SD ie.a(II)I @46 getstatic.
+ea.c(I)V	ea.r:[[B	oh.g:[[B	ClientPlayer.debugBallast	HD e.a(IIIIIIIIJILga;)V / SD pb.a(IIIIIIIIJILue;)V. Debug memory ballast grows by byte[102400] for each missing unit and explicitly nulls entries in the shrink loop. TS src/dash3d/ClientPlayer.ts debugBallast.
+ea.c(I)V	ea.p:Lna;	client.kb:Lid;	LocalisedText.tradeRequest	unique incoming localized constants ('m-Ochte mit Ihnen handeln)3', 'voudrait faire un -Bchange avec vous)3')
+ea.c(I)V	ea.q:Lna;	client.lb:Lid;	LocalisedText.englishTradeRequest	unique ('literal', 'wishes to trade with you)3')
+wh.a(B)V	wh.m:[I	fa.n:[I	OrbitCamera.shakeAmplitude	membermap HD ui.a / SD kk.a: camera positioning, axis-specific shake or world draw arguments.
+wh.a(B)V	wh.c:[[[Lbj;	vf.V:[[[Lra;	world.underwaterSquares	reviewed operand Tests this layer for null immediately before switching to underwater and drawing a separate pass. HD mf.a(IIIII[[[B[I[I[I[I[IIBII)V @614 getstatic; SD qc.a(IIIII[[[B[I[I[I[I[IIBII)V @600 getstatic; TS src/dash3d/world.ts underwaterSquares.
+wh.a(B)V	wh.u:Lna;	qk.E:Lid;	Client.percent2	unique ('literal', '(U2')
+wh.a(B)V	wh.o:Lna;	dl.b:Lid;	Client.rectDebugPrefix	unique ('literal', 'rect_debug=')
+wh.a(B)V	wh.g:[I	uh.Q:[I	Client.soundEffectLoops	HD ca.a(IIII)V and ma.a(ILtk;IIZI)V / SD uj.a(ZIII)V and sf.a(Lek;IIIZI)V. Both enqueue paths take the repeat count; the animation path extracts its 3-bit setting. TS src/client/Client.ts soundEffectLoops.
+wh.a(B)V	wh.j:[Lcl;	wk.b:[Lhf;	PlayerModel.slotFramesets	Original HD hh.a([Lub;ILtk;Ltk;IIIIZII)Lak; and SD cl.a(IILek;IZ[Lci;IIZLek;I)Lnd;. The current slot frameset is fetched with packed frame id >>> 16 and supplied to the masked animator. TS src/dash3d/PlayerModel.ts slotFramesets.
+wh.a(B)V	wh.l:[Lqf;	wa.a:[Lvc;	Client.hintHeadicons	membermap HD ui.a / SD kk.a: ordered projection inputs, crosshair/arrow sprite selection, or viewport menu call sites.
+wh.a(B)V	wh.n:Lna;	h.d:Lid;	CookieStatics.cookiePathDomain	unique ('literal', '; version=1; path=)4; domain=')
+hl.e()V	hl.M:Lai;	qb.P:Lk;	NativePcmPlayer.device	shared subsystem cleanup qb.e()V
+nl.a()V	nl.b:[[F	ub.g:[[F	Filter.workspace	shared subsystem cleanup ub.a()V
+nl.a()V	nl.f:[[I	ub.a:[[I	Filter.coefficients	shared subsystem cleanup ub.a()V
+dh.a(I)V	dh.d:[I	ii.j:[I	Client.entityUpdateIds	NPC movement decode HD dm.a(B)V / SD ob.e(B)V appends id on movement update type zero and on post-step update bit one, for the subsequent entity mask decoding pass. TS src/client/Client.ts entityUpdateIds.
+dh.a(I)V	dh.i:Lna;	oa.e:Lid;	Client.modCrownTag	Unique '<img=1>' operand in paired consumer ac.a(B)Z @2099,6880,9405,9717 and rg.a(B)Z @2529,6672,8219,10476.
+dh.a(I)V	dh.e:Lna;	mf.n:Lid;	Client.playerCachePrefix	unique ('literal', 'Number of player models in cache:')
+vf.a(B)V	vf.a:Ln;	ig.n:Lve;	BASTypeList.types	membermap Group 32 BASType lookup checks the cache, reads and decodes, then calls PostDecode before insertion.
+vf.a(B)V	vf.i:Lna;	di.j:Lid;	LocalisedText.chatcol10	unique incoming localized constants ('brillant2:', 'leuchten2:')
+vf.a(B)V	vf.e:Lna;	ld.m:Lid;	LocalisedText.attempt_to_reestablish	unique incoming localized constants ('Bitte warten Sie )2 es wird versucht)1 die Verbindung wiederherzustellen)3', 'Veuillez patienter )2 tentative de r-Btablissement)3')
+vf.a(B)V	vf.d:Lna;	ld.n:Lid;	LocalisedText.englishAttemptToReestablish	unique ('literal', 'Please wait )2 attempting to reestablish)3')
+vf.a(B)V	vf.j:Lna;	di.k:Lid;	LocalisedText.englishChatcol10	unique ('literal', 'glow2:')
+vf.a(B)V	vf.g:[I	jk.r:[I	PlayerModel.layerFrameDelays	Original HD hh.a([Lub;ILtk;Ltk;IIIIZII)Lak; and SD cl.a(IILek;IZ[Lci;IIZLek;I)Lnd;. The per-slot duration comes from the sequence delay array and is cleared to zero without a tween. TS src/dash3d/PlayerModel.ts layerFrameDelays.
+vf.a(B)V	vf.n:Lve;	a.b:Lal;	QuickChatPhraseTypeList.global	Quick-chat phrase IDs masked with 32767, group 1; sj.b(II)Lcb; @58 and bb.b(II)Lpe; @36 getstatic.
+vf.a(B)V	vf.l:Ln;	uj.f:Lve;	LocType.m_mc3	HD pb.a(IILek;ILtk;I[[IZII[[IIII)Lsm; / SD jb.a(IIIIII[[IIZIBLch;[[ILek;)Lwj;. The animated loc model branch caches the prepared per-type model at the rotated model key before sequence animation. TS src/config/LocType.ts m_mc3.
+vf.a(B)V	vf.h:Lna;	di.f:Lid;	LocalisedText.defaultChatcol10	only remaining initializer alias of vf.j:Lna; / di.k:Lid;
+vf.a(B)V	vf.k:Ln;	pb.xc:Lve;	NpcType.headModelCache	NPC head model cache lookup and insertion, distinct from body model and definition caches. HD me.a(Ltk;IIII)Lak; @65 getstatic, 415 getstatic. SD ja.a(Lek;IIII)Lnd; @70 getstatic, 406 getstatic.
+rd.d()V	rd.d:[F		WaterProgramMaterial.ambient	HD cleanup and its native storage declaration
+pd.e()V	pd.b:[F		HighDetailWaterMaterial.environmentColour	HD cleanup and its native storage declaration
+ob.b(B)V	ob.e:Lna;	gh.G:Lid;	IfType.emptyString	Unique '' operand in paired consumer be.<init>()V @123,207,259,306,318 and aj.<init>()V @10,42,121,178,330.
+ob.b(B)V	ob.f:Lve;	jf.o:Lal;	TextureOpSprite.spriteArchive	membermap Texture graph decode, size or gamma setup and source binding in HD lc.a and SD jd.a.
+ob.b(B)V	ob.a:[Z	qh.h:[Z	OrbitCamera.shake	membermap HD ui.a / SD kk.a: camera positioning, axis-specific shake or world draw arguments.
+ob.b(B)V	ob.p:Lna;	na.x:Lid;	ScriptRunner.gosubErrorPrefix	unique ('literal', '(U0a )2 non)2existant gosub script)2num: ')
+ob.b(B)V	ob.c:Lna;	o.X:Lid;	LocalisedText.germanSkill	unique ('literal', 'Fertigkeit: ')
+ob.b(B)V	ob.o:Lna;	ai.m:Lid;	Client.urlAffiliatePart	Unique ')4a=' operand in paired consumer ob.a(IB)Z @247 and fd.a(II)Z @235.
+ja.a(I)V	ja.s:Lna;	gi.q:Lid;	GameWorld.httpPrefix	Unique 'http:)4)4' operand in paired consumer ob.a(IB)Z @213 and fd.a(II)Z @202.
+ja.a(I)V	ja.o:Lna;	aa.f:Lid;	LocalisedText.frenchTradeRequest	unique ('literal', 'voudrait faire un -Bchange avec vous)3')
+ja.a(I)V	ja.f:Lih;	ra.r:Lgk;	Client.mouseExit	Mouse release and exit hooks append with relative coordinates; client.a([Lbe;IIIIIII)V @1704,2044 and client.a([Laj;IIIIIII)V @1665,2005 getstatic.
+ja.a(I)V	ja.p:Lna;	id.bb:Lid;	LocalisedText.frenchAlreadyFriend	unique ('literal', ' est d-Bj-9 dans votre liste d(Wamis)3')
+ja.a(I)V	ja.k:Lna;	d.f:Lid;	WorldMap.fpsLabel	Unique 'Fps:' operand in paired consumer wa.a(IIIII)V @756 and ah.a(IIIII)V @449.
+ja.a(I)V	ja.b:Lna;	tg.u:Lid;	LocalisedText.frenchSelect	unique ('literal', 'S-Blectionner')
+ja.a(I)V	ja.l:[Lwa;	d.d:[Lgd;	ReceivePlayerPositions.m_apCache	only shutdown field of paired type [Lgd;
+ja.a(I)V	ja.d:Lna;	fa.r:Lid;	LocalisedText.frenchLevel	unique ('literal', 'niveau ')
+jc.a()V	jc.T:[B	ni.S:[B	JagVorbis.data	shared subsystem cleanup ni.a()V
+jc.a()V	jc.I:[Lji;	ni.y:[Ldh;	JagVorbis.m_codebook	shared subsystem cleanup ni.a()V
+jc.a()V	jc.J:[Lie;	ni.I:[Llb;	JagVorbis.m_floor	shared subsystem cleanup ni.a()V
+jc.a()V	jc.u:[Lvb;	ni.s:[Li;	JagVorbis.m_residue	shared subsystem cleanup ni.a()V
+jc.a()V	jc.A:[Luk;	ni.X:[Lfh;	JagVorbis.m_mapping	shared subsystem cleanup ni.a()V
+jc.a()V	jc.v:[Z	ni.G:[Z	JagVorbis.m_modeBlockflag	shared subsystem cleanup ni.a()V
+jc.a()V	jc.W:[I	ni.Q:[I	JagVorbis.m_modeMapping	shared subsystem cleanup ni.a()V
+jc.a()V	jc.F:[F	ni.N:[F	JagVorbis.block	shared subsystem cleanup ni.a()V
+jc.a()V	jc.C:[F	ni.K:[F	JagVorbis.m_A0	shared subsystem cleanup ni.a()V
+jc.a()V	jc.P:[F	ni.q:[F	JagVorbis.m_B0	shared subsystem cleanup ni.a()V
+jc.a()V	jc.S:[F	ni.W:[F	JagVorbis.m_C0	shared subsystem cleanup ni.a()V
+jc.a()V	jc.B:[F	ni.D:[F	JagVorbis.m_A1	shared subsystem cleanup ni.a()V
+jc.a()V	jc.p:[F	ni.T:[F	JagVorbis.m_B1	shared subsystem cleanup ni.a()V
+jc.a()V	jc.q:[F	ni.u:[F	JagVorbis.m_C1	shared subsystem cleanup ni.a()V
+jc.a()V	jc.t:[I	ni.O:[I	JagVorbis.m_bitrev0	shared subsystem cleanup ni.a()V
+jc.a()V	jc.L:[I	ni.B:[I	JagVorbis.m_bitrev1	shared subsystem cleanup ni.a()V
+ie.a()V	ie.k:[I	lb.a:[I	Floor.ranges	shared subsystem cleanup lb.b()V
+ie.a()V	ie.l:[F	lb.f:[F	Floor.inverseDb	shared subsystem cleanup lb.b()V
+ie.a()V	ie.h:[I	lb.g:[I	Floor.xs	shared subsystem cleanup lb.b()V
+ie.a()V	ie.j:[I	lb.d:[I	Floor.ys	shared subsystem cleanup lb.b()V
+ie.a()V	ie.b:[Z	lb.e:[Z	Floor.enabled	shared subsystem cleanup lb.b()V
+bi.a(Z)V	bi.Y:[[B		Client.sceneMapUnderwaterLocData	HD storage declaration
+bi.a(Z)V	bi.W:Lna;	we.t:Lid;	WorldMap.memSuffix	Unique 'k' operand in paired consumer wa.a(IIIII)V @857 and ah.a(IIIII)V @543.
+vl.a(Z)V	vl.i:[I	gh.L:[I	RoofModeStatics.roofMaxX	membermap HD ui.a / SD kk.a: ordered projection inputs, crosshair/arrow sprite selection, or viewport menu call sites.
+vl.a(Z)V	vl.f:Lna;	mk.C:Lid;	WordPack.cabbage	unique ('literal', 'Cabbage')
+vl.a(Z)V	vl.e:[I	gh.B:[I	ClientBuild.WSHAPE0	identical primitive array initializer 18 instructions
+vl.a(Z)V	vl.g:Lve;	rk.k:Lal;	Client.modelsArchive	MainLoad JS5 archive 7
+vl.a(Z)V	vl.a:Ln;	gl.x:Lve;	AnimFrameSet.cache	Unique lookup of AnimFrameSet.cache in paired consumer; fl.b(II)Lcl; @27,69 and gb.a(II)Lhf; @8,54 getstatic.
+j.d(I)V	j.O:[I	lj.i:[I	ClientBuild.DECORXOF2	identical primitive array initializer 18 instructions
+j.d(I)V	j.M:Lna;	ek.B:Lid;	Client.replaceCanvasCommand	unique ('literal', '::replacecanvas')
+j.d(I)V	j.z:Lna;	ki.N:Lid;	Client.shiftClickCommand	unique ('literal', '::shiftclick')
+j.d(I)V	j.x:Lrk;	ma.b:Lmb;	Client.fontPlain11	Plain 11 font loader slot consumed in overhead label draw; hn.a(Lve;ILve;)V @11 and si.a(BLal;Lal;)V @18 putstatic.
+wf.b(I)V	wf.b:[I	qj.B:[I	SpriteLoader.xOffsets	reviewed operand Sprite constructor argument 3 is this entry's X offset. HD cj.a(I)[Lqf; @120 getstatic; SD oc.a(B)[Lvc; @108 getstatic; TS src/graphics/SpriteLoader.ts xOffsets.
+wf.b(I)V	wf.g:Lve;	sf.b:Lal;	Client.configArchive	MainLoad JS5 archive 2
+wf.b(I)V	wf.h:Lna;	od.Y:Lid;	LocalisedText.germanLoadedUpdateList	unique ('literal', 'Update)2Liste geladen)3')
+wf.b(I)V	wf.o:[Lgb;	ll.j:[Lcb;	LocType.temp	only shutdown field of paired type [Lcb;
+wf.b(I)V	wf.s:Lna;	hh.fb:Lid;	Client.tweenDisabled	unique ('literal', 'Forced tweening disabled)3')
+wf.b(I)V	wf.j:Lbe;	ai.i:Laj;	ScriptRunner.activeComponent2	reviewed operand Secondary active widget selected when the extended opcode operand is one. Both widget creation and deletion use this selection.
+nd.c(B)V	nd.t:Lve;	wh.X:Lal;	Client.materialsArchive	MainLoad JS5 archive 26
+nd.c(B)V	nd.v:Lve;	pb.nc:Lal;	IfType.m_pFontMetrics	IfType font loader metrics archive; second stage after loading glyph sprite; be.a([Lok;I)Lrk; @58 and aj.a([Lsi;B)Lmb; @53 getstatic.
+nd.c(B)V	nd.q:[[I	qd.t:[[I	RouteFinding.m_distMap	two method windows aa.a(IIIIIZIIIIII)Z, di.a(IIIIIIIIZIII)Z
+nd.c(B)V	nd.b:Lna;	qe.fb:Lid;	ScriptRunner.scriptErrorPrefix	unique ('literal', 'Clientscript error in: ')
+nd.c(B)V	nd.y:Lmm;	uf.g:Lrh;	TitleFlames.flameSprite	The writable title flame sprite used for animated output; s.b(III)V @198,273,305,368,381,389,395 and vb.b(III)V @145,221,309,365 getstatic.
+nd.c(B)V	nd.u:Lna;	kh.E:Lid;	LocalisedText.germanCancel	unique ('literal', 'Abbrechen')
+nd.c(B)V	nd.x:Lna;	rk.j:Lid;	WorldList.settingsParamPrefix	Unique ')4p=' operand in paired consumer ob.a(IB)Z @189 and fd.a(II)Z @178.
+nd.c(B)V	nd.p:Lve;	s.S:Lal;	BASTypeList.archive	membermap Group 32 BASType lookup checks the cache, reads and decodes, then calls PostDecode before insertion.
+nd.c(B)V	nd.n:Lve;	wd.i:Lal;	ObjType.m_pConfigClient	Object definition archive in GetType; fk.a(IB)Lh; @31 and rg.a(II)Lkl; @36 getstatic.
+nd.c(B)V	nd.c:[B	je.Q:[B	TextureOpEmboss.inverseNormalLength	HD pk.a(IB)[I / SD ab.a(IB)[I. The emboss filter accesses the inverse normal length table at max*(max+1)/2+min and masks its signed byte to 255. TS src/dash3d/TextureOpEmboss.ts inverseNormalLength.
+nd.c(B)V	nd.r:Lna;	gf.bb:Lid;	Client.jsZap	unique ('literal', 'zap')
+pf.a(I)V	pf.b:Ln;	bj.b:Lve;	IfType.m_spriteCache	component sprite LRU get/put; be.a(ZI)Lqf; @61,105 and aj.b(ZI)Lvc; @51,91 getstatic.
+pf.a(I)V	pf.r:[I	ia.n:[I	Minimenu.cursor	AddEntry appends cursor or default cursor at menu size; hj.a(IJBLna;ISLna;I)V @75 and tb.a(BLid;SLid;IIJI)V @53 getstatic.
+pf.a(I)V	pf.h:[J	pi.r:[J	Client.ignoreName37	Ignored base37 account written from incoming long and used to decode ignored display name. ac.a(B)Z @600, 853, 969, 1122; rg.a(B)Z @384, 495, 725, 845 getstatic.
+pf.a(I)V	pf.l:Lna;	sb.j:Lid;	LocalisedText.germanMoreOptions	unique ('literal', ' weitere Optionen')
+pf.a(I)V	pf.f:Len;	q.c:Lsa;	DataFile.masterIndexFile	The index file with a 6000-byte read buffer is passed to cache index 255 alongside the data file. HD client.g(I)V @460 putstatic, 473 getstatic, 544 putstatic. SD client.b(B)V @446 putstatic, 459 getstatic, 530 putstatic.
+hb.d(I)V	hb.x:Lna;	r.W:Lid;	LocalisedText.germanPleaseWait	unique ('literal', 'Bitte warten Sie)3)3)3')
+hb.d(I)V	hb.t:[I	kk.T:[I	world.midTab	HD ub.a(Lbj;Z)V / SD p.a(Lra;Z)V. The intersection with wall orientation controls the rest of the deferred wall setup. TS src/dash3d/world.ts midTab.
+hb.d(I)V	hb.p:Lna;	pg.B:Lid;	LocalisedText.frenchMillionSuffixAmount	Unique 'M' operand in paired consumer lk.a(Z)V @344,430 and sk.e(I)V @192,522.
+hb.d(I)V	hb.v:[[[B	mg.o:[[[B	WorldMap.overlayShapes	ground overlay shape/angle; dk.a(Lwa;Z)V @336,348,362 and gl.a(Lgd;I)V @354,366,380 getstatic.
+lc.a(Z)V	lc.e:Ln;	ga.B:Lve;	SeqType.m_recentUse	Sequence definition getter caches the parsed definition. HD client.a(IB)Ltk; @24 getstatic, 106 getstatic. SD tb.b(II)Lek; @8 getstatic, 100 getstatic.
+lc.a(Z)V	lc.m:Lna;	lg.N:Lid;	CookieStatics.settingsCookieKey	unique ('literal', 'settings=')
+gj.a(B)V	gj.q:[I	ii.c:[I	Client.varpUpdates	Varp change ring takes server-side var differing from the current value. ac.a(B)Z @6498; rg.a(B)Z @5531 getstatic.
+gj.a(B)V	gj.p:Ln;	vj.h:Lve;	FluType.m_list	membermap Stage 70 config stores, group 1/4 definition lookup or overlay opcode in the two floor decoders.
+gj.a(B)V	gj.m:[[[I	ve.q:[[[I	world.levelHeightmaps	membermap aligned field accesses
+gj.a(B)V	gj.i:[[[I	qj.L:[[[I	WorldMap.locIds	world-map icon locId grid; sm.a(IIIIIIIIIII)V @179,192 and e.a(IIIIIIIIIII)V @185,200 getstatic.
+we.c(B)V	we.v:Lfd;	lk.E:Leg;	WorldMap.font11	Map font allocated with constructor size 11; pa.d(I)V @1005 and lg.b(Z)V @977 putstatic.
+we.c(B)V	we.H:[[B	mk.G:[[B	Client.sceneMapLandData	reviewed operand Both test the ordinary terrain-file bytes for null at the region index before requesting the terrain archive. HD gd.c(I)V @30 getstatic; SD gj.e(I)V @42 getstatic; TS src/client/Client.ts sceneMapLandData.
+vd.d(I)V	vd.v:Lna;	gi.l:Lid;	SpriteLoader.hitbarDefaultName	unique ('literal', 'hitbar_default')
+vd.d(I)V	vd.B:[S	ik.Z:[S	PlayerModel.recolourSourcesRs	identical primitive array initializer 22 instructions
+vd.d(I)V	vd.F:Lna;	ci.k:Lid;	WorldList.zero	Unique '0' operand in paired consumer ob.a(IB)Z @285,311,343 and fd.a(II)Z @278,304,330.
+vd.d(I)V	vd.w:Lvk;	rg.s:Loh;	GameShell.drawArea	only shutdown field of paired type Loh;
+ef.a(B)V	ef.t:Lna;	si.p:Lid;	LocalisedText.defaultChateffect4	only remaining initializer alias of ef.m:Lna; / si.r:Lid;
+ef.a(B)V	ef.o:Lna;	si.d:Lid;	LocalisedText.chateffect4	unique incoming localized constants ('d-Broulement:', 'scrollen:')
+ef.a(B)V	ef.q:Lna;	tg.J:Lid;	LocalisedText.level	unique incoming localized constants ('Stufe: ', 'niveau ')
+ef.a(B)V	ef.c:[I	ml.x:[I	Minimenu.paramC	AddEntry appends second tile/component argument at menu size; hj.a(IJBLna;ISLna;I)V @121 and tb.a(BLid;SLid;IIJI)V @100 getstatic.
+ef.a(B)V	ef.s:Lna;	tg.H:Lid;	LocalisedText.englishLevel	unique ('literal', 'level: ')
+ef.a(B)V	ef.l:Lna;	l.B:Lid;	LocalisedText.frenchLoadingInterfaces	unique ('literal', 'Chargement des interfaces )2 ')
+ef.a(B)V	ef.j:Lmm;	ob.Kb:Lrh;	MinimapBuilder.pendingImage	reviewed operand Both retain this software minimap staging image through a failed map-scene sprite request and clear it after a successful build. HD kl.b(II)Z @18 getstatic; SD ph.a(IZ)Z @26 getstatic; TS src/dash3d/MinimapBuilder.ts pendingImage.
+ef.a(B)V	ef.r:Lbe;	m.W:Laj;	ComponentDrag.target	Drag release hook event target and drag/drop outgoing component fields; ac.b(I)V @433,472,527,541 and fl.b(B)V @432,445,494,508 getstatic.
+ef.a(B)V	ef.a:[I	sg.f:[I	Client.FACING_MAP	Regional NPC spawn HD mh.h(B)V / SD vg.e(I)V indexes by NPC type initial facing, assigning both current and target facing before the turn-speed-zero override. TS src/client/Client.ts FACING_MAP.
+ef.a(B)V	ef.n:Lna;	ck.s:Lid;	LocalisedText.skill	unique incoming localized constants ('Fertigkeit: ', 'comp-Btence ')
+ef.a(B)V	ef.m:Lna;	si.r:Lid;	LocalisedText.englishChateffect4	unique ('literal', 'scroll:')
+ef.a(B)V	ef.f:Lna;	qe.eb:Lid;	Protocol.duelStakeTag	unique ('literal', ':duelstake:')
+ef.a(B)V	ef.h:Lna;	fl.a:Lid;	Client.jsUnzap	unique ('literal', 'unzap')
+ef.a(B)V	ef.k:Lna;	ck.F:Lid;	LocalisedText.englishSkill	unique ('literal', 'skill: ')
+ef.a(B)V	ef.p:Lvj;	ba.f:Lhd;	AudioEngine.decimator	only shutdown field of paired type Lhd;
+ef.a(B)V	ef.b:Ln;	m.O:Lve;	SpotType.m_modelCache	Spot animation base-model cache used before frame transform. HD eg.a(IBII)Lak; @13 getstatic, 198 getstatic. SD li.a(IBII)Lnd; @13 getstatic, 185 getstatic.
+ed.d(I)V	ed.r:Lna;	uh.S:Lid;	LocalisedText.germanLoadedWordpack	unique ('literal', 'Wordpack geladen)3')
+ed.d(I)V	ed.D:Lna;	hl.l:Lid;	MapArea.details	Unique 'details' operand in paired consumer ta.a([Lmm;ILve;)V @49 and mc.a(I[Lrh;Lal;)V @38.
+ed.d(I)V	ed.H:Lna;	vc.Q:Lid;	Client.colEndTimes	unique ('literal', '<)4col> x')
+fc.a(I)V	fc.d:Lna;	ck.r:Lid;	LocalisedText.germanLoadingInterfaces	unique ('literal', 'Lade Benutzeroberfl-=che )2 ')
+fc.a(I)V	fc.f:Lna;	rf.y:Lid;	Client.modIconTag	Unique '<img=0>' operand in paired consumer ac.a(B)Z @2210,6933,9362,9784 and rg.a(B)Z @2576,6586,8319,10432.
+fc.a(I)V	fc.g:Lna;	pe.F:Lid;	LocalisedText.frenchUse	unique ('literal', 'Utiliser')
+ig.a(B)V	ig.c:Lna;	ea.j:Lid;	LocalisedText.englishContinue	unique ('literal', 'Continue')
+ig.a(B)V	ig.e:Lna;	ll.s:Lid;	LocalisedText.germanLoadingPleaseWait2	unique ('literal', 'Ladevorgang )2 bitte warten Sie)3')
+ig.a(B)V	ig.g:Lna;	ea.i:Lid;	LocalisedText.continue	unique incoming localized constants ('Continuer', 'Weiter')
+mi.h(I)V	mi.S:[Le;	tf.J:[Lpb;	Client.players	reviewed operand Both select a player by encoded entity id from this array for the action menu. The sibling NPC branch uses a different array. HD ob.a(IIIIIIB)V @1189 getstatic; SD pg.a(IIIIIII)V @1145 getstatic; TS src/client/Client.ts players.
+mi.h(I)V	mi.R:Lna;	ff.E:Lid;	WorldMap.comma	Unique ')1' operand in paired consumer en.a(IIIB)V @30,48,67,87 and uh.a(IIII)V @29,46,64,83.
+mi.h(I)V	mi.W:[Z	c.v:[Z	SpriteLoader.hasAlpha	Decode indexed sprites allocates per-sprite alpha-present flag; gk.a([BI)V @63 and og.a(B[B)V @40 putstatic.
+mi.h(I)V	mi.T:[Lok;	ag.k:[Lsi;	PixfontGeneric.nameIcons	Tooltip font configures inline name/mod icons; dm.a(Lbe;III)V @113 and ii.a(ILaj;IB)V @46 getstatic.
+mi.h(I)V	mi.U:[J	sa.z:[J	Minimenu.keys	unique typed field in i.p(II)V, qe.b(II)V, wl.b(I)V
+mi.h(I)V	mi.Y:[[[Lih;	b.H:[[[Lgk;	Client.groundObj	reviewed operand Both reset the per-plane, per-tile ground object lists; the zone packet handler indexes the same array when adding objects. HD tk.a(Z)V @7309 getstatic; SD tj.a(I)V @6911 getstatic; TS src/client/Client.ts groundObj.
+fm.h(I)V	fm.eb:Lna;	mk.I:Lid;	Fonts.b12FullName	unique ('literal', 'b12_full')
+fm.h(I)V	fm.W:Lna;	la.cb:Lid;	JagString.minusSign	Unique ')2' operand in paired consumer oj.a(IZIJI)Lna; @41 and ui.a(JIIBZ)Lid; @32.
+fm.h(I)V	fm.gb:Lna;	wb.T:Lid;	WorldMap.upper	unique ('literal', 'overlay2')
+fm.h(I)V	fm.S:Ln;	wk.o:Lve;	Client.npcHitbarSprites	Unique lookup of Client.npcHitbarSprites in paired consumer; lc.a(IIIIIII)V @1067,1125 and vj.a(IIIIIII)V @1027,1078 getstatic.
+fm.h(I)V	fm.fb:[I	qj.r:[I	PlayerModel.layerFrameCycles	Original HD hh.a([Lub;ILtk;Ltk;IIIIZII)Lak; and SD cl.a(IILek;IZ[Lci;IIZLek;I)Lnd;. The per-slot cycle comes from the active animation record and is decremented when submitted. TS src/dash3d/PlayerModel.ts layerFrameCycles.
+fm.h(I)V	fm.T:Lna;	ta.T:Lid;	LocalisedText.frenchMenuSeparator	French menu operation/target separator. bb.a(B)V @283; sk.e(I)V @168 getstatic.
+fm.h(I)V	fm.db:Lgn;	sc.Q:Lvj;	QuickChatCatTypeList.types	Local and global quick-chat category lookups share this cache. HD tb.b(IB)Lbc; @8 getstatic, 123 getstatic. SD ib.a(BI)Lpg; @19 getstatic, 124 getstatic.
+rl.h(I)V	rl.Y:[Lna;	rj.k:[Lid;	CookieStatics.dayNames	cookie days array, cj.a(JB)Lna; / gk.a(IJ)Lid; or the CS2 4104 body
+rl.h(I)V	rl.ab:Lna;	rj.f:Lid;	CookieStatics.wed	unique ('literal', 'Wed')
+rl.h(I)V	rl.W:Lna;	rj.u:Lid;	CookieStatics.fri	unique ('literal', 'Fri')
+rl.h(I)V	rl.eb:Lna;	sj.D:Lid;	ScriptRunner.errorInLabel	unique ('literal', '(U0a )2 in: ')
+rl.h(I)V	rl.db:Lna;	rj.n:Lid;	CookieStatics.sun	unique ('literal', 'Sun')
+rl.h(I)V	rl.U:Lna;	rj.y:Lid;	CookieStatics.mon	unique ('literal', 'Mon')
+rl.h(I)V	rl.cb:Lna;	rj.w:Lid;	CookieStatics.tue	unique ('literal', 'Tue')
+rl.h(I)V	rl.P:Ln;	mk.A:Lve;	MSITypeList.spriteCache	Rotated map-scene sprite lookup and insertion. HD aa.a(IB)Lek; @13 getstatic, 136 getstatic. SD da.a(IB)Lch; @20 getstatic, 126 getstatic.
+rl.h(I)V	rl.bb:Lna;	rj.c:Lid;	CookieStatics.thu	unique ('literal', 'Thu')
+rl.h(I)V	rl.V:[Lqf;	oa.c:[Lvc;	Client.headiconsPk	PK headicon indexed by player skull; separate prayer overlay slot; lc.a(IIIIIII)V @242 and vj.a(IIIIIII)V @563 getstatic.
+rl.h(I)V	rl.S:Lna;	uh.R:Lid;	Client.hitmarksSpriteName	unique ('literal', 'hitmarks')
+rl.h(I)V	rl.T:Lna;	rj.g:Lid;	CookieStatics.sat	unique ('literal', 'Sat')
+qg.a(Z)V	qg.Y:[I	ll.d:[I	OrbitCamera.shakeFrequency	membermap HD ui.a / SD kk.a: camera positioning, axis-specific shake or world draw arguments.
+qg.a(Z)V	qg.ab:Lve;	kh.A:Lal;	IfType.m_pInterfaces	Interface group fetch on load; tm.b(II)Z @26,43,102 and qg.a(IZ)Z @18,32,96 getstatic.
+qg.a(Z)V	qg.U:Lna;	fe.O:Lid;	QuickChatPhraseType.empty	Unique '' operand in paired consumer cb.f(I)Lna; @39 and pe.c(Z)Lid; @35.
+qg.a(Z)V	qg.Z:Lna;	ec.h:Lid;	Client.gcPrefix	unique ('literal', 'mem=')
+mc.h(I)V	mc.Z:Lve;	ke.s:Lal;	CursorType.configArchive	Cursor definition archive in GetType; qg.d(II)Lia; @28 and il.a(ZI)Ldl; @35 getstatic.
+mc.h(I)V	mc.vb:Lna;	dl.f:Lid;	LocalisedText.languageCodeDe	unique ('literal', 'de')
+mc.h(I)V	mc.fb:Lna;	dl.g:Lid;	LocalisedText.languageCodePt	unique ('literal', 'pt')
+mc.h(I)V	mc.pb:Lna;	dl.j:Lid;	LocalisedText.languageCodeFr	unique ('literal', 'fr')
+mc.h(I)V	mc.Q:Lna;	ph.d:Lid;	WorldMap.previousMap	Previously open map reopened by name and then cleared; lb.d(B)V @11,20 and g.a(I)V @5,12 getstatic.
+mc.h(I)V	mc.ab:[I	kf.p:[I	PlayerModel.femaleBodyParts	identical primitive array initializer 34 instructions
+mc.h(I)V	mc.ob:[Lna;	dl.p:[Lid;	LocalisedText.languageCodes	Find language index by case-insensitive code match; hm.a(Lna;B)I @28,37 and fi.a(ILid;)I @18,37 getstatic.
+mc.h(I)V	mc.Y:[Lna;	m.T:[Lid;	ChatHistory.names	Chat history shift and head write for sender; md.a(IILna;Lna;BLna;)V @53,58,131 and jd.a(ILid;Lid;IILid;)V @43,48,110 getstatic.
+mc.h(I)V	mc.mb:Lna;	dl.k:Lid;	LocalisedText.languageCodeEn	unique ('literal', 'en')
+mc.h(I)V	mc.S:Lmm;		WorldMap.viewportImage	HD storage declaration
+nm.f(B)V	nm.P:[I	ae.c:[I	Client.npcSpawnGroupIds	Original regional rebuild HD gd.c(I)V and SD gj.e(I)V. Holds each NPC spawn group id. A positive id triggers the per-region keyed fetch if its data slot is null. TS src/client/Client.ts npcSpawnGroupIds.
+nm.f(B)V	nm.bb:Lna;	li.s:Lid;	Minimenu.red	unique ('literal', '<col=ff0000>')
+nm.f(B)V	nm.R:Lna;	we.x:Lid;	LocalisedText.germanClose	unique ('literal', 'Schlie-8en')
+nm.f(B)V	nm.S:[Lkm;	uc.l:[Lbk;	Client.npcs	reviewed operand Both select an NPC by encoded entity id from this array for the action menu. The sibling player branch uses a different array. HD ob.a(IIIIIIB)V @847 getstatic; SD pg.a(IIIIIII)V @818 getstatic; TS src/client/Client.ts npcs.
+nm.f(B)V	nm.W:Lna;	client.sb:Lid;	Client.pendingUrl	Successful pending URL request receives stored URL and then clears it. client.d(B)V @1123; client.g(B)V @458 getstatic.
+aj.h(I)V	aj.Z:[I	de.w:[I	world.hiddenRoofY	reviewed operand Both assign the first array parameter to the first roof occlusion input, after the visibility loops. HD mf.a(IIIII[[[B[I[I[I[I[IIBII)V @588 putstatic; SD qc.a(IIIII[[[B[I[I[I[I[IIBII)V @574 putstatic; TS src/dash3d/world.ts hiddenRoofY.
+aj.h(I)V	aj.R:Lna;	f.j:Lid;	Minimenu.orange	two method windows gn.a(III[Lbe;IIIIBI)V, i.p(II)V
+pi.f(B)V	pi.V:[Lna;	na.y:[Lid;	Client.ignoreNames	Ignored display name assigned by converting the received ignored base37 account. ac.a(B)Z @8783; rg.a(B)Z @6793 getstatic.
+pi.f(B)V	pi.bb:Lna;	ia.p:Lid;	LocalisedText.germanSelfIgnore	unique ('literal', 'Sie k-Onnen sich selbst nicht selbst auf Ihre Ignorieren)2Liste setzen(Q')
+pi.f(B)V	pi.Q:Lna;	sd.S:Lid;	JagString.nullString2	Unique 'null' operand in paired consumer jd.a(II[Lna;I)Lna; @39 and ug.a(I[Lid;IB)Lid; @49.
+wi.b(Z)V	wi.X:[[B	wg.e:[[B	ByteArrayPool.small	The 100-byte branch decrements the count, takes the array and clears that slot. HD sh.a(II)[B @28 getstatic, 42 getstatic. SD oi.a(BI)[B @23 getstatic, 37 getstatic.
+wi.b(Z)V	wi.R:[Lqf;	gf.cb:[Lvc;	SpriteLoader.hintMapEdge	Off-map rotated edge arrow; software path casts sprite, normal marker drawn nearby; hi.a(IIIIILbe;Z)V @235,298 and hd.a(Laj;IIIIII)V @203 getstatic.
+wi.b(Z)V	wi.hb:[[Z		TerrainBuilder.edgeVertices	HD-only terrain builders a.a([[F[[F[[II[[F[[B[[II[[B[[B[[B[[[B)[Lhg; and pi.a([[[B[[B[[B[[I[[F[[I[[B[[B[[FI[[F[[I[[I[[II)[Lhg;. a.a checks flags at indices 1 and 0 of the adjacent edge ID rows for overlay blending. TS src/dash3d/TerrainBuilder.ts edgeVertices.
+ej.a(Z)V	ej.cb:Lna;	vj.q:Lid;	LocalisedText.frenchChatcol7	unique ('literal', 'clignotant2:')
+um.i(I)V	um.U:Ldd;	ae.k:Lfg;	ObjType.m_countFont	Count font when rendering an item icon; na.a(IBZIZIIZ)Lqf; @580 and jb.a(IZIZIIZI)Lvc; @547 getstatic.
+um.i(I)V	um.V:Ljava/math/BigInteger;	mg.H:Ljava/math/BigInteger;	Login.rsaModulus	membermap HD ri.a(B)V and SD le.a(I)V: ordered login request fields or stage-8 response assignments.
+mg.h(I)V	mg.W:Lna;	wa.i:Lid;	LocalisedText.chatcol6	unique incoming localized constants ('blinken1:', 'clignotant1:')
+mg.h(I)V	mg.U:Lna;	wa.f:Lid;	LocalisedText.englishChatcol6	unique ('literal', 'flash1:')
+mg.h(I)V	mg.T:Lna;	wa.p:Lid;	LocalisedText.defaultChatcol6	only remaining initializer alias of mg.U:Lna; / wa.f:Lid;
+mg.h(I)V	mg.Y:Lna;	dl.c:Lid;	LocalisedText.frenchAllocatedMemory	unique ('literal', 'M-Bmoire attribu-Be')
+ag.i(I)V	ag.bb:Lna;	gk.f:Lid;	Minimenu.lime	unique ('literal', '<col=40ff00>')
+ag.i(I)V	ag.cb:[Lcl;	qh.f:[Lhf;	NpcType.layerFramesets	Original HD me.a([Lub;IBIIIILtk;ILtk;)Lak; and SD ja.a([Lci;ILek;IIIBIILek;)Lnd;. Layer frameset obtained using the current packed id's upper 16 bits. TS src/config/NpcType.ts layerFramesets.
+ag.i(I)V	ag.ab:Lna;	lg.I:Lid;	JagString.zero	Unique '0' operand in paired consumer oj.a(IZIJI)Lna; @261 and ui.a(JIIBZ)Lid; @174.
+ag.i(I)V	ag.P:Li;	qk.v:Lbe;	Client.out	membermap WINDOW_STATUS 243
+rj.h(I)V	rj.U:Lih;	cg.f:Lgk;	Client.projectiles	Active projectiles traversal; pk.i(I)V @24,357 and pk.a(I)V @23,365 getstatic.
+rj.h(I)V	rj.Z:[I	uf.m:[I	Client.mapNpcRegionIds	Regional NPC spawn HD mh.h(B)V / SD vg.e(I)V searches prior mapped region ids for the incoming spawn group, appending if new. The index becomes the low bits of spawned NPC ids. TS src/client/Client.ts mapNpcRegionIds.
+rj.h(I)V	rj.ab:Lna;	ie.w:Lid;	Protocol.clanRequestSuffix	unique ('literal', ':clanreq:')
+sa.h(I)V	sa.U:Lna;	le.b:Lid;	LocalisedText.englishUse	unique ('literal', 'Use')
+sa.h(I)V	sa.Q:[I	lj.f:[I	OrbitCamera.shakeRandom	membermap HD ui.a / SD kk.a: camera positioning, axis-specific shake or world draw arguments.
+sa.h(I)V	sa.R:Ljava/awt/Font;	wj.f:Ljava/awt/Font;	GameShell.progressFont	only shutdown field of paired type Ljava/awt/Font;
+sa.h(I)V	sa.X:Lna;	le.f:Lid;	LocalisedText.use	unique incoming localized constants ('Benutzen', 'Utiliser')
+hm.h(I)V	hm.fb:[Lba;	ke.y:[Lqk;	GameWorld.m_list	World list iterator returns successive entries from this array. HD h.a(I)Lba; @8 getstatic, 18 getstatic. SD bj.b(I)Lqk; @8 getstatic, 22 getstatic.
+hm.h(I)V	hm.T:Lna;	ai.c:Lid;	WorldMap.space	Unique ' ' operand in paired consumer hc.a(Lna;Z)I @59 and wh.a(Lid;B)I @56.
+hm.h(I)V	hm.lb:Lna;	hh.cb:Lid;	LocalisedText.frenchPreparedSoundEngine	unique ('literal', 'Moteur son pr-Bpar-B')
+hm.h(I)V	hm.R:Lna;	lj.a:Lid;	ScriptRunner.img1Tag	Unique '<img=1>' operand in paired consumer h.a(BILjl;)V @8419,9206,9611 and gh.a(Lwf;II)V @22358,23129,23517.
+hm.h(I)V	hm.Y:Lna;	ak.g:Lid;	Client.fpsLabel	Unique 'Fps:' operand in paired consumer gn.a(III[Lbe;IIIIBI)V @1644 and lf.a(I[Laj;IIIIIIZI)V @1433.
+f.f(B)V	f.T:[S	de.v:[S	LocType.recolPalette	Location raw-model builder indexes the short recolour palette when the definition has palette indices. HD pb.a(III)Lgb; @664 getstatic. SD jb.a(III)Lcb; @649 getstatic.
+f.f(B)V	f.W:Lfi;	mf.e:Ldd;	WordPack.codec	only shutdown field of paired type Ldd;
+f.f(B)V	f.P:[I		StaticPointLight.mPerlinNoise	HD gi constructor initializes this 2048-entry noise wave if null and uses it for per-light flicker; HdMapLightOracle snapshots precisely this field. TS src/dash3d/StaticPointLight.ts mPerlinNoise.
+f.f(B)V	f.ab:[[I	ke.o:[[I	world.waterSpriteKeys	reviewed operand Both allocate an int[x][z] key array only with the underwater layer. The SetSprite methods copy keys into empty tiles of the rectangular footprint. HD cd.a(IIIIZ)V @86 putstatic; SD mc.a(IIIIZ)V @73 putstatic; TS src/dash3d/world.ts waterSpriteKeys.
+hk.f(B)V	hk.bb:[I	nk.X:[I	Client.sceneMapUnderwaterLandFile	Region update g.a(IZ)V and its SD counterpart request the same underwater names. Region group lookup uses the um prefix for underwater ground. HD gd.c(I)V fetches these IDs into pa.L. TS src/client/Client.ts sceneMapUnderwaterLandFile.
+hk.f(B)V	hk.W:Lih;	ph.g:Lgk;	MapSpotAnim.active	Active spot animations tick; u.a(Z)V @9,134 and mf.a(I)V @24,139 getstatic.
+hk.f(B)V	hk.fb:[I	di.i:[I	Client.statEffectiveLevel	two method windows ac.a(B)Z, we.a(BILbe;)I
+hk.f(B)V	hk.db:Lna;		Client.wm3Command	HD storage declaration
+kd.a(Z)V	kd.kb:Lna;	kf.g:Lid;	LocalisedText.englishAllocatingMemory	unique ('literal', 'Allocating memory')
+kd.a(Z)V	kd.tb:Lna;	sf.k:Lid;	LocalisedText.frenchConnectedToUpdateServer	unique ('literal', 'Connect-B au serveur de mise -9 jour')
+kd.a(Z)V	kd.Ab:Lna;	kf.f:Lid;	LocalisedText.allocatingMemory	unique incoming localized constants ('M-Bmoire en cours d(Wattribution', 'Speicher wird zugewiesen)3')
+kd.a(Z)V	kd.sb:[I	ki.S:[I	world.middep128	HD ub.a(Lbj;Z)V / SD p.a(Lra;Z)V. The remaining diagonal orientation sets corner mask 9 and computes 9 minus this entry. TS src/dash3d/world.ts middep128.
+kd.a(Z)V	kd.mb:[Lcl;	pj.A:[Lhf;	NpcType.slotNextFramesets	Original HD me.a([Lub;IBIIIILtk;ILtk;)Lak; and SD ja.a([Lci;ILek;IIIBIILek;)Lnd;. Next layer frameset looked up for the tween, otherwise null. TS src/config/NpcType.ts slotNextFramesets.
+nh.f(B)V	nh.V:Lna;	hl.S:Lid;	LocalisedText.germanChateffect3	unique ('literal', 'sch-Utteln:')
+nh.f(B)V	nh.bb:Lna;	qd.r:Lid;	LocalisedText.englishLoadingPleaseWait2	unique ('literal', 'Loading )2 please wait)3')
+nh.f(B)V	nh.W:Lna;	qd.s:Lid;	LocalisedText.loadingPleaseWait2	unique incoming localized constants ('Chargement en cours)3 Veuillez patienter)3', 'Ladevorgang )2 bitte warten Sie)3')
+nh.f(B)V	nh.hb:Lna;	rf.q:Lid;	Client.fpsCommand	unique ('literal', '::fps ')
+nh.f(B)V	nh.fb:[I	cl.x:[I	Client.archiveLoadWeights	identical primitive array initializer 114 instructions
+nh.f(B)V	nh.S:Lna;	n.l:Lid;	LocalisedText.germanLoading	unique ('literal', 'Lade)3)3)3')
+ke.h(I)V	ke.Y:[I	cg.m:[I	ClientPlayer.nameAffixSlotCounts	CS2 title affix assignment allocates prefix/suffix array of per-game selected count; h.a(BILjl;)V @18423,18466 and gh.a(Lwf;II)V @13997,14037 getstatic.
+ke.h(I)V	ke.T:[[I	fa.q:[[I	world.minimapShape	HD ma.a([IIIIII)V / SD vg.a([IIIIII)V. For a shaped ground tile, obtains the 16-entry pixel mask by shape and selects foreground/background. TS src/dash3d/world.ts minimapShape.
+ke.h(I)V	ke.R:Lve;	ig.s:Lal;	SpotType.m_pConfigClient	Spot animation definition archive in GetType; ck.a(BI)Leg; @28 and bf.b(II)Lli; @39 getstatic.
+gg.h(I)V	gg.jb:Lna;	df.C:Lid;	LocalisedText.frenchAlreadyIgnored	unique ('literal', ' est d-Bj-9 dans votre liste noire)3')
+gg.h(I)V	gg.W:Lna;	n.e:Lid;	LocType.defaultName	Unique 'null' operand in paired consumer pb.<init>()V @30 and jb.<init>()V @25.
+gg.h(I)V	gg.Q:Lna;	jk.I:Lid;	LocalisedText.frenchLoggedIn	unique ('literal', ' s(West connect-B)3')
+gg.h(I)V	gg.ab:Lve;	ba.g:Lal;	VarpType.m_pConfigClient	membermap Group 16 VarpType initialization, id lookup and configuration decode, or a sweep of its capacity-64 cache.
+gg.h(I)V	gg.Y:Lna;	wj.a:Lid;	Client.gcCommand	unique ('literal', '::gc')
+tb.i(I)V	tb.P:Lna;	lg.F:Lid;	Client.percent5	unique ('literal', '(U5')
+tb.i(I)V	tb.X:Lse;	ug.d:Lkc;	WorldMapLabels.scene	reviewed operand Optional world map label set: the minimap draw tests it for null before iterating and testing label flags. HD ed.a(IBIILbe;)V @238 getstatic; SD fd.a(ILaj;III)V @164 getstatic; TS src/ui/WorldMapLabels.ts scene.
+je.i(I)V	je.eb:[I	h.e:[I	TextureOp.sinTable	HD al.b(B)V / SD gf.e(I)V. Stores int(sin(2*pi*i/255)*4096) at each of 256 entries. TS src/dash3d/TextureOp.ts sinTable.
+je.i(I)V	je.db:Lna;	la.ib:Lid;	Client.objCountWhiteTag	unique ('literal', ' <col=ffffff>')
+je.i(I)V	je.T:Lsc;	va.Z:Lnc;	InterfaceList.subInterfaces	reviewed operand Both retrieve the attached interface from the subinterface hash table keyed by the current component id. HD aa.a([Lbe;ZI)V @77 getstatic; SD ri.a(I[Laj;Z)V @54 getstatic; TS src/ui/InterfaceList.ts subInterfaces.
+je.i(I)V	je.W:Lve;	he.y:Lal;	WorldMap.archive	World map archive used for map area details; ta.a([Lmm;ILve;)V @46,58,92 and mc.a(I[Lrh;Lal;)V @33,45,73 getstatic.
+je.i(I)V	je.U:Lna;	qe.lb:Lid;	BrowserControl.jsShowingVideoAd	unique ('literal', 'showingVideoAd')
+fn.a(Z)V	fn.R:Lna;	jf.j:Lid;	LocalisedText.loadedConfig	unique incoming localized constants ('Fichiers config charg-Bs', 'Konfig geladen)3')
+fn.a(Z)V	fn.Z:Lna;	ek.d:Lid;	CookieStatics.dateDaySeparator	cookie weekday suffix, cj.a(JB)Lna; / gk.a(IJ)Lid; or the CS2 4104 body
+fn.a(Z)V	fn.X:Ljava/util/zip/CRC32;	ff.G:Ljava/util/zip/CRC32;	Js5RemoteLoader.crc32	only shutdown field of paired type Ljava/util/zip/CRC32;
+fn.a(Z)V	fn.P:Lna;	jf.h:Lid;	LocalisedText.englishLoadedConfig	unique ('literal', 'Loaded config')
+sk.f(B)V	sk.hb:Ln;	hj.f:Lve;	MSITypeList.types	Map-scene definition cache around config fetch. HD da.c(II)Laa; @8 getstatic, 78 getstatic. SD dl.a(II)Lda; @0 getstatic, 65 getstatic.
+sk.f(B)V	sk.eb:Lna;	aa.g:Lid;	LocalisedText.germanPreparedSoundEngine	unique ('literal', 'Musik)2Engine vorbereitet)3')
+sk.f(B)V	sk.cb:Lna;	bk.nc:Lid;	LocalisedText.germanExamine	unique ('literal', 'Untersuchen')
+sk.f(B)V	sk.bb:Lgn;	qi.G:Lvj;	StructType.m_recentUse	Struct definition cache around config fetch. HD jj.a(BI)Llk; @8 getstatic, 82 getstatic. SD hl.a(II)Laf; @8 getstatic, 77 getstatic.
+ca.i(I)V	ca.bb:Lna;	ek.p:Lid;	LocalisedText.frenchExamine	unique ('literal', 'Examiner')
+ca.i(I)V	ca.Y:[I	df.H:[I	SpriteLoader.innerHeights	reviewed operand Sprite constructor argument 6 is this entry's inner height; it participates in the pixel-array length. HD cj.a(I)[Lqf; @48 getstatic; SD oc.a(B)[Lvc; @35 getstatic; TS src/graphics/SpriteLoader.ts innerHeights.
+ca.i(I)V	ca.X:Lih;	wh.S:Lgk;	Client.locChanges	Pending loc changes traversed to match zone position and layer; ce.a(IIIIIIIIII)V @18,89,152 and b.a(IZIIIIIIII)V @16,102,166 getstatic.
+ca.i(I)V	ca.eb:[I	de.t:[I	ChatHistory.types	Chat history shift and head write for message type; md.a(IILna;Lna;BLna;)V @39,44,125 and jd.a(ILid;Lid;IILid;)V @29,34,125 getstatic.
+ca.i(I)V	ca.cb:Lna;	kh.x:Lid;	JagString.nbsp	Formatted decimal number groups digits using nonbreaking space for the French locale. oj.a(IZIJI)Lna; @90; ui.a(JIIBZ)Lid; @96 getstatic.
+ca.i(I)V	ca.fb:[I	gk.e:[I	Client.soundEffectPositions	HD ca.a(IIII)V and ma.a(ILtk;IIZI)V / SD uj.a(ZIII)V and sf.a(Lek;IIIZI)V. Animation sound packs tile Z and X with range, while the nonspatial enqueue writes zero to this field. TS src/client/Client.ts soundEffectPositions.
+ca.i(I)V	ca.Z:Lve;	re.d:Lal;	Client.mapsArchive	MainLoad JS5 archive 5
+d.f(B)V	d.gb:Lna;	ce.Q:Lid;	LocalisedText.close	unique incoming localized constants ('Fermer', 'Schlie-8en')
+d.f(B)V	d.eb:[S	p.u:[S	Minimenu.actions	unique typed field in i.p(II)V, qe.b(II)V, wl.b(I)V
+d.f(B)V	d.Y:Ljava/awt/Frame;	tb.h:Ljava/awt/Frame;	GameShell.frame	reviewed operand Both use the primary app frame for window mode selection and query its native Insets; the fullscreen frame is a distinct field. HD pm.a(ZIZIZII)V @168 getstatic; SD he.a(IIIIZZI)V @51 getstatic; TS src/client/GameShell.ts frame.
+d.f(B)V	d.S:Ljava/util/Random;	bi.i:Ljava/util/Random;	Minimenu.tooltipRandom	only shutdown field of paired type Ljava/util/Random;
+d.f(B)V	d.fb:Lna;	ce.U:Lid;	LocalisedText.englishClose	unique ('literal', 'Close')
+d.f(B)V	d.ib:Lqf;	o.R:Lvc;	Minimenu.titleBarSprite	reviewed operand Both divide menu width by sprite width and repeat it horizontally at the menu top before drawing the two end caps. HD ij.a(B)V @30 getstatic; SD wh.e(B)V @30 getstatic; TS src/ui/Minimenu.ts titleBarSprite.
+d.f(B)V	d.R:Lbe;	ca.g:Laj;	InterfaceList.pressedContinue	Outstanding continue component invalidated and cleared on server interface packets; ac.a(B)Z @5063,5071 and rg.a(B)Z @9517,9523 getstatic.
+d.f(B)V	d.hb:Lve;	uf.s:Lal;	ParamType.m_pConfigClient	Param definition archive in GetType; ih.a(II)Lhn; @48 and ak.a(II)Lsj; @36 getstatic.
+ol.h(I)V	ol.Y:Lna;	ik.bb:Lid;	ObjType.countColourMillions	unique ('literal', '<col=00ff80>')
+ol.h(I)V	ol.S:Lna;	oa.b:Lid;	LocalisedText.frenchConlost	unique ('literal', 'Connexion perdue)3')
+ol.h(I)V	ol.U:Lve;	ek.D:Lal;	Client.binaryArchive	MainLoad JS5 archive 10
+ol.h(I)V	ol.X:Lna;	uf.r:Lid;	LocalisedText.englishAlreadyIgnored	unique ('literal', ' is already on your ignore list)3')
+ol.h(I)V	ol.db:Lna;	uf.q:Lid;	LocalisedText.alreadyIgnored	unique incoming localized constants (' est d-Bj-9 dans votre liste noire)3', ' steht bereits auf Ihrer Ignorieren)2Liste(Q')
+si.h(I)V	si.ib:Lna;	uf.n:Lid;	LocalisedText.germanContinue	unique ('literal', 'Weiter')
+si.h(I)V	si.R:[[[B	hc.f:[[[B	WorldMap.upperOverlayIds	upper overlay ID; sk.a(ILwa;)V @275,287,301 and oc.a(BLgd;)V @313,325,339 getstatic.
+si.h(I)V	si.cb:[B	ag.j:[B	GameWorld.worldListBuffer	World list download allocates the buffer, fills it from the socket, then decodes it. HD ql.b(I)I @409 putstatic, 477 getstatic, 506 getstatic, 606 putstatic. SD jb.c(I)I @389 putstatic, 455 getstatic, 484 getstatic, 569 putstatic.
+si.h(I)V	si.X:[Lsg;	rb.h:[Lea;	Client.grandExchangeOffers	reviewed operand Both offer script opcodes select the requested offer and query its state. Both packet handlers also construct and replace this indexed offer from a packet. HD h.a(BILjl;)V @9717 getstatic; SD gh.a(Lwf;II)V @5125 getstatic; TS src/client/Client.ts grandExchangeOffers.
+si.h(I)V	si.hb:Lna;	kh.C:Lid;	LocalisedText.englishTake	unique ('literal', 'Take')
+si.h(I)V	si.S:[Lna;	gj.X:[Lid;	Login.suggestedNames	Reads the count then decodes each suggested name from its eight-byte encoding into this array. HD mh.f(B)V @406 putstatic, 436 getstatic, 460 getstatic, 479 getstatic, 491 getstatic. SD hi.a(I)V @370 putstatic, 410 getstatic, 442 getstatic, 456 getstatic, 478 getstatic.
+si.h(I)V	si.db:Lna;	kh.z:Lid;	LocalisedText.take	unique incoming localized constants ('Nehmen', 'Prendre')
+si.h(I)V	si.gb:Lna;	ti.V:Lid;	LocalisedText.loadingPercentStart	unique ('literal', '<br>(X')
+si.h(I)V	si.Z:Lna;	wj.d:Lid;	Minimenu.amber	unique ('literal', '<col=ffb000>')
+fh.h(I)V	fh.bb:Lna;	ui.C:Lid;	LocalisedText.millionSuffixAmount	Unique 'M' operand in paired consumer fi.a(BI)Lna; @131 and gf.c(II)Lid; @134.
+fh.h(I)V	fh.T:Lna;	ui.x:Lid;	LocalisedText.millionSuffix	Unique 'M' operand in paired consumer eb.b(II)Lna; @134 and ii.a(II)Lid; @126.
+fh.h(I)V	fh.W:Lna;	ui.s:Lid;	LocalisedText.englishMillionSuffixAmount	initializer supplies verified alias fh.T:Lna; / ui.x:Lid;
+fh.h(I)V	fh.ab:Lna;	pg.N:Lid;	Client.noClipCommand	unique ('literal', '::noclip')
+fh.h(I)V	fh.Y:Ljava/awt/Frame;	aj.kb:Ljava/awt/Frame;	GameShell.fullScreenFrame	reviewed operand Fullscreen Frame accepted by the window-mode and presentation routines; the HD frame-present oracle installs a real Frame here.
+fh.h(I)V	fh.U:[[Z		TerrainBuilder.useSurfaceHeight	HD-only terrain builders a.a([[F[[F[[II[[F[[B[[II[[B[[B[[B[[[B)[Lhg; and pi.a([[[B[[B[[B[[I[[F[[I[[B[[B[[FI[[F[[I[[I[[II)[Lhg;. pi.a reads its boolean row at the same shape as ec.B to select vertex surface heights. TS src/dash3d/TerrainBuilder.ts useSurfaceHeight.
+fh.h(I)V	fh.V:Lna;	la.T:Lid;	LocalisedText.frenchChatcol2	unique ('literal', 'vert:')
+fh.h(I)V	fh.cb:Lll;	ca.l:Lfb;	GameShell.errorSignlink	Unique lookup of GameShell.errorSignlink in paired consumer; ha.a(Ljava/lang/String;Ljava/lang/Throwable;B)V @142,152,160 and pk.a(Ljava/lang/Throwable;Ljava/lang/String;I)V @133,143,152 getstatic.
+gm.i(I)V	gm.X:Ljava/math/BigInteger;	bi.g:Ljava/math/BigInteger;	Client.rsaExponent	membermap HD ri.a(B)V and SD le.a(I)V: ordered login request fields or stage-8 response assignments.
+gm.i(I)V	gm.eb:Lna;	nl.Z:Lid;	LocalisedText.germanLoadingSprites	unique ('literal', 'Lade Sprites )2 ')
+gm.i(I)V	gm.gb:[I	ej.d:[I	world.middep64	HD ub.a(Lbj;Z)V / SD p.a(Lra;Z)V. Orientation 64 sets corner mask 12, then computes its complement 12 minus entry. TS src/dash3d/world.ts middep64.
+gm.i(I)V	gm.T:Lk;	ud.a:Lca;	Client.js5DiskQueue	only shutdown field of paired type Lca;
+gm.i(I)V	gm.ib:Lve;	nl.Y:Lal;	NpcType.m_pModels	NPC head model IDs and model-file readiness; me.a(Ltk;IIII)Lak; @111,185 and ja.a(Lek;IIII)Lnd; @103,170 getstatic.
+gm.i(I)V	gm.db:Lna;	je.jb:Lid;	Client.crossName	unique ('literal', 'cross')
+gm.i(I)V	gm.cb:Lna;	jf.e:Lid;	LocalisedText.loadedTextures	unique incoming localized constants ('Texturen geladen)3', 'Textures charg-Bes')
+gm.i(I)V	gm.W:Lna;	qc.M:Lid;	Client.mapNameSeparator	unique ('literal', '_')
+gm.i(I)V	gm.fb:Lna;	jf.c:Lid;	LocalisedText.englishLoadedTextures	unique ('literal', 'Loaded textures')
+gm.i(I)V	gm.hb:Lna;	qc.V:Lid;	LocalisedText.frenchFaceHere	unique ('literal', 'Regarder dans cette direction')
+pk.h(I)V	pk.bb:Lna;	nh.ab:Lid;	Minimenu.walkHere	Scene menu action 60 displays the walk-here verb. gn.a(III[Lbe;IIIIBI)V @1293; lf.a(I[Laj;IIIIIIZI)V @1108 getstatic.
+pk.h(I)V	pk.V:[S	lh.e:[S	PlayerModel.recolourSources2Rs	identical primitive array initializer 22 instructions
+pk.h(I)V	pk.R:[[Lhg;		world.underwaterTerrainBatches	HD storage declaration
+pk.h(I)V	pk.eb:Lna;	se.A:Lid;	LocalisedText.germanAttack	unique ('literal', 'Angreifen')
+pk.h(I)V	pk.Q:Lna;	t.D:Lid;	LocalisedText.frenchChateffect5	unique ('literal', 'glissement:')
+pk.h(I)V	pk.Z:Lve;	ha.b:Lal;	Client.texturesArchive	MainLoad JS5 archive 9
+an.f(B)V	an.eb:Lna;	cg.c:Lid;	LocalisedText.germanLoadingFonts	unique ('literal', 'Lade Schrifts-=tze )2 ')
+an.f(B)V	an.cb:Lna;	je.U:Lid;	LocalisedText.hidden	unique incoming localized constants ('Cach-B', 'Versteckt')
+an.f(B)V	an.Z:Lna;	je.cb:Lid;	LocalisedText.englishHidden	unique ('literal', 'Hidden')
+an.f(B)V	an.ab:Luf;	li.t:Lvb;	ClientKeyboardListener.instance	only shutdown field of paired type Lvb;
+pg.f(B)V	pg.Z:[I	ga.Q:[I	Client.chatHeight	Actor overlay HD lc.a(IIIIIII)V / SD vj.a(IIIIIII)V. The font's line height is subtracted from other chat Y coordinates to move overlapping text up. TS src/client/Client.ts chatHeight.
+pg.f(B)V	pg.lb:[I	ga.L:[I	Client.chatY	Actor overlay HD lc.a(IIIIIII)V / SD vj.a(IIIIIII)V. The collision resolution loop reassigns the projected Y to the previous Y minus its font height. TS src/client/Client.ts chatY.
+pg.f(B)V	pg.Y:Lna;	cf.d:Lid;	LocalisedText.germanChatcol9	unique ('literal', 'leuchten1:')
+pg.f(B)V	pg.P:[Lna;	ga.T:[Lid;	Client.chatMessage	Actor overlay HD lc.a(IIIIIII)V / SD vj.a(IIIIIII)V. Retains each actor's original overhead JagString until the effect-specific draw. TS src/client/Client.ts chatMessage.
+pg.f(B)V	pg.ib:Lna;	dk.Q:Lid;	LocalisedText.englishChateffect2	unique ('literal', 'wave2:')
+pg.f(B)V	pg.ab:[I	la.jb:[I	Minimenu.playerCursor	Player menu builder per-option player option cursor; rj.a(IIILe;I)V @698 and dg.a(IIIILpb;)V @741 getstatic.
+pg.f(B)V	pg.db:Lna;	vf.W:Lid;	Protocol.assistReqSuffix	unique ('literal', ':assistreq:')
+pg.f(B)V	pg.W:Lna;	j.e:Lid;	LocalisedText.germanLoggedIn	unique ('literal', ' loggt sich ein)3')
+pg.f(B)V	pg.R:[I	ga.O:[I	Client.chatX	Actor overlay HD lc.a(IIIIIII)V / SD vj.a(IIIIIII)V. The actor projection X is tested with plus/minus half the string width for horizontal overlaps. TS src/client/Client.ts chatX.
+pg.f(B)V	pg.jb:[[B	kg.o:[[B	Client.mapBuildNpcData	Original regional rebuild HD gd.c(I)V and SD gj.e(I)V. Receives the optional NPC spawn group bytes from the keyed fetch. TS src/client/Client.ts mapBuildNpcData.
+pg.f(B)V	pg.cb:[I	ga.R:[I	Client.chatWidth	Actor overlay HD lc.a(IIIIIII)V / SD vj.a(IIIIIII)V. Each native method assigns the font's measured width of the actor's message divided by two. TS src/client/Client.ts chatWidth.
+pg.f(B)V	pg.hb:Lna;	dk.U:Lid;	LocalisedText.chateffect2	unique incoming localized constants ('ondulation2:', 'welle2:')
+pg.f(B)V	pg.kb:[I	ga.U:[I	Client.chatEffect	Actor overlay HD lc.a(IIIIIII)V / SD vj.a(IIIIIII)V. Values 0-5 select ordinary, wave and other effects, and 4 selects the width-100 scrolling region. TS src/client/Client.ts chatEffect.
+pg.f(B)V	pg.T:[I	uc.a:[I	world.postTab	HD ub.a(Lbj;Z)V / SD p.a(Lra;Z)V. Allocates the tile's back-wall orientation mask from the camera-relative quadrant as the next read after the front-wall mask. TS src/dash3d/world.ts postTab.
+pg.f(B)V	pg.Q:[I	ga.P:[I	Client.chatTimer	Actor overlay HD lc.a(IIIIIII)V / SD vj.a(IIIIIII)V. Color ramps and timed text motion take 150 minus this actor message timer. TS src/client/Client.ts chatTimer.
+pg.f(B)V	pg.eb:[I	ga.S:[I	Client.chatColour	reviewed operand Both record each overhead chat entry's colour from the actor at the common insertion index. HD lc.a(IIIIIII)V @964 getstatic; SD vj.a(IIIIIII)V @931 getstatic; TS src/client/Client.ts chatColour.
+pg.f(B)V	pg.X:Lna;	dk.S:Lid;	LocalisedText.defaultChateffect2	only remaining initializer alias of pg.ib:Lna; / dk.Q:Lid;
+ui.f(B)V	ui.ab:Lna;	ae.f:Lid;	LocalisedText.englishMoreOptions	unique ('literal', ' more options')
+ui.f(B)V	ui.ob:Lna;	fd.Y:Lid;	LocalisedText.englishAttack	unique ('literal', 'Attack')
+ui.f(B)V	ui.Y:Lna;	fd.eb:Lid;	LocalisedText.attack	unique incoming localized constants ('Angreifen', 'Attaquer')
+ui.f(B)V	ui.V:Lna;	ae.i:Lid;	LocalisedText.MOREOPTIONS	unique incoming localized constants (' autres options', ' weitere Optionen')
+ui.f(B)V	ui.hb:Lna;	ok.G:Lid;	LocalisedText.germanLoadedFonts	unique ('literal', 'Schrifts-=tze geladen)3')
+ui.f(B)V	ui.cb:Lve;	ml.t:Lal;	Client.seqConfigArchive	MainLoad JS5 archive 20
+ui.f(B)V	ui.eb:[[[B	qe.V:[[[B	ClientBuild.m_floort1	reviewed operand Both tile decoders store opcode minus 81 in this underlay id array. HD wj.a(IIZLwa;IIBII)V @425 getstatic; SD fi.a(ZLgd;IIIIIZI)V @411 getstatic; TS src/client/ClientBuild.ts m_floort1.
+ui.f(B)V	ui.nb:Lna;	ak.e:Lid;	LocalisedText.frenchChatcol0	unique ('literal', 'jaune:')
+mh.g(B)V	mh.hb:Lbn;	jh.k:Lgh;	WorldMap.sceneArea	current scene map area; gd.c(I)V @384,399,436,483 and gj.e(I)V @228,243,284,319 getstatic.
+vc.h(I)V	vc.db:[S	rc.h:[S	Client.recolourPalette	CS2 5401 custom recolour update; h.a(BILjl;)V @17564 and gh.a(Lwf;II)V @13202 getstatic.
+vc.h(I)V	vc.X:Lna;	nb.c:Lid;	LocalisedText.englishLoadingSprites	unique ('literal', 'Loading sprites )2 ')
+vc.h(I)V	vc.R:[I	ke.m:[I	SpriteLoader.palette	Decode indexed sprites allocates RGB palette; gk.a([BI)V @300 and og.a(B[B)V @296 putstatic.
+vc.h(I)V	vc.Q:Lna;	nb.d:Lid;	LocalisedText.loadingSprites	unique incoming localized constants ('Chargement des sprites )2 ', 'Lade Sprites )2 ')
+vc.h(I)V	vc.bb:[S	al.q:[S	ObjType.recolourPalette	two method windows client.g(I)V, h.a(IIILtk;II)Lak;
+vc.h(I)V	vc.V:[J	pf.W:[J	ModelLit.pickedTypecodes	two method windows w.a(IIIIIIIIJILga;)V, w.a(ZZJIILga;)V
+vc.h(I)V	vc.eb:[I	n.j:[I	RouteFinding.m_listx	HD aa.a(IIIIIZIIIIII)Z and SD ld.a(ZIIIIIIIIIII)Z route search. Queue storage for the first coordinate: West neighbor writes X minus one before advancing to the next queue slot; Z retains its current value. TS src/movement/RouteFinding.ts m_listx.
+vc.h(I)V	vc.ab:Lna;	me.k:Lid;	SpriteLoader.mapflagName	unique ('literal', 'mapflag')
+dk.a(B)V	dk.h:Lna;	oj.k:Lid;	Client.settings	membermap HD ri.a(B)V and SD le.a(I)V: ordered login request fields or stage-8 response assignments.
+dk.a(B)V	dk.i:Lna;	wk.n:Lid;	LocalisedText.germanChatcol6	unique ('literal', 'blinken1:')
+dk.a(B)V	dk.j:[Len;	f.g:[Lsa;	Client.cacheIndexFiles	only shutdown field of paired type [Lsa;
+wd.a(I)V	wd.a:Lgn;	mg.c:Lvj;	ParamType.m_recentUse	Parameter definition cache around config fetch. HD ih.a(II)Lhn; @0 getstatic, 90 getstatic. SD ak.a(II)Lsj; @8 getstatic, 75 getstatic.
+wd.a(I)V	wd.d:[I	rb.g:[I	PlayerModel.partToSlot	HD hh.a(IBLtk;II)Lak; and hh.a([IIZI[II)V / SD cl.a(IILek;II)Lnd; and cl.a(Z[II[III)V. Indexes equipment by selected part. The kit stores as Integer.MIN_VALUE OR id in the selected slot. TS src/dash3d/PlayerModel.ts partToSlot.
+wd.a(I)V	wd.f:Lna;	rg.r:Lid;	Client.errorTestCommand	unique ('literal', '::errortest')
+wd.a(I)V	wd.e:Lna;	fi.g:Lid;	CookieStatics.cookiePrefixParam	unique ('literal', 'cookieprefix')
+wd.a(I)V	wd.c:Lna;	gk.l:Lid;	LocalisedText.germanUnableToFind	unique ('literal', 'Spieler kann nicht gefunden werden: ')
+t.c(B)V	t.l:Lma;	mf.m:Lse;	Protocol.oldSocket	Main state transition closes and clears the saved socket. HD pl.a(II)V @84 getstatic, 90 getstatic, 100 putstatic. SD ej.a(II)V @65 getstatic, 71 getstatic, 80 putstatic.
+t.c(B)V	t.D:Lna;	ra.T:Lid;	LocalisedText.friendsFull	unique incoming localized constants ('Ihre Freunde)2Liste ist voll(Q Maximale Eintr-=ge: Mitglieder 200)4freie Spieler 100', 'Votre liste d(Wamis est pleine (X100 noms maximum pour la version gratuite et 200 pour les abonn-Bs(Y)3')
+t.c(B)V	t.G:[Lek;	ij.a:[Lch;	TitleFlames.runeSprites	random rune image passed into GenerateNoise; vl.a(II)V @82 and nl.c(II)V @79 getstatic.
+t.c(B)V	t.E:[I	rg.o:[I	Client.updatedVarcStrings	Delayed string varc change ring after the string write. gg.a(Z)V @1596; t.c(I)V @1538 getstatic.
+t.c(B)V	t.v:[Lna;	ph.e:[Lid;	Minimenu.target	AddEntry appends target at menu size; hj.a(IJBLna;ISLna;I)V @66 and tb.a(BLid;SLid;IIJI)V @45 getstatic.
+t.c(B)V	t.p:Ln;	ik.U:Lve;	FloType.m_list	membermap Stage 70 config stores, group 1/4 definition lookup or overlay opcode in the two floor decoders.
+t.c(B)V	t.w:[J	rj.t:[J	Client.privateMessageIds	Remembered private message ID checked and inserted in 100-slot cyclic duplicate filter. ac.a(B)Z @1907, 2017, 6720, 6818; rg.a(B)Z @2345, 2467, 6394, 6521 getstatic.
+t.c(B)V	t.B:Lna;	ra.X:Lid;	LocalisedText.englishFriendsFull	unique ('literal', 'Your friend list is full)3 Max of 100 for free users)1 and 200 for members)3')
+t.c(B)V	t.C:Lna;	je.R:Lid;	JagString.period	Unique ')3' operand in paired consumer oi.a(II)Lna; @40,61,83 and qc.a(IZ)Lid; @61,82,103.
+fb.a(B)V	fb.p:Lna;	ic.P:Lid;	Minimenu.redOrange	unique ('literal', '<col=ff3000>')
+fb.a(B)V	fb.q:[I	ii.e:[I	ClientBuild.DECORZOF2	identical primitive array initializer 18 instructions
+fb.a(B)V	fb.l:[Lna;	ma.j:[Lid;	ChatHistory.clans	Chat history shift and head write for clan; md.a(IILna;Lna;BLna;)V @81,86,156 and jd.a(ILid;Lid;IILid;)V @71,76,149 getstatic.
+fb.a(B)V	fb.n:[[B	tb.d:[[B	SpriteLoader.alphas	Decode indexed sprites allocates per-sprite alpha plane; gk.a([BI)V @72 and og.a(B[B)V @66 putstatic.
+fb.a(B)V	fb.k:Lna;	ac.l:Lid;	LocalisedText.germanMillionSuffixAmount	Unique 'M' operand in paired consumer bb.a(B)V @48,173 and d.a(B)V @260,272.
+fb.a(B)V	fb.i:Lna;	kc.r:Lid;	CookieStatics.maxAgeAttribute	unique ('literal', '; Max)2Age=')
+fb.a(B)V	fb.h:[I	cf.h:[I	TextureOp.normalisedY	membermap Texture graph decode, size or gamma setup and source binding in HD lc.a and SD jd.a.
+ch.a(B)V	ch.z:[I	cd.f:[I	OrbitCamera.shakePhase	membermap HD ui.a / SD kk.a: camera positioning, axis-specific shake or world draw arguments.
+ch.a(B)V	ch.v:[B	rb.f:[B	JagString.base37Alphabet	identical primitive array initializer 150 instructions
+ch.a(B)V	ch.y:[Z	ce.T:[Z	InterfaceList.rectangleRedraw	reviewed operand Both mark this exact boolean array at the supplied root index after compass/minimap drawing. HD ed.a(IBIILbe;)V @2091 getstatic; SD fd.a(ILaj;III)V @1813 getstatic; TS src/ui/InterfaceList.ts rectangleRedraw.
+ch.a(B)V	ch.x:Lna;	de.y:Lid;	WorldList.colon	Unique ':' operand in paired consumer ob.a(IB)Z @138 and fd.a(II)Z @136.
+ch.a(B)V	ch.C:[[I	aj.Nb:[[I	Client.tileActorCount	HD cn.b(ZI)V and nk.c(IZ)V / SD th.a(IZ)V and nc.a(ZI)V. Both NPC and player draw passes increment this per-tile grid and skip stacked centered actors using its count. TS src/client/Client.ts tileActorCount.
+ah.a(Z)V	ah.j:[I	vj.d:[I	ClientVarCache.m_var	Current client varp overwritten with differing server value prior to transmitting varp hooks. ac.a(B)Z @6450, 6469, 6482; rg.a(B)Z @5502, 5515, 5554 getstatic.
+ah.a(Z)V	ah.m:Lna;	pi.i:Lid;	LocalisedText.englishChatcol11	unique ('literal', 'glow3:')
+ah.a(Z)V	ah.i:Ln;	ii.i:Lve;	CursorType.spriteCache	Cursor sprite lookup and insertion keyed by sprite ID. HD ia.a(B)Lmm; @0 getstatic, 64 getstatic. SD dl.a(I)Lrh; @9 getstatic, 56 getstatic.
+ah.a(Z)V	ah.p:Lih;	v.F:Lgk;	world.drawTileQueue	reviewed operand The scene Fill method pushes the supplied Square onto this list, pops a Square, and re-enqueues visible neighbours on this same list. HD ub.a(Lbj;Z)V @0 getstatic; SD p.a(Lra;Z)V @0 getstatic; TS src/dash3d/world.ts drawTileQueue.
+ah.a(Z)V	ah.k:[J	ab.T:[J	GameShell.m_drawTime	Shell draw timing samples and stores timestamp around draw callback and derives FPS. rc.e(I)V @6, 34; p.e(I)V @26, 35 getstatic.
+ah.a(Z)V	ah.r:Lna;	pi.g:Lid;	LocalisedText.defaultChatcol11	only remaining initializer alias of ah.m:Lna; / pi.i:Lid;
+ah.a(Z)V	ah.l:[[B	vg.hb:[[B	SpriteLoader.pixels	reviewed operand Both load the indexed pixel byte array from this sprite entry and use the palette to expand it into the output pixels. HD cj.a(I)[Lqf; @55 getstatic; SD oc.a(B)[Lvc; @47 getstatic; TS src/graphics/SpriteLoader.ts pixels.
+ah.a(Z)V	ah.u:Lna;	ec.b:Lid;	LocalisedText.frenchRemoveFriend	unique ('literal', 'Veuillez commencer par supprimer ')
+ah.a(Z)V	ah.q:Lna;	pi.m:Lid;	LocalisedText.chatcol11	unique incoming localized constants ('brillant3:', 'leuchten3:')
+pa.f(B)V	pa.S:Lna;	ga.G:Lid;	Client.username	membermap HD ri.a(B)V and SD le.a(I)V: ordered login request fields or stage-8 response assignments.
+pa.f(B)V	pa.P:Lna;	ga.F:Lid;	Client.password	membermap HD ri.a(B)V and SD le.a(I)V: ordered login request fields or stage-8 response assignments.
+pa.f(B)V	pa.L:[[B		Client.sceneMapUnderwaterLandData	HD storage declaration
+pa.f(B)V	pa.O:Lna;	ga.J:Lid;	JagString.empty	initializer supplies verified alias pa.P:Lna; / ga.F:Lid;
+pa.f(B)V	pa.R:[Z	sf.m:[Z	InterfaceList.dirty	reviewed operand Both clear the pending per-root dirty flag during game redraw after transferring it to the redraw arrays; invalidation sets it for the matching rectangle. HD ha.a(I)V @147 getstatic; SD gf.e(B)V @149 getstatic; TS src/ui/InterfaceList.ts dirty.
+ud.e(I)V	ud.Q:Lna;	af.D:Lid;	Minimenu.countSeparator	unique ('literal', ' x ')
+ud.e(I)V	ud.L:Lna;	sg.g:Lid;	LocalisedText.frenchChatcol6	unique ('literal', 'clignotant1:')
+ud.e(I)V	ud.T:[I	ld.d:[I	Client.statUpdates	Skill update ring takes skill index immediately after base/current/XP are set. ac.a(B)Z @4837; rg.a(B)Z @5460 getstatic.
+ud.e(I)V	ud.J:Lve;	bc.c:Lal;	Client.basesArchive	MainLoad JS5 archive 1
+ud.e(I)V	ud.P:Lgn;	ke.p:Lvj;	QuickChatPhraseTypeList.phrases	Quick-chat phrase lookup and insertion around local/global group one fetch. HD sj.b(II)Lcb; @8 getstatic, 124 getstatic. SD bb.b(II)Lpe; @8 getstatic, 105 getstatic.
+ud.e(I)V	ud.I:Lna;	sg.d:Lid;	LocalisedText.frenchLoading	unique ('literal', 'Chargement en cours)3)3)3')
+bk.d(I)V	bk.N:Lna;	nc.t:Lid;	LocalisedText.loadingConfig	unique incoming localized constants ('Chargement des fichiers config )2 ', 'Lade Konfiguration )2 ')
+bk.d(I)V	bk.R:Lna;	gb.o:Lid;	LocalisedText.defaultChatcol0	only remaining initializer alias of bk.I:Lna; / gb.s:Lid;
+bk.d(I)V	bk.K:Lna;	nc.a:Lid;	LocalisedText.englishLoadingConfig	unique ('literal', 'Loading config )2 ')
+bk.d(I)V	bk.L:Lna;	gb.p:Lid;	LocalisedText.chatcol0	unique incoming localized constants ('gelb:', 'jaune:')
+bk.d(I)V	bk.P:Lna;	si.s:Lid;	LocalisedText.germanAllocatingMemory	unique ('literal', 'Speicher wird zugewiesen)3')
+bk.d(I)V	bk.I:Lna;	gb.s:Lid;	LocalisedText.englishChatcol0	unique ('literal', 'yellow:')
+oj.a(Z)V	oj.x:Lve;	aj.ec:Lal;	FluType.m_pConfigClient	membermap Stage 70 config stores, group 1/4 definition lookup or overlay opcode in the two floor decoders.
+oj.a(Z)V	oj.t:[I	nk.N:[I	Texture.animBuffer	HD uh.a(IB)V / SD qi.a(ZI)V. Texture scroll reuses this int array, replacing it if its length is smaller than the current texel array; the buffers swap. TS src/dash3d/Texture.ts animBuffer.
+oj.a(Z)V	oj.E:[[Lhg;		world.terrainBatches	HD storage declaration
+oj.a(Z)V	oj.z:[Z	v.G:[Z	Skill.used	Widget expression opcode 9 sums base levels only for enabled skills; we.a(BILbe;)I @464 and mj.a(Laj;IB)I @426 getstatic.
+qk.a(I)V	qk.l:Lna;	pa.Q:Lid;	LocalisedText.englishMenuSeparator	initializer supplies verified alias qk.i:Lna; / pa.ub:Lid;
+qk.a(I)V	qk.g:Lma;	hl.H:Lse;	Client.js5ConnectStream	Unique lookup of Client.js5ConnectStream in paired consumer; client.h(I)V @463,522,566,658 and client.b(Z)V @435,492,534,621 getstatic.
+qk.a(I)V	qk.i:Lna;	pa.ub:Lid;	LocalisedText.MINISEPERATOR	unique incoming localized constants (' ', ': ')
+qk.a(I)V	qk.b:Lna;	ci.l:Lid;	BrowserControl.tbrefresh	unique ('literal', 'tbrefresh')
+qk.a(I)V	qk.a:Lna;	aj.ed:Lid;	Client.zeroPercent	unique ('literal', '0(U')
+qk.a(I)V	qk.c:[I	rj.p:[I	world.roofHideMinZ	reviewed operand Both assign the fifth array parameter to the roof Z minima. HD mf.a(IIIII[[[B[I[I[I[I[IIBII)V @608 putstatic; SD qc.a(IIIII[[[B[I[I[I[I[IIBII)V @594 putstatic; TS src/dash3d/world.ts roofHideMinZ.
+vg.a(Z)V	vg.f:Lna;	th.k:Lid;	Minimenu.chartreuse	unique ('literal', '<col=80ff00>')
+vg.a(Z)V	vg.a:[Lna;	hh.bb:[Lid;	ClientPlayer.nameSuffixes	Player displayed name builder inserts suffix after player name; e.e(I)Lna; @78,94 and pb.c(I)Lid; @53,69 getstatic.
+vg.a(Z)V	vg.e:[I	f.a:[I	TitleFlames.flameBuffer1	noise smoothing scratch before array swap; fh.a(BLek;)V @135,203 and ca.a(ILch;)V @134,212 getstatic.
+vg.a(Z)V	vg.h:Lna;	cf.i:Lid;	CookieStatics.expiresAttribute	unique ('literal', '; Expires=')
+hc.e(I)V	hc.O:[Lpe;	ll.c:[Ljg;	world.occluders	original unique complete 54-instruction body wj.a(IIIIIII)V / og.a(IIIIIII)V, instruction 45
+lb.c(I)V	lb.D:Lna;	p.k:Lid;	LocalisedText.defaultChatcol1	only remaining initializer alias of lb.x:Lna; / p.T:Lid;
+lb.c(I)V	lb.p:[I	wa.o:[I	Client.statBaseLevel	two method windows ac.a(B)Z, we.a(BILbe;)I
+lb.c(I)V	lb.q:Lna;	p.t:Lid;	LocalisedText.chatcol1	unique incoming localized constants ('rot:', 'rouge:')
+lb.c(I)V	lb.x:Lna;	p.T:Lid;	LocalisedText.englishChatcol1	unique ('literal', 'red:')
+lb.c(I)V	lb.s:Lna;	nh.V:Lid;	Protocol.clanTag	unique ('literal', ':clan:')
+qi.d(B)V	qi.z:Lqf;	dd.i:Lvc;	Minimenu.spriteBottomCorner	reviewed operand Both draw this sprite at the bottom left and horizontally mirror it at the bottom right without tiling. HD ij.a(B)V @598 getstatic; SD wh.e(B)V @382 getstatic; TS src/ui/Minimenu.ts spriteBottomCorner.
+qi.d(B)V	qi.x:[I	ph.k:[I	PlayerModel.maleKitBodyParts	HD hh.a(IBLtk;II)Lak; and hh.a([IIZI[II)V / SD cl.a(IILek;II)Lnd; and cl.a(Z[II[III)V. Scans selectable IdkType definitions for this body-part index when gender is false. TS src/dash3d/PlayerModel.ts maleKitBodyParts.
+qi.d(B)V	qi.B:Lna;	uc.g:Lid;	Minimenu.white	Unique '<col=ffffff>' operand in paired consumer i.p(II)V @3124,3161,5500 and bd.c(II)V @3753,6365,6392.
+qi.d(B)V	qi.u:Lih;	di.a:Lgk;	ReflectionCheck.queue	Processes queued reflection checks and removes each completed request. HD t.a(Li;II)V @30 getstatic. SD lg.a(ILbe;Z)V @19 getstatic.
+qi.d(B)V	qi.C:Lei;	o.P:Lcj;	AudioEngine.effects	only shutdown field of paired type Lcj;
+kf.a(B)V	kf.h:[I	th.e:[I	LocShape.shapeToLayer	Zone loc shape ID to scene layer lookup; g.b(B)V @44,856,1023 and qd.a(I)V @1987,2894,3071 getstatic.
+kf.a(B)V	kf.d:[Lcl;	kj.Y:[Lhf;	PlayerModel.slotNextFramesets	Original HD hh.a([Lub;ILtk;Ltk;IIIIZII)Lak; and SD cl.a(IILek;IZ[Lci;IIZLek;I)Lnd;. A tweened next slot fetch populates this second frameset array; the fallback stores null. TS src/dash3d/PlayerModel.ts slotNextFramesets.
+ci.a(Z)V	ci.q:Lek;	al.R:Lch;	ClientLocAnim.defaultShadow	HD dc.a(ZI)Lth; / SD ml.a(ZI)Lug;. Shadow argument to the loc builder selects the shared field when the loc owns no projection. The TS HD path retains it when the builder generates a shadow. TS src/dash3d/ClientLocAnim.ts defaultShadow.
+ci.a(Z)V	ci.u:[[S	gk.o:[[S	PlayerModel.recolourDestinations2Alt	Client startup assigns the two recolour palette sets to the actual actor-builder statics in both JARs. Both startup selectors choose this alternate secondary palette alongside alternate sources beginning -4160. TS src/dash3d/PlayerModel.ts recolourDestinations2Alt.
+re.b(B)V	re.B:Lve;	uh.O:Lal;	Client.animFramesArchive	MainLoad JS5 archive 0
+re.b(B)V	re.r:Lna;	qh.a:Lid;	LocalisedText.germanWalkHere	unique ('literal', 'Hierhin gehen')
+re.b(B)V	re.w:[Lqf;	pe.B:[Lvc;	Client.imageHitmarks	Hitmark sprite selected by actor hit-type array; lc.a(IIIIIII)V @1629 and vj.a(IIIIIII)V @1495 getstatic.
+ta.b(B)V	ta.p:[I	tk.e:[I	ObjType.wearables	HD e.a(ILwa;)V / SD pb.a(Lgd;I)V. Appearance equipment indices above 32767 are remapped with its value at the decoded id minus 32768. TS src/config/ObjType.ts wearables.
+ta.b(B)V	ta.m:Lna;	ib.T:Lid;	LocalisedText.germanAllocatedMemory	unique ('literal', 'Zugewiesener Speicher)3')
+ta.b(B)V	ta.q:Lna;	si.f:Lid;	LocalisedText.englishChooseOption	unique ('literal', 'Choose Option')
+ta.b(B)V	ta.w:Lna;	si.q:Lid;	LocalisedText.chooseOption	unique incoming localized constants ('Choisir une option', 'W-=hlen Sie eine Option')
+ta.b(B)V	ta.z:[I	rg.i:[I	Protocol.serverPacketSizes	Packet reader uses the newly decoded opcode to index the packet sizes, then handles -1 and -2 lengths. HD ac.a(B)Z @94 getstatic. SD rg.a(B)Z @84 getstatic.
+ta.b(B)V	ta.o:[I	aj.Ub:[I	world.roofHideMaxZ	reviewed operand Both assign the fourth array parameter to the roof Z maxima. HD mf.a(IIIII[[[B[I[I[I[I[IIBII)V @603 putstatic; SD qc.a(IIIII[[[B[I[I[I[I[IIBII)V @589 putstatic; TS src/dash3d/world.ts roofHideMaxZ.
+kc.a(I)V	kc.r:Lna;	si.k:Lid;	LocalisedText.frenchThousandsSuffix2	French thousands suffix assigned to both active slots. bb.a(B)V @445, 457; sk.e(I)V @108, 318 getstatic.
+kc.a(I)V	kc.s:[I		TerrainBuilder.shapeEdges	HD-only terrain builders a.a([[F[[F[[II[[F[[B[[II[[B[[B[[B[[[B)[Lhg; and pi.a([[[B[[B[[B[[I[[F[[I[[B[[B[[FI[[F[[I[[I[[II)[Lhg;. a.a indexes shape times four plus rotated direction to obtain the edge ID. TS src/dash3d/TerrainBuilder.ts shapeEdges.
+kc.a(I)V	kc.o:[[[Lbj;	kl.Bb:[[[Lra;	world.squares	membermap aligned field accesses
+kc.a(I)V	kc.C:Lfd;	t.Y:Leg;	WorldMap.font22	Map font allocated with constructor size 22; pa.d(I)V @1214 and lg.b(Z)V @1191 putstatic.
+kc.a(I)V	kc.n:Lfd;	rb.b:Leg;	WorldMap.font17	Map font allocated with constructor size 17; pa.d(I)V @1132 and lg.b(Z)V @1107 putstatic.
+kc.a(I)V	kc.w:Lve;	al.l:Lal;	Client.m_pMidi	MainLoad JS5 archive 6
+kc.a(I)V	kc.p:[I	c.t:[I	TextureOp.cosine	HD al.b(B)V / SD gf.e(I)V. Stores int(cos(2*pi*i/255)*4096) at each of 256 entries. TS src/dash3d/TextureOp.ts cosine.

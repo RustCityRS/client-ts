@@ -26,6 +26,8 @@ function at2(array: (Int32Array | null)[] | null, i: number, j: number): number 
 
 type ModelUnlitArgs = [] | [Uint8Array | null] | [(ModelUnlit | null)[] | null, number] | [number, number, number] | [ModelUnlit | null, boolean, boolean, boolean, boolean];
 
+type MergePointIndex = { heads: Int32Array; next: Int32Array };
+
 // cb in the revision 530 SD gamepack (NXT jag::oldscape::dash3d::ModelUnlit, split there into ModelUnlit and the
 // software ModelUnlitImpl; 530 has one class). It is the decoded, unlit form of a cache model: vertex, face and
 // texture-axis arrays, the two model-format decoders, the merge/copy constructors, the geometry transforms,
@@ -335,6 +337,9 @@ export default class ModelUnlit extends ModelSource {
                 this.textureTransV = new Uint8Array(this.numT);
             }
 
+            // The destination starts empty and owns all three coordinate arrays until the
+            // merge returns. Index only successfully inserted points during this constructor.
+            const points: MergePointIndex | undefined = this.numPoints >= 32 ? { heads: new Int32Array(1 << Math.min(16, 32 - Math.clz32(this.numPoints - 1))), next: new Int32Array(this.numPoints) } : undefined;
             this.numPoints = 0;
             this.numFaces = 0;
             this.numT = 0;
@@ -382,9 +387,9 @@ export default class ModelUnlit extends ModelSource {
 
                         arrayPutI16(this.faceColour, this.numFaces, arrayAtI16(var14.faceColour, var15));
                         arrayPutI16(this.facePartMask, this.numFaces, var13);
-                        arrayPutI32(this.faceVertexA, this.numFaces, this.AddPointFromModel(var14, arrayAtI32(var14.faceVertexA, var15), var13));
-                        arrayPutI32(this.faceVertexB, this.numFaces, this.AddPointFromModel(var14, arrayAtI32(var14.faceVertexB, var15), var13));
-                        arrayPutI32(this.faceVertexC, this.numFaces, this.AddPointFromModel(var14, arrayAtI32(var14.faceVertexC, var15), var13));
+                        arrayPutI32(this.faceVertexA, this.numFaces, this.AddPointFromModel(var14, arrayAtI32(var14.faceVertexA, var15), var13, points));
+                        arrayPutI32(this.faceVertexB, this.numFaces, this.AddPointFromModel(var14, arrayAtI32(var14.faceVertexB, var15), var13, points));
+                        arrayPutI32(this.faceVertexC, this.numFaces, this.AddPointFromModel(var14, arrayAtI32(var14.faceVertexC, var15), var13, points));
                         this.numFaces = (this.numFaces + 1) | 0;
                     }
 
@@ -393,9 +398,9 @@ export default class ModelUnlit extends ModelSource {
                         putByte(this.textureType, this.numT, (var17 = sbyteAt(var14.textureType, var16)));
                         if (var17 === 0) {
                             // The (short) casts are the Int16Array stores.
-                            arrayPutI16(this.faceTextureP, this.numT, this.AddPointFromModel(var14, arrayAtI16(var14.faceTextureP, var16), var13));
-                            arrayPutI16(this.faceTextureM, this.numT, this.AddPointFromModel(var14, arrayAtI16(var14.faceTextureM, var16), var13));
-                            arrayPutI16(this.faceTextureN, this.numT, this.AddPointFromModel(var14, arrayAtI16(var14.faceTextureN, var16), var13));
+                            arrayPutI16(this.faceTextureP, this.numT, this.AddPointFromModel(var14, arrayAtI16(var14.faceTextureP, var16), var13, points));
+                            arrayPutI16(this.faceTextureM, this.numT, this.AddPointFromModel(var14, arrayAtI16(var14.faceTextureM, var16), var13, points));
+                            arrayPutI16(this.faceTextureN, this.numT, this.AddPointFromModel(var14, arrayAtI16(var14.faceTextureN, var16), var13, points));
                         }
 
                         if (var17 >= 1 && var17 <= 3) {
@@ -1483,21 +1488,36 @@ export default class ModelUnlit extends ModelSource {
     // cb.a(Lcb;IS)I (NXT AddPoint(ModelUnlitImpl&, int); suffixed because TS has no overloads by signature)
     // Adds vertex var2 of var1 unless this model already has a vertex at the same position, ORs the part bit var3
     // into it, and returns its index.
-    private AddPointFromModel(var1: ModelUnlit, var2: number, var3: number): number {
+    private AddPointFromModel(var1: ModelUnlit, var2: number, var3: number, points?: MergePointIndex): number {
         const var4 = arrayAtI32(var1.pointX, var2);
         const var5 = arrayAtI32(var1.pointY, var2);
         const var6 = arrayAtI32(var1.pointZ, var2);
 
-        // cb.a / HD gb.a compare X at every vertex before loading either Y or Z.
-        // The linear scan can index X directly when its complete range is present.
-        const pointX = this.numPoints > 0 ? this.pointX : null;
-        const validX = pointX !== null && pointX.length >= this.numPoints;
-        for (let var7 = 0; var7 < this.numPoints; var7++) {
-            if (var4 === (validX ? pointX[var7] : arrayAtI32(this.pointX, var7)) && var5 === arrayAtI32(this.pointY, var7) && var6 === arrayAtI32(this.pointZ, var7)) {
-                // (short) cast: the Int16Array store truncates.
-                arrayPutI16(this.pointPartMask, var7, arrayAtI16(this.pointPartMask, var7) | var3);
-                return var7;
+        let match = -1;
+        let bucket = 0;
+        if (points) {
+            const hash = Math.imul(var4, 73856093) ^ Math.imul(var5, 19349663) ^ Math.imul(var6, 83492791);
+            bucket = (hash ^ (hash >>> 16)) & (points.heads.length - 1);
+            for (let p = points.heads[bucket] - 1; p >= 0; p = points.next[p] - 1) {
+                if (var4 === arrayAtI32(this.pointX, p) && var5 === arrayAtI32(this.pointY, p) && var6 === arrayAtI32(this.pointZ, p)) {
+                    match = p;
+                    break;
+                }
             }
+        } else {
+            // cb.a / HD gb.a compare X at every vertex before loading either Y or Z.
+            const pointX = this.numPoints > 0 ? this.pointX : null;
+            const validX = pointX !== null && pointX.length >= this.numPoints;
+            for (let p = 0; p < this.numPoints; p++) {
+                if (var4 === (validX ? pointX[p] : arrayAtI32(this.pointX, p)) && var5 === arrayAtI32(this.pointY, p) && var6 === arrayAtI32(this.pointZ, p)) {
+                    match = p;
+                    break;
+                }
+            }
+        }
+        if (match >= 0) {
+            arrayPutI16(this.pointPartMask, match, arrayAtI16(this.pointPartMask, match) | var3);
+            return match;
         }
 
         arrayPutI32(this.pointX, this.numPoints, var4);
@@ -1511,6 +1531,10 @@ export default class ModelUnlit extends ModelSource {
         // return this.s++;
         const previous = this.numPoints;
         this.numPoints = (previous + 1) | 0;
+        if (points) {
+            points.next[previous] = points.heads[bucket];
+            points.heads[bucket] = previous + 1;
+        }
         return previous;
     }
 

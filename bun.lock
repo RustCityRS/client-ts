@@ -11,12 +11,14 @@
         "@eslint/js": "^9.39.5",
         "@types/bun": "latest",
         "@webgpu/types": "0.1.74",
+        "acorn": "8.15.0",
         "eslint": "^9.39.5",
         "globals": "^17.14.0",
         "jiti": "^2.7.0",
         "prettier": "^3.10.1",
         "terser": "^5.51.4",
         "typescript-eslint": "^8.74.0",
+        "webgpu": "0.6.2",
       },
       "peerDependencies": {
         "typescript": "^5.0.0 || ~6.0.3",
@@ -261,6 +263,8 @@
     "undici-types": ["undici-types@7.14.0", "", {}, "sha512-QQiYxHuyZ9gQUIrmPo3IA+hUl4KYk8uSA7cHrcKd/l3p1OTpZcM0Tbp9x7FAtXdAYhlasd60ncPpgu6ihG6TOA=="],
 
     "uri-js": ["uri-js@4.4.1", "", { "dependencies": { "punycode": "^2.1.0" } }, "sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg=="],
+
+    "webgpu": ["webgpu@0.6.2", "", { "dependencies": { "@webgpu/types": "^0.1.72", "debug": "^4.4.0" } }, "sha512-3L4GfmqJLvYUIEWJngEQY+2HQiUlAFkg8+P8NDDj3Xx5hHHIFO/r8JW+ynfqBj7kHN4mbnwO74uB+lrRtLhp4Q=="],
 
     "which": ["which@2.0.2", "", { "dependencies": { "isexe": "^2.0.0" }, "bin": { "node-which": "./bin/node-which" } }, "sha512-BLI3Tl1TW3Pvl70l3yq3Y64i+awpwXqsGBYWkkqMtnbXgrMD+yj7rhW0kuEDxzJaYXGjEW5ogapKNMEKNMjibA=="],
 

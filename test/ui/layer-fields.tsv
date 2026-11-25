@@ -1,0 +1,143 @@
+owner	property	sd	hd	scope
+ComponentDrag	component	pe.T	ib.e
+ComponentDrag	parent	vf.Y	ac.p
+ComponentDrag	visible	wg.d	dh.a
+ComponentDrag	x	sg.c	jk.p
+ComponentDrag	y	kh.D	bj.s
+ComponentDrag	parentVisible	bk.vc	lg.b
+ComponentDrag	parentX	oe.s	gg.db
+ComponentDrag	parentY	oa.g	sh.f
+ComponentDrag	cycles	h.a	re.y
+ComponentDrag	target	m.W	ef.r
+ComponentDrag	dragMouseX	c.A	u.a
+ComponentDrag	dragMouseY	c.s	nb.d
+Mouse	x	sj.C	rh.o
+Mouse	mouseY	pf.Q	sc.v
+Mouse	mouseButton	ca.a	bl.Q
+Mouse	clickButton	oi.h	lk.Z
+Mouse	clickX	sa.x	ah.s
+Mouse	clickY	oj.e	em.y
+WorldMap	dragging	sb.e	kl.s
+WorldMap	component	mf.h	bn.N
+WorldMap	zoom	hd.h	gj.r
+WorldMap	centerX	c.C	bc.W
+WorldMap	centerZ	sg.b	cd.u
+WorldMap	baseX	oi.a	mh.S
+WorldMap	baseZ	od.P	aa.j
+WorldMap	height	ml.m	oi.m
+WorldMap	dragStartX	we.q	pm.hb
+WorldMap	dragStartZ	nl.db	fk.e
+WorldMap	targetZoom	ug.f	km.uc
+MouseWheel	rotation	kf.l	eh.j
+Client	staffModLevel	mi.E	pg.S
+Client	minimapClickX	a.e	a.h
+Client	minimapClickY	ca.n	id.k
+Client	m_hookQueue	mi.q	p.c
+Client	mouseExit	ra.r	ja.f
+Client	timerEvents	db.s	ac.i
+Client	varcChanges	lc.t	ac.o
+Client	varcStrChangeCount	uc.i	fl.B
+Client	varpTransmitCount	qg.B	fi.n
+Client	invTransmitCount	b.I	ii.c
+Client	changedStatCount	od.V	ha.m
+Client	chatTransmitCycle	sb.c	dm.u
+Client	friendListTransmitCycle	uc.b	p.d
+Client	clanTransmitCycle	qe.N	wj.l
+Client	stockTransmitCycle	pi.p	ql.d
+Client	transmitCycle	bb.e	je.fb
+Client	updatedVarcs	e.a	km.Bc
+Client	updatedVarcStrings	rg.o	t.E
+Client	varpUpdates	ii.c	gj.q
+Client	changedInvs	pa.zb	cb.I
+Client	statUpdates	ld.d	ud.T
+Keyboard	count	ok.D	oj.y
+Keyboard	codes	sc.T	sg.q
+Keyboard	chars	hd.i	qj.i
+Keyboard	pressed	ob.q	pb.q
+InterfaceList	miscTransmitAt	mf.l	ra.J
+InterfaceList	viewportComponent	bh.l	wl.h
+Minimenu	isOpen	ie.F	em.z
+Minimenu	objDragComponent	ec.e	jd.i
+CinematicCamera	justEnded	tk.a	bc.I
+Widget	parentId	n	N
+Widget	if3	y	Hb
+Widget	type	ob	I
+Widget	hasHook	i	T
+Widget	clientCode	wc	K
+Widget	x	ib	jd
+Widget	y	Mb	jb
+Widget	width	C	n
+Widget	height	H	R
+Widget	noClickThrough	hd	sb
+Widget	id	Kc	Fc
+Widget	onScrollWheel	Pc	E
+Widget	onClick	Gc	k
+Widget	onVarcTransmit	dc	g
+Widget	onVarcstrTransmit	qc	ub
+Widget	onVarTransmit	Lc	Jc
+Widget	onInvTransmit	Zc	t
+Widget	onStatTransmit	Z	d
+Widget	onKey	x	tb
+Widget	lastTransmitCycle	Mc	Ib
+Widget	varcTriggers	U	kb
+Widget	varcstrTriggers	sc	G
+Widget	varTriggers	c	Nc
+Widget	invTriggers	Rb	u
+Widget	statTriggers	Qb	Ac
+Widget	lastVarcTransmit	sd	Lc
+Widget	lastVarcStringTransmit	o	Rb
+Widget	lastVarTransmit	b	mb
+Widget	lastInvTransmit	rd	ec
+Widget	lastStatTransmit	Nc	od
+Client	qaOpTest	uc.c	jg.e	draw
+ComponentDrag	dragLayerX	gf.db	gf.K	draw
+ComponentDrag	dragLayerY	ma.n	k.j	draw
+ComponentDrag	dragLayerComponents	jg.q	th.m	draw
+ComponentDrag	started	ed.h	km.pc	draw
+Minimenu	tooltipX	fd.Z	kd.Bb	draw
+Minimenu	tooltipY2	li.y	ld.c	draw
+Minimenu	tooltipComponent	nk.V	qf.X	draw
+Minimenu	tooltipX2	oi.g	hi.a	draw
+Minimenu	tooltipY	jb.ab	rg.s	draw
+Minimenu	mouseX	ve.g	me.nb	draw
+Minimenu	mouseY	ud.j	em.w	draw
+Client	minimapState	ki.R	wb.d	draw
+OrbitCamera	followYaw	df.B	eg.d	draw
+OrbitCamera	minimapAngle	ag.e	ej.W	draw
+Pix3D	cosTable	dc.g	hf.r	draw
+Pix3D	sinTable	dc.l	hf.g	draw
+Client	localPlayer	te.g	nk.O	draw
+Minimenu	targetMode	ok.r	th.n	draw
+Minimenu	targetFlags	pj.C	wf.f	draw
+Minimenu	targetChild	gh.Y	hj.e	draw
+Minimenu	targetComponent	qe.W	be.Ec	draw
+Minimenu	targetCursor	ce.D	u.i	draw
+Minimenu	groundArrow	t.bb	se.m	draw
+Minimenu	targetVerb	t.W	hn.W	draw
+Client	displayFps	jg.C	dg.f	draw
+GameShell	m_fps	dd.a	tk.v	draw
+Client	p12	wj.g	rh.h	draw
+Client	kilobytes	mf.o	bg.z	draw
+Client	cardLabel	-	q.h	draw
+Minimenu	count	vb.o	sk.kb	draw
+Minimenu	defaultCursor	aa.e	cl.Y	draw
+Minimenu	actions	p.u	d.eb	draw
+Minimenu	option	ak.a	uj.C	draw
+Minimenu	cursor	ia.n	pf.r	draw
+LocalisedText	cancel	dd.b	wb.h	draw
+JagString	empty	ga.J	pa.O	draw
+Client	rectDebug	ml.T	qc.U	draw
+IfType	resourceMissing	rk.o	rc.C	draw
+Client	localPid	mi.y	bf.E	draw
+Client	players	tf.J	mi.S	draw
+Client	tooltipComponent	gh.C	dg.h	draw
+InterfaceList	tooltipDelay	jf.i	kf.l	draw
+Client	tooltipTimer	gh.A	pg.V	draw
+QuickChatCatTypeList	local	nh.N	gn.t	draw
+Client	designAppearanceInstance	f.b	kh.g	draw
+Widget	dragRender	zc	Y	draw
+Widget	maskStarts	s	gb	draw
+Widget	maskWidths	ud	Tc	draw
+Widget	modelId	w	Z	draw
+Widget	textValue	gb	Gb	draw
+Widget	modelType	md	ab	draw

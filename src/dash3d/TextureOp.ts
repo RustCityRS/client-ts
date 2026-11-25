@@ -194,7 +194,8 @@ export default abstract class TextureOp extends Linkable {
         if (bound <= 0) throw new RangeError('IllegalArgumentException');
         if (isPowerOfTwo(bound)) {
             const bits = requireNonNull(random).nextInt() >>> 0;
-            return Number((BigInt(bound) * BigInt(bits)) >> 32n) | 0;
+            // Multiplying a 32-bit integer by a power of two only shifts its binary exponent.
+            return ((bits * bound) / 4294967296) | 0;
         }
         const limit = (-2147483648 - (4294967296 % bound)) | 0;
         let value: number;
